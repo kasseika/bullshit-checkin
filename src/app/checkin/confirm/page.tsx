@@ -80,6 +80,11 @@ function Confirm() {
     router.push(`/checkin/survey?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purpose}`);
   };
 
+  // ★ 新しいハンドラを追加
+  const handleReset = () => {
+    router.push("/");
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">入力内容の確認</h1>
@@ -125,6 +130,16 @@ function Confirm() {
         className="w-full max-w-xs text-xl h-12"
       >
         戻る
+      </Button>
+
+      {/* ★ 最初からやり直すボタンを追加 */}
+      <Button
+        variant="destructive" // 目立つようにdestructive variantを使うのだ
+        size="lg"
+        onClick={handleReset}
+        className="w-full max-w-xs text-xl h-12 mt-4" // 少しマージンを追加
+      >
+        最初からやり直す
       </Button>
     </div>
   );
