@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
 
 const purposes = [
   { id: "meeting", name: "会議・打合せ" },
@@ -13,7 +14,7 @@ const purposes = [
   { id: "other", name: "その他" },
 ];
 
-export default function PurposeSelectionPage() {
+function PurposeSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const room = searchParams.get("room");
@@ -64,5 +65,13 @@ export default function PurposeSelectionPage() {
         戻る
       </Button>
     </div>
+  );
+}
+
+export default function PurposeSelectionPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">読み込み中...</div>}>
+      <PurposeSelection />
+    </Suspense>
   );
 }

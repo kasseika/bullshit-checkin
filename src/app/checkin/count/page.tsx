@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-export default function CountSelectionPage() {
+function CountSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const room = searchParams.get("room");
@@ -114,5 +114,13 @@ export default function CountSelectionPage() {
         戻る
       </Button>
     </div>
+  );
+}
+
+export default function CountSelectionPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">読み込み中...</div>}>
+      <CountSelection />
+    </Suspense>
   );
 }

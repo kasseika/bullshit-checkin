@@ -1,6 +1,6 @@
 "use client"; // useRouter, useSearchParams, useState を使うため
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Cardを追加
@@ -12,7 +12,7 @@ const availableTimes = Array.from({ length: 19 }, (_, i) => {
   return `${hour.toString().padStart(2, "0")}:${minute}`;
 });
 
-export default function TimeSelectionPage() {
+function TimeSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const room = searchParams.get("room"); // 前の画面から部屋情報を取得
@@ -120,5 +120,13 @@ export default function TimeSelectionPage() {
         戻る
       </Button>
     </div>
+  );
+}
+
+export default function TimeSelectionPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">読み込み中...</div>}>
+      <TimeSelection />
+    </Suspense>
   );
 }

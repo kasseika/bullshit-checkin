@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Suspense } from "react";
 
 // 部屋名のマッピング
 const roomNames: Record<string, string> = {
@@ -35,7 +36,7 @@ const ageGroupNames: Record<string, string> = {
   "over60s": "60代以上",
 };
 
-export default function ConfirmPage() {
+function Confirm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const room = searchParams.get("room");
@@ -126,5 +127,13 @@ export default function ConfirmPage() {
         戻る
       </Button>
     </div>
+  );
+}
+
+export default function ConfirmPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">読み込み中...</div>}>
+      <Confirm />
+    </Suspense>
   );
 }

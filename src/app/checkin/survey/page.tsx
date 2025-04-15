@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
 
 const ageGroups = [
   { id: "under10s", name: "10代以下" },
@@ -12,7 +13,7 @@ const ageGroups = [
   { id: "over60s", name: "60代以上" },
 ];
 
-export default function SurveyPage() {
+function Survey() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const room = searchParams.get("room");
@@ -69,5 +70,13 @@ export default function SurveyPage() {
         戻る
       </Button>
     </div>
+  );
+}
+
+export default function SurveyPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">読み込み中...</div>}>
+      <Survey />
+    </Suspense>
   );
 }
