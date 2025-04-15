@@ -71,8 +71,19 @@ function Confirm() {
     console.log("チェックインデータ:", checkInData);
 
     // チェックイン完了画面（今回はトップに戻る）
-    // チェックイン完了のフラグを付けてトップページに遷移
-    router.push("/?checkinComplete=true");
+    // チェックイン完了のフラグと予約内容を付けてトップページに遷移
+    const queryParams = new URLSearchParams({
+      checkinComplete: "true",
+      room,
+      roomName: roomNames[room] || room,
+      startTime,
+      endTime,
+      count,
+      purpose: purposeNames[purpose] || purpose,
+      ageGroup: ageGroupNames[ageGroup] || ageGroup
+    }).toString();
+    
+    router.push(`/?${queryParams}`);
   };
 
   const handleBack = () => {

@@ -16,6 +16,16 @@ import {
 export default function Home() {
   const searchParams = useSearchParams();
   const [showDialog, setShowDialog] = useState(false);
+  
+  // 予約情報を取得
+  const checkinInfo = {
+    roomName: searchParams.get("roomName") || "",
+    startTime: searchParams.get("startTime") || "",
+    endTime: searchParams.get("endTime") || "",
+    count: searchParams.get("count") || "",
+    purpose: searchParams.get("purpose") || "",
+    ageGroup: searchParams.get("ageGroup") || ""
+  };
 
   // マウント時にクエリパラメータをチェック
   useEffect(() => {
@@ -64,6 +74,30 @@ export default function Home() {
               ごゆっくりご利用ください。
             </DialogDescription>
           </DialogHeader>
+          
+          {/* 予約内容の表示 */}
+          {checkinInfo.roomName && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-md">
+              <h3 className="font-semibold text-lg mb-2">予約内容</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="font-medium">利用部屋:</div>
+                <div>{checkinInfo.roomName}</div>
+                
+                <div className="font-medium">利用時間:</div>
+                <div>{checkinInfo.startTime} 〜 {checkinInfo.endTime}</div>
+                
+                <div className="font-medium">利用人数:</div>
+                <div>{checkinInfo.count}人</div>
+                
+                <div className="font-medium">利用目的:</div>
+                <div>{checkinInfo.purpose}</div>
+                
+                <div className="font-medium">年代:</div>
+                <div>{checkinInfo.ageGroup}</div>
+              </div>
+            </div>
+          )}
+          
           <DialogFooter className="mt-4">
             <Button onClick={() => setShowDialog(false)} className="w-full">
               OK
