@@ -71,8 +71,8 @@ function Confirm() {
     console.log("チェックインデータ:", checkInData);
 
     // チェックイン完了画面（今回はトップに戻る）
-    router.push("/");
-    // alert("チェックインが完了しました！"); // 簡単な完了通知
+    // チェックイン完了のフラグを付けてトップページに遷移
+    router.push("/?checkinComplete=true");
   };
 
   const handleBack = () => {
