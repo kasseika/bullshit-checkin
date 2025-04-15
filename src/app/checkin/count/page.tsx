@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input"; // Inputを追加
-import { Label } from "@/components/ui/label"; // Labelを追加
-import { Minus, Plus } from "lucide-react"; // アイコンを追加
+import { Label } from "@/components/ui/label";
 
 export default function CountSelectionPage() {
   const router = useRouter();
@@ -18,16 +16,8 @@ export default function CountSelectionPage() {
 
   const handleIncrement = () => setCount((prev) => prev + 1);
   const handleDecrement = () => setCount((prev) => Math.max(1, prev - 1)); // 1未満にならないように
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
-    if (!isNaN(value) && value >= 1) {
-      setCount(value);
-    } else if (e.target.value === "") {
-      // 空の場合は一旦許容 (入力途中かもしれない)
-      // 必要であれば、より厳密なバリデーションを追加
-    }
-  };
+  const handleIncrementTen = () => setCount((prev) => prev + 10);
+  const handleDecrementTen = () => setCount((prev) => Math.max(1, prev - 10)); // 1未満にならないように
 
   const handleNext = () => {
     if (room && startTime && endTime && count >= 1) {
@@ -42,28 +32,57 @@ export default function CountSelectionPage() {
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">利用者人数を入力してください</h1>
       <div className="flex flex-col items-center gap-4 w-full max-w-xs">
-        <Label htmlFor="count-input" className="text-xl mb-2">
-          人数
-        </Label>
-        <div className="flex items-center gap-2">
+        <Label className="text-2xl font-semibold mb-4">人数を選択してください</Label>
+        <div className="flex items-center justify-center gap-4"> {/* gapを調整 */}
+          {/* -10ボタン */}
           <Button
-            variant="outline"
-            size="icon"
-            onClick={handleDecrement}
-            disabled={count <= 1} // 1以下の場合は減らせない
+            variant="default"
+            size="lg"
+            onClick={handleDecrementTen}
+            disabled={count <= 10} // 10以下の場合は減らせない
+            className="rounded-full w-16 h-16 p-0 text-white"
+            aria-label="人数を10減らす"
           >
-            <Minus className="h-5 w-5" />
+            -10
           </Button>
-          <Input
-            id="count-input"
-            type="number"
-            min="1"
-            value={count}
-            onChange={handleInputChange}
-            className="text-center text-2xl h-16 w-24" // サイズ調整
-          />
-          <Button variant="outline" size="icon" onClick={handleIncrement}>
-            <Plus className="h-5 w-5" />
+
+          {/* -1ボタン */}
+          <Button
+            variant="default"
+            size="lg"
+            onClick={handleDecrement}
+            disabled={count <= 1}
+            className="rounded-full w-16 h-16 p-0 text-white"
+            aria-label="人数を1減らす"
+          >
+            -1
+          </Button>
+
+          {/* 人数表示 */}
+          <span className="text-7xl font-bold w-28 text-center tabular-nums">
+            {count}
+          </span>
+
+          {/* +1ボタン */}
+          <Button
+            variant="default"
+            size="lg"
+            onClick={handleIncrement}
+            className="rounded-full w-16 h-16 p-0 text-white"
+            aria-label="人数を1増やす"
+          >
+            +1
+          </Button>
+
+          {/* +10ボタン */}
+          <Button
+            variant="default"
+            size="lg"
+            onClick={handleIncrementTen}
+            className="rounded-full w-16 h-16 p-0 text-white"
+            aria-label="人数を10増やす"
+          >
+            +10
           </Button>
         </div>
       </div>
@@ -72,8 +91,8 @@ export default function CountSelectionPage() {
       <Button
         size="lg"
         onClick={handleNext}
-        disabled={count < 1} // 人数が1未満の場合は無効
-        className="mt-12 w-full max-w-xs text-xl h-16"
+        disabled={count < 1}
+        className="mt-16 w-full max-w-xs text-xl h-16" // マージン調整
       >
         次へ
       </Button>
