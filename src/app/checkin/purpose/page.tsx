@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 
 const purposes = [
   { id: "meeting", name: "会議・打合せ" },
-  { id: "remote", name: "テレワーク利用" },
-  { id: "study", name: "学習利用" },
+  { id: "remote", name: "仕事・テレワーク" },
+  { id: "study", name: "学習" },
   { id: "event", name: "イベント・講座" },
-  { id: "creation", name: "デジタル制作" },
+  { id: "creation", name: "制作" },
   { id: "tour", name: "視察・見学・取材" },
   { id: "other", name: "その他" },
 ];

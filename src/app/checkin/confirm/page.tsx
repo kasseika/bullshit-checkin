@@ -17,7 +17,7 @@ const roomNames: Record<string, string> = {
 // 目的のマッピング
 const purposeNames: Record<string, string> = {
   "meeting": "会議・打合せ",
-  "remote": "テレワーク利用",
+  "remote": "仕事・テレワーク利用",
   "study": "学習利用",
   "event": "イベント・講座",
   "creation": "デジタル制作",

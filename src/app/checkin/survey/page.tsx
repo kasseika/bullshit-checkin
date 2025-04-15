@@ -44,7 +44,7 @@ export default function SurveyPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">利用者アンケート</h1>
-      <h2 className="text-2xl mb-8">年代を選択してください</h2>
+      <h2 className="text-2xl mb-8">年代を選択してください(グループの場合は代表者)</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-2xl">
         {ageGroups.map((ageGroup) => (
           <Button
