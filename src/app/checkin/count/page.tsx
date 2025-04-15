@@ -16,9 +16,6 @@ function CountSelection() {
 
   const handleIncrement = () => setCount((prev) => prev + 1);
   const handleDecrement = () => setCount((prev) => Math.max(1, prev - 1)); // 1未満にならないように
-  const handleIncrementTen = () => setCount((prev) => prev + 10);
-  const handleDecrementTen = () => setCount((prev) => Math.max(1, prev - 10)); // 1未満にならないように
-
   const handleNext = () => {
     if (room && startTime && endTime && count >= 1) {
       // 次の画面に選択した情報を渡す
@@ -41,28 +38,16 @@ function CountSelection() {
       <div className="flex flex-col items-center gap-4 w-full max-w-xs">
         <Label className="text-2xl font-semibold mb-4">人数を選択してください</Label>
         <div className="flex items-center justify-center gap-4"> {/* gapを調整 */}
-          {/* -10ボタン */}
-          <Button
-            variant="default"
-            size="lg"
-            onClick={handleDecrementTen}
-            disabled={count <= 10} // 10以下の場合は減らせない
-            className="rounded-full w-16 h-16 p-0 text-white"
-            aria-label="人数を10減らす"
-          >
-            -10
-          </Button>
-
-          {/* -1ボタン */}
+          {/* -ボタン */}
           <Button
             variant="default"
             size="lg"
             onClick={handleDecrement}
             disabled={count <= 1}
-            className="rounded-full w-16 h-16 p-0 text-white"
+            className="rounded-full w-16 h-16 p-0 text-white text-3xl"
             aria-label="人数を1減らす"
           >
-            -1
+            -
           </Button>
 
           {/* 人数表示 */}
@@ -70,26 +55,15 @@ function CountSelection() {
             {count}
           </span>
 
-          {/* +1ボタン */}
+          {/* +ボタン */}
           <Button
             variant="default"
             size="lg"
             onClick={handleIncrement}
-            className="rounded-full w-16 h-16 p-0 text-white"
+            className="rounded-full w-16 h-16 p-0 text-white text-3xl"
             aria-label="人数を1増やす"
           >
-            +1
-          </Button>
-
-          {/* +10ボタン */}
-          <Button
-            variant="default"
-            size="lg"
-            onClick={handleIncrementTen}
-            className="rounded-full w-16 h-16 p-0 text-white"
-            aria-label="人数を10増やす"
-          >
-            +10
+            +
           </Button>
         </div>
       </div>
