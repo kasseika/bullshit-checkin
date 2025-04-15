@@ -47,6 +47,13 @@ export default function SurveyPage() {
     }
   };
 
+  const handleBack = () => {
+    if (room && startTime && endTime && count) {
+      // 前の画面に戻る（利用用途選択画面）
+      router.push(`/checkin/purpose?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}`);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">利用者アンケート</h1>
@@ -64,6 +71,16 @@ export default function SurveyPage() {
           </Button>
         ))}
       </div>
+
+      {/* 戻るボタン */}
+      <Button
+        variant="outline"
+        size="lg"
+        onClick={handleBack}
+        className="mt-12 w-full max-w-xs text-xl h-12"
+      >
+        戻る
+      </Button>
     </div>
   );
 }

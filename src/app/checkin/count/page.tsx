@@ -28,6 +28,13 @@ export default function CountSelectionPage() {
     }
   };
 
+  const handleBack = () => {
+    if (room) {
+      // 前の画面に戻る（時間選択画面）
+      router.push(`/checkin/time?room=${room}`);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">利用者人数を入力してください</h1>
@@ -95,6 +102,16 @@ export default function CountSelectionPage() {
         className="mt-16 w-full max-w-xs text-xl h-16" // マージン調整
       >
         次へ
+      </Button>
+
+      {/* 戻るボタン */}
+      <Button
+        variant="outline"
+        size="lg"
+        onClick={handleBack}
+        className="mt-4 w-full max-w-xs text-xl h-12"
+      >
+        戻る
       </Button>
     </div>
   );

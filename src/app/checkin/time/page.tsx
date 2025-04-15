@@ -5,10 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Cardを追加
 
-// 9:00から18:00までの時間リストを生成 (1時間ごと)
-const availableTimes = Array.from({ length: 10 }, (_, i) => {
-  const hour = 9 + i;
-  return `${hour.toString().padStart(2, "0")}:00`;
+// 9:00から18:00までの時間リストを生成 (30分刻み)
+const availableTimes = Array.from({ length: 19 }, (_, i) => {
+  const hour = Math.floor(9 + i / 2);
+  const minute = i % 2 === 0 ? "00" : "30";
+  return `${hour.toString().padStart(2, "0")}:${minute}`;
 });
 
 export default function TimeSelectionPage() {
@@ -23,7 +24,7 @@ export default function TimeSelectionPage() {
   const availableEndTimes = useMemo(() => {
     if (!startTime) return [];
     const startIndex = availableTimes.indexOf(startTime);
-    // 終了時間は開始時間の次から選択可能 (最低1時間利用)
+    // 終了時間は開始時間の次から選択可能 (最低30分利用)
     return availableTimes.slice(startIndex + 1);
   }, [startTime]);
 
@@ -33,6 +34,13 @@ export default function TimeSelectionPage() {
       router.push(
         `/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}`
       );
+    }
+  };
+
+  const handleBack = () => {
+    if (room) {
+      // 前の画面に戻る（部屋選択画面）
+      router.push(`/checkin/room`);
     }
   };
 
@@ -48,7 +56,7 @@ export default function TimeSelectionPage() {
           <CardHeader>
             <CardTitle className="text-2xl">開始時間</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-3 gap-4">
+          <CardContent className="grid grid-cols-2 gap-4">
             {availableTimes.slice(0, -1).map((time) => ( // 最後の時間は開始時間として選べない
               <Button
                 key={`start-${time}`}
@@ -71,7 +79,7 @@ export default function TimeSelectionPage() {
           <CardHeader>
             <CardTitle className="text-2xl">終了時間</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-3 gap-4">
+          <CardContent className="grid grid-cols-2 gap-4">
             {availableEndTimes.map((time) => (
               <Button
                 key={`end-${time}`}
@@ -84,7 +92,7 @@ export default function TimeSelectionPage() {
               </Button>
             ))}
             {!startTime && (
-              <p className="col-span-3 text-muted-foreground text-center">
+              <p className="col-span-2 text-muted-foreground text-center">
                 開始時間を選択してください
               </p>
             )}
@@ -100,6 +108,16 @@ export default function TimeSelectionPage() {
         className="mt-12 w-full max-w-xs text-xl h-16"
       >
         次へ
+      </Button>
+
+      {/* 戻るボタン */}
+      <Button
+        variant="outline"
+        size="lg"
+        onClick={handleBack}
+        className="mt-4 w-full max-w-xs text-xl h-12"
+      >
+        戻る
       </Button>
     </div>
   );

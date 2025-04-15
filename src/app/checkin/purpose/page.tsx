@@ -30,6 +30,13 @@ export default function PurposeSelectionPage() {
     }
   };
 
+  const handleBack = () => {
+    if (room && startTime && endTime) {
+      // 前の画面に戻る（人数選択画面）
+      router.push(`/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}`);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">利用用途を選択してください</h1>
@@ -46,6 +53,16 @@ export default function PurposeSelectionPage() {
           </Button>
         ))}
       </div>
+
+      {/* 戻るボタン */}
+      <Button
+        variant="outline"
+        size="lg"
+        onClick={handleBack}
+        className="mt-12 w-full max-w-xs text-xl h-12"
+      >
+        戻る
+      </Button>
     </div>
   );
 }
