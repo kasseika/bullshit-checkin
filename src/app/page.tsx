@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"; // Shadcn/uiのButtonをインポート
 import Link from "next/link"; // 画面遷移のためにLinkをインポート
 import { useSearchParams } from "next/navigation"; // クエリパラメータを取得するためのフック
-import { useEffect, useState } from "react"; // useEffectとuseStateをインポート
+import { Suspense, useEffect, useState } from "react"; // SuspenseとuseEffectとuseStateをインポート
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"; // Dialogコンポーネントをインポート
 
-export default function Home() {
+// useSearchParamsを使用する部分を別コンポーネントに分離
+function CheckinContent() {
   const searchParams = useSearchParams();
   const [showDialog, setShowDialog] = useState(false);
   
@@ -42,9 +43,9 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [searchParams]);
+  
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-4xl font-bold mb-12">チェックイン</h1>
+    <>
       <div className="grid grid-cols-1 gap-8 w-full max-w-md">
         {/* 予約ありボタン (今回はダミー) */}
         <Button
@@ -105,6 +106,17 @@ export default function Home() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  );
+}
+
+export default function Home() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-8">
+      <h1 className="text-4xl font-bold mb-12">チェックイン</h1>
+      <Suspense fallback={<div>Loading...</div>}>
+        <CheckinContent />
+      </Suspense>
     </div>
   );
 }
