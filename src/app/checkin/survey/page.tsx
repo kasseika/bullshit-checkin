@@ -23,23 +23,10 @@ export default function SurveyPage() {
 
   const handleSelect = (ageGroupId: string) => {
     if (room && startTime && endTime && count && purpose) {
-      const checkInData = {
-        room,
-        startTime,
-        endTime,
-        count: parseInt(count, 10), // 数値に変換
-        purpose,
-        ageGroup: ageGroupId,
-        checkInTime: new Date().toISOString(), // チェックイン時刻を追加
-      };
-
-      // TODO: ここでFirestoreにデータを保存する
-      console.log("チェックインデータ:", checkInData);
-
-      // チェックイン完了画面（今回はトップに戻る）
-      // 将来的には専用の完了画面に遷移させるのが良いかも
-      router.push("/");
-      // alert("チェックインが完了しました！"); // 簡単な完了通知
+      // 確認画面に遷移する
+      router.push(
+        `/checkin/confirm?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purpose}&ageGroup=${ageGroupId}`
+      );
     } else {
       console.error("必要な情報が不足しています。", { room, startTime, endTime, count, purpose });
       // エラー処理: 例えば前の画面に戻るなど
