@@ -3,8 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { saveCheckInData } from "@/lib/firestore";
+import { toast } from "sonner";
 
 // 部屋名のマッピング
 const roomNames: Record<string, string> = {
@@ -47,6 +48,43 @@ function Confirm() {
   const purpose = searchParams.get("purpose");
   const ageGroup = searchParams.get("ageGroup");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'offline' | 'error'>('idle');
+
+  // ネットワーク状態の監視
+  useEffect(() => {
+    // オンライン/オフラインイベントのリスナーを設定
+    const handleOnline = () => {
+      setSaveStatus('idle'); // ステータスをリセット
+      toast.success('ネットワーク接続が回復しました', {
+        description: '保存されたデータを送信しています...',
+        duration: 5000,
+      });
+    };
+
+    const handleOffline = () => {
+      toast.warning('オフライン状態です', {
+        description: 'データは端末に保存され、接続が回復したときに自動的に送信されます',
+        duration: 5000,
+      });
+    };
+
+    // 初期状態がオフラインの場合は通知
+    if (!navigator.onLine) {
+      toast.warning('オフライン状態です', {
+        description: 'データは端末に保存され、接続が回復したときに自動的に送信されます',
+        duration: 5000,
+      });
+    }
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // クリーンアップ関数
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // 必要なデータがない場合はトップページにリダイレクト
   if (!room || !startTime || !endTime || !count || !purpose || !ageGroup) {
@@ -81,6 +119,26 @@ function Confirm() {
       if (success) {
         console.log("チェックインデータを保存しました:", checkInData);
         
+        // オフライン時はIndexedDBに保存された場合
+        if (!navigator.onLine) {
+          setSaveStatus('offline');
+          setIsSubmitting(false);
+          
+          toast.success('チェックインデータを端末に保存しました', {
+            description: 'インターネット接続が回復したときに自動的に送信されます',
+            duration: 8000,
+            action: {
+              label: 'トップに戻る',
+              onClick: () => router.push('/'),
+            },
+          });
+          
+          // オフライン保存の場合はここで処理を終了
+          return;
+        }
+        
+        setSaveStatus('success');
+        
         // チェックイン完了画面（今回はトップに戻る）
         // チェックイン完了のフラグと予約内容を付けてトップページに遷移
         const queryParams = new URLSearchParams({
@@ -97,7 +155,11 @@ function Confirm() {
         router.push(`/?${queryParams}`);
       } else {
         // 保存に失敗した場合
-        alert("チェックインデータの保存に失敗しました。もう一度お試しください。");
+        setSaveStatus('error');
+        toast.error('チェックインデータの保存に失敗しました', {
+          description: 'もう一度お試しください',
+          duration: 5000,
+        });
         setIsSubmitting(false);
       }
     } catch (error) {
@@ -145,12 +207,13 @@ function Confirm() {
         </CardContent>
       </Card>
       
+      
       {/* 確定ボタン */}
       <Button
         size="lg"
         onClick={handleConfirm}
         className="w-full max-w-xs text-xl h-16 mb-4"
-        disabled={isSubmitting}
+        disabled={isSubmitting || saveStatus === 'offline' || !navigator.onLine}
       >
         {isSubmitting ? "保存中..." : "確定する"}
       </Button>
