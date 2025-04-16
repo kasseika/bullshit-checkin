@@ -6,6 +6,8 @@ export interface CheckInData {
   room: string;
   startTime: string;
   endTime: string;
+  startDate?: string; // 開始日（YYYY-MM-DD形式）
+  endDate?: string;   // 終了日（YYYY-MM-DD形式）
   count: number;
   purpose: string;
   ageGroup: string;
@@ -19,9 +21,15 @@ export interface CheckInData {
  */
 export async function saveCheckInData(data: CheckInData): Promise<boolean> {
   try {
-    // データにサーバータイムスタンプを追加
+    // 当日の日付を取得（YYYY-MM-DD形式）
+    const today = new Date().toISOString().split('T')[0];
+    
+    // データにサーバータイムスタンプと日付を追加
     const dataToSave = {
       ...data,
+      // 開始日と終了日を追加（運用上、日をまたぐことはないので当日の日付）
+      startDate: today,
+      endDate: today,
       // クライアント側のタイムスタンプも保持
       clientCheckInTime: data.checkInTime,
       // サーバー側のタイムスタンプを追加
