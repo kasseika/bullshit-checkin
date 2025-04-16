@@ -11,27 +11,54 @@ export function NetworkMonitor() {
   // IndexedDBから未送信データの数を取得する関数
   const checkPendingData = async () => {
     try {
-      // IndexedDBを開く
-      const request = indexedDB.open('bullshitCheckinDB', 1);
+      // IndexedDBを開く（バージョン2に更新）
+      const request = indexedDB.open('bullshitCheckinDB', 2);
+      
+      // データベースのバージョンが上がった時やDBが存在しない時に実行される
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        
+        // オブジェクトストアが存在しない場合は作成
+        if (!db.objectStoreNames.contains('pendingCheckins')) {
+          // auto-incrementをtrueにして、一意のIDを自動生成
+          db.createObjectStore('pendingCheckins', { keyPath: 'id', autoIncrement: true });
+          console.log(`オブジェクトストア 'pendingCheckins' を作成しました`);
+        }
+      };
       
       request.onsuccess = async (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        const transaction = db.transaction(['pendingCheckins'], 'readonly');
-        const store = transaction.objectStore('pendingCheckins');
-        const countRequest = store.count();
         
-        countRequest.onsuccess = () => {
-          const count = countRequest.result;
-          setPendingCount(count);
-          
-          if (count > 0 && isOnline) {
-            toast.info(`${count}件の未送信データがあります`, {
-              description: 'ネットワーク接続が回復次第、自動的に送信されます',
-              duration: 5000,
-            });
+        try {
+          // オブジェクトストアが存在するか確認
+          if (!db.objectStoreNames.contains('pendingCheckins')) {
+            console.error('pendingCheckinsオブジェクトストアが存在しません');
+            setPendingCount(0);
+            db.close();
+            return;
           }
+          
+          const transaction = db.transaction(['pendingCheckins'], 'readonly');
+          const store = transaction.objectStore('pendingCheckins');
+          const countRequest = store.count();
+          
+          countRequest.onsuccess = () => {
+            const count = countRequest.result;
+            setPendingCount(count);
+            
+            if (count > 0 && isOnline) {
+              toast.info(`${count}件の未送信データがあります`, {
+                description: 'ネットワーク接続が回復次第、自動的に送信されます',
+                duration: 5000,
+              });
+            }
+            db.close();
+          };
+        } catch (error) {
+          console.error('IndexedDBの操作中にエラーが発生しました:', error);
+          setPendingCount(0);
           db.close();
-        };
+        }
       };
     } catch (error) {
       console.error('未送信データの確認中にエラーが発生しました:', error);

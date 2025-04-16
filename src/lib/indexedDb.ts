@@ -2,7 +2,7 @@ import { CheckInData } from './firestore';
 
 // IndexedDBの設定
 const DB_NAME = 'bullshitCheckinDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // バージョンを上げて再初期化を強制する
 const STORE_NAME = 'pendingCheckins';
 
 /**
