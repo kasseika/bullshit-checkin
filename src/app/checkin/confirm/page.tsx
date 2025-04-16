@@ -3,7 +3,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
+import { saveCheckInData } from "@/lib/firestore";
 
 // 部屋名のマッピング
 const roomNames: Record<string, string> = {
@@ -45,6 +46,7 @@ function Confirm() {
   const count = searchParams.get("count");
   const purpose = searchParams.get("purpose");
   const ageGroup = searchParams.get("ageGroup");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 必要なデータがない場合はトップページにリダイレクト
   if (!room || !startTime || !endTime || !count || !purpose || !ageGroup) {
@@ -56,7 +58,12 @@ function Confirm() {
     return null;
   }
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    // 二重送信防止
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    
     const checkInData = {
       room,
       startTime,
@@ -67,23 +74,37 @@ function Confirm() {
       checkInTime: new Date().toISOString(),
     };
 
-    // TODO: ここでFirestoreにデータを保存する
-    console.log("チェックインデータ:", checkInData);
-
-    // チェックイン完了画面（今回はトップに戻る）
-    // チェックイン完了のフラグと予約内容を付けてトップページに遷移
-    const queryParams = new URLSearchParams({
-      checkinComplete: "true",
-      room,
-      roomName: roomNames[room] || room,
-      startTime,
-      endTime,
-      count,
-      purpose: purposeNames[purpose] || purpose,
-      ageGroup: ageGroupNames[ageGroup] || ageGroup
-    }).toString();
-    
-    router.push(`/?${queryParams}`);
+    try {
+      // Firestoreにデータを保存
+      const success = await saveCheckInData(checkInData);
+      
+      if (success) {
+        console.log("チェックインデータを保存しました:", checkInData);
+        
+        // チェックイン完了画面（今回はトップに戻る）
+        // チェックイン完了のフラグと予約内容を付けてトップページに遷移
+        const queryParams = new URLSearchParams({
+          checkinComplete: "true",
+          room,
+          roomName: roomNames[room] || room,
+          startTime,
+          endTime,
+          count,
+          purpose: purposeNames[purpose] || purpose,
+          ageGroup: ageGroupNames[ageGroup] || ageGroup
+        }).toString();
+        
+        router.push(`/?${queryParams}`);
+      } else {
+        // 保存に失敗した場合
+        alert("チェックインデータの保存に失敗しました。もう一度お試しください。");
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("チェックイン処理中にエラーが発生しました:", error);
+      alert("エラーが発生しました。もう一度お試しください。");
+      setIsSubmitting(false);
+    }
   };
 
   const handleBack = () => {
@@ -129,8 +150,9 @@ function Confirm() {
         size="lg"
         onClick={handleConfirm}
         className="w-full max-w-xs text-xl h-16 mb-4"
+        disabled={isSubmitting}
       >
-        確定する
+        {isSubmitting ? "保存中..." : "確定する"}
       </Button>
       
       {/* 戻るボタン */}
