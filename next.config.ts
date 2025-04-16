@@ -47,8 +47,8 @@ const pwaConfig = {
 };
 
 const nextConfig: NextConfig = {
-  output: 'export',
-  distDir: 'out',
+  // output: 'export', // APIルートを使用するため、静的エクスポートを無効化
+  // distDir: 'out',
 };
 
 export default withPWA(pwaConfig)(nextConfig);
