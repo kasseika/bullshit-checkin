@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NetworkMonitor } from "@/components/NetworkMonitor";
 import { InstallPWA } from "@/components/InstallPWA";
+import { AppShell } from "@/components/AppShell";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -54,7 +55,9 @@ export default function RootLayout({
         <NetworkMonitor />
         <InstallPWA />
         <Toaster position="top-center" richColors />
-        {children}
+        <AppShell>
+          {children}
+        </AppShell>
       </body>
     </html>
   );
