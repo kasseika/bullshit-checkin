@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import { HttpsError, onRequest } from 'firebase-functions/v2/https';
+import * as express from 'express';
 import * as admin from 'firebase-admin';
 import { google, calendar_v3 } from 'googleapis';
 
@@ -44,14 +44,20 @@ function formatTimeString(date: Date): string {
 }
 
 // Cloud Function: カレンダー予約情報を取得
-export const getCalendarReservations = functions.https.onCall({
-  region: 'asia-northeast1', // 東京リージョンを指定
-}, async (request) => {
+export const getCalendarReservations = functions.region('asia-northeast1').https.onCall(async (data, context) => {
+  // ログ情報を格納する配列
+  const logs: string[] = [];
+  logs.push(`Function called with room: ${data.room}`);
+  logs.push(`Auth: ${context.auth ? 'Authenticated' : 'Not authenticated'}`);
+  if (context.auth) {
+    logs.push(`User ID: ${context.auth.uid}`);
+  }
+  
   try {
-    const roomId = request.data.room;
+    const roomId = data.room;
 
     if (!roomId) {
-      throw new HttpsError(
+      throw new functions.https.HttpsError(
         'invalid-argument',
         'Room ID is required'
       );
@@ -66,15 +72,19 @@ export const getCalendarReservations = functions.https.onCall({
       );
     }
     const calendarId = config.calendar.id;
+    logs.push(`Using calendar ID: ${calendarId}`);
 
     const calendar = getCalendarClient();
+    logs.push('Calendar client initialized');
     
     // 当日の日付範囲を設定
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    logs.push(`Date range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
 
     // イベントを取得
+    logs.push('Fetching events from Google Calendar...');
     const response = await calendar.events.list({
       calendarId,
       timeMin: startOfDay.toISOString(),
@@ -84,8 +94,10 @@ export const getCalendarReservations = functions.https.onCall({
     });
 
     const events = response.data.items || [];
+    logs.push(`Found ${events.length} events in calendar`);
     
     // 予約情報に変換
+    logs.push('Processing events...');
     const reservations = events
       .filter(event => event.summary) // タイトルがあるイベントのみ
       .map(event => {
@@ -129,44 +141,59 @@ export const getCalendarReservations = functions.https.onCall({
         }
       });
     
-    return { reservations };
+    logs.push(`Filtered ${reservations.length} reservations for room ${roomId}`);
+    return { reservations, logs };
   } catch (error) {
     console.error('Error fetching reservations:', error);
-    throw new HttpsError(
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logs.push(`Error: ${errorMessage}`);
+    throw new functions.https.HttpsError(
       'internal',
-      'Failed to fetch reservations'
+      'Failed to fetch reservations',
+      { error: errorMessage, logs }
     );
   }
 });
 
 // RESTful APIとしても提供（オプション）
-export const getCalendarReservationsApi = onRequest({
-  region: 'asia-northeast1' // 東京リージョンを指定
-}, async (req, res) => {
+export const getCalendarReservationsApi = functions.region('asia-northeast1').https.onRequest(async (req: express.Request, res: express.Response) => {
+  // ログ情報を格納する配列
+  const logs: string[] = [];
+  logs.push(`API called with room: ${req.query.room}`);
+  
   try {
     const roomId = req.query.room as string;
 
     if (!roomId) {
-      res.status(400).json({ error: 'Room ID is required' });
+      logs.push('Error: Room ID is required');
+      res.status(400).json({ error: 'Room ID is required', logs });
       return;
     }
 
     // 単一のカレンダーIDを使用
     const config = functions.config();
     if (!config.calendar || !config.calendar.id) {
-      res.status(500).json({ error: 'Calendar ID not configured. Please set calendar.id using firebase functions:config:set' });
+      logs.push('Error: Calendar ID not configured');
+      res.status(500).json({
+        error: 'Calendar ID not configured. Please set calendar.id using firebase functions:config:set',
+        logs
+      });
       return;
     }
     const calendarId = config.calendar.id;
+    logs.push(`Using calendar ID: ${calendarId}`);
 
     const calendar = getCalendarClient();
+    logs.push('Calendar client initialized');
     
     // 当日の日付範囲を設定
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    logs.push(`Date range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
 
     // イベントを取得
+    logs.push('Fetching events from Google Calendar...');
     const response = await calendar.events.list({
       calendarId,
       timeMin: startOfDay.toISOString(),
@@ -176,8 +203,10 @@ export const getCalendarReservationsApi = onRequest({
     });
 
     const events = response.data.items || [];
+    logs.push(`Found ${events.length} events in calendar`);
     
     // 予約情報に変換
+    logs.push('Processing events...');
     const reservations = events
       .filter(event => event.summary)
       .map(event => {
@@ -217,11 +246,15 @@ export const getCalendarReservationsApi = onRequest({
         }
       });
     
+    logs.push(`Filtered ${reservations.length} reservations for room ${roomId}`);
+    
     // CORS設定
     res.set('Access-Control-Allow-Origin', '*');
-    res.status(200).json({ reservations });
+    res.status(200).json({ reservations, logs });
   } catch (error) {
     console.error('Error fetching reservations:', error);
-    res.status(500).json({ error: 'Failed to fetch reservations' });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logs.push(`Error: ${errorMessage}`);
+    res.status(500).json({ error: 'Failed to fetch reservations', errorDetails: errorMessage, logs });
   }
 });

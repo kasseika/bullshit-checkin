@@ -1,4 +1,16 @@
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { FirebaseError } from 'firebase/app';
+
+// Cloud Functionsのエラー詳細の型定義
+interface CloudFunctionErrorDetails {
+  error?: string;
+  logs?: string[];
+}
+
+// Firebase Functionsのエラー型
+interface FirebaseFunctionError extends FirebaseError {
+  details?: CloudFunctionErrorDetails;
+}
 
 // 予約情報の型定義
 export interface Reservation {
@@ -26,11 +38,34 @@ export async function getTodayReservations(roomId: string): Promise<Reservation[
     const getCalendarReservations = httpsCallable(functions, 'getCalendarReservations');
     
     const result = await getCalendarReservations({ room: roomId });
-    const data = result.data as { reservations: Reservation[] };
+    const data = result.data as { reservations: Reservation[], logs?: string[] };
+    
+    // Cloud Functionsのログ情報をコンソールに表示
+    if (data.logs && data.logs.length > 0) {
+      console.group('Cloud Functions Logs:');
+      data.logs.forEach(log => console.log(log));
+      console.groupEnd();
+    }
     
     return data.reservations || [];
   } catch (error) {
     console.error('Error fetching reservations:', error);
+    
+    // エラーオブジェクトからログ情報を取得して表示
+    if (error instanceof FirebaseError) {
+      const fbError = error as FirebaseFunctionError;
+      if (fbError.details) {
+        if (fbError.details.logs && fbError.details.logs.length > 0) {
+          console.group('Cloud Functions Error Logs:');
+          fbError.details.logs.forEach(log => console.log(log));
+          console.groupEnd();
+        }
+        if (fbError.details.error) {
+          console.error('Error details:', fbError.details.error);
+        }
+      }
+    }
+    
     return [];
   }
 }
