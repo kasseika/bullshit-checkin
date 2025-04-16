@@ -1,7 +1,7 @@
 // Firebase関連の設定と初期化
 import { initializeApp } from 'firebase/app';
 import { getFirestore, type Firestore } from 'firebase/firestore';
-import { getFunctions } from 'firebase/functions';
+import { getFunctions, type Functions } from 'firebase/functions';
 
 // Firebaseの設定
 // 環境変数から設定を読み込む
@@ -19,14 +19,14 @@ const firebaseConfig = {
 // グローバル変数を使って初期化を一度だけ行うようにします
 let firebaseApp;
 let firestoreDb: Firestore;
-let functions;
+let functions: Functions;
 
 if (typeof window !== 'undefined') {
   // クライアントサイドの場合
   if (!firebaseApp) {
     firebaseApp = initializeApp(firebaseConfig);
     firestoreDb = getFirestore(firebaseApp);
-    functions = getFunctions(firebaseApp);
+    functions = getFunctions(firebaseApp, 'asia-northeast1');
     
     // ローカル開発環境の場合はエミュレータに接続
     // if (process.env.NODE_ENV === 'development') {
@@ -39,7 +39,7 @@ if (typeof window !== 'undefined') {
   // 追加の設定が必要になる場合があります
   firebaseApp = initializeApp(firebaseConfig);
   firestoreDb = getFirestore(firebaseApp);
-  functions = getFunctions(firebaseApp);
+  functions = getFunctions(firebaseApp, 'asia-northeast1');
 }
 
 export { firestoreDb, functions };

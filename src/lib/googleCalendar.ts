@@ -1,5 +1,6 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { httpsCallable } from 'firebase/functions';
 import { FirebaseError } from 'firebase/app';
+import { functions } from './firebase';
 
 // Cloud Functionsのエラー詳細の型定義
 interface CloudFunctionErrorDetails {
@@ -34,7 +35,6 @@ export function extractRoomIdentifier(title: string): string | null {
 export async function getTodayReservations(roomId: string): Promise<Reservation[]> {
   try {
     // Firebase Functionsを呼び出す
-    const functions = getFunctions();
     const getCalendarReservations = httpsCallable(functions, 'getCalendarReservations');
     
     const result = await getCalendarReservations({ room: roomId });
