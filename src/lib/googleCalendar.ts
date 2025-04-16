@@ -1,3 +1,5 @@
+import { getFunctions, httpsCallable } from 'firebase/functions';
+
 // 予約情報の型定義
 export interface Reservation {
   id: string;
@@ -19,14 +21,13 @@ export function extractRoomIdentifier(title: string): string | null {
 // 特定の部屋の当日の予約を取得する関数
 export async function getTodayReservations(roomId: string): Promise<Reservation[]> {
   try {
-    // サーバーサイドAPIを呼び出す
-    const response = await fetch(`/api/calendar?room=${roomId}`);
+    // Firebase Functionsを呼び出す
+    const functions = getFunctions();
+    const getCalendarReservations = httpsCallable(functions, 'getCalendarReservations');
     
-    if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
-    }
+    const result = await getCalendarReservations({ room: roomId });
+    const data = result.data as { reservations: Reservation[] };
     
-    const data = await response.json();
     return data.reservations || [];
   } catch (error) {
     console.error('Error fetching reservations:', error);
