@@ -1,4 +1,5 @@
 import * as functions from 'firebase-functions';
+import { HttpsError, onRequest } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { google, calendar_v3 } from 'googleapis';
 
@@ -43,14 +44,14 @@ function formatTimeString(date: Date): string {
 }
 
 // Cloud Function: カレンダー予約情報を取得
-export const getCalendarReservations = functions
-  .region('asia-northeast1') // 東京リージョンを指定
-  .https.onCall(async (data, _context: functions.https.CallableContext) => {
+export const getCalendarReservations = functions.https.onCall({
+  region: 'asia-northeast1', // 東京リージョンを指定
+}, async (request) => {
   try {
-    const roomId = data.room;
+    const roomId = request.data.room;
 
     if (!roomId) {
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'invalid-argument',
         'Room ID is required'
       );
@@ -131,7 +132,7 @@ export const getCalendarReservations = functions
     return { reservations };
   } catch (error) {
     console.error('Error fetching reservations:', error);
-    throw new functions.https.HttpsError(
+    throw new HttpsError(
       'internal',
       'Failed to fetch reservations'
     );
@@ -139,9 +140,9 @@ export const getCalendarReservations = functions
 });
 
 // RESTful APIとしても提供（オプション）
-export const getCalendarReservationsApi = functions
-  .region('asia-northeast1') // 東京リージョンを指定
-  .https.onRequest(async (req: functions.https.Request, res: functions.Response) => {
+export const getCalendarReservationsApi = onRequest({
+  region: 'asia-northeast1' // 東京リージョンを指定
+}, async (req, res) => {
   try {
     const roomId = req.query.room as string;
 

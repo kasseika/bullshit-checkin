@@ -47,8 +47,8 @@ const pwaConfig = {
 };
 
 const nextConfig: NextConfig = {
-  // output: 'export', // APIルートを使用するため、静的エクスポートを無効化
-  // distDir: 'out',
+  output: 'export', // Firebase Functionsを使用するため、静的エクスポートを有効化
+  distDir: 'out',
 };
 
 export default withPWA(pwaConfig)(nextConfig);
