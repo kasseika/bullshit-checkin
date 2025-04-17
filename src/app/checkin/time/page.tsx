@@ -53,6 +53,7 @@ function TimeSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const room = searchParams.get("room"); // 前の画面から部屋情報を取得
+  const nextReservationStart = searchParams.get("nextReservationStart"); // 次の予約の開始時間
 
   // 開始時間は現在時刻で自動設定
   const [startTime, setStartTime] = useState<string | null>(null);
@@ -64,6 +65,19 @@ function TimeSelection() {
   // 終了時間の文字列表現
   const endTime = endHour && endMinute ? `${endHour}:${endMinute}` : null;
 
+  // 次の予約の開始時間を解析
+  const nextReservationLimit = useMemo(() => {
+    if (!nextReservationStart) return null;
+    
+    // HH:MM形式の時間を解析
+    const [hours, minutes] = nextReservationStart.split(":").map(Number);
+    return {
+      hours: hours.toString().padStart(2, "0"),
+      minutes: minutes.toString().padStart(2, "0"),
+      timeString: nextReservationStart
+    };
+  }, [nextReservationStart]);
+
   // コンポーネントマウント時に現在時刻を設定
   useEffect(() => {
     const currentTime = getCurrentOrBusinessTime();
@@ -74,13 +88,22 @@ function TimeSelection() {
       const [startHour] = currentTime.split(":").map(Number);
       let defaultEndHour = startHour + 1;
       
+      // 次の予約がある場合は、その開始時間を上限とする
+      if (nextReservationLimit) {
+        const nextHour = parseInt(nextReservationLimit.hours, 10);
+        if (defaultEndHour > nextHour || (defaultEndHour === nextHour && parseInt(nextReservationLimit.minutes, 10) === 0)) {
+          defaultEndHour = nextHour;
+          setEndMinute(nextReservationLimit.minutes);
+        }
+      }
+      
       // 営業時間内に収まるように調整
       if (defaultEndHour > 18) defaultEndHour = 18;
       
       setEndHour(defaultEndHour.toString().padStart(2, "0"));
-      setEndMinute("00"); // デフォルトは00分
+      if (defaultEndHour === 18) setEndMinute("00"); // 18時の場合は00分
     }
-  }, []);
+  }, [nextReservationLimit]);
 
   // 時間が変更されたときに分を調整する
   useEffect(() => {
@@ -114,19 +137,29 @@ function TimeSelection() {
     }
   }, [startTime, endHour, endMinute]);
 
-  // 選択可能な時間オプションを計算（開始時間以降）
+  // 選択可能な時間オプションを計算（開始時間以降、次の予約開始時間以前）
   const availableHourOptions = useMemo(() => {
     if (!startTime) return hourOptions;
     
     const [startHour] = startTime.split(":").map(Number);
-    // 開始時間と同じか、それ以降の時間のみを選択可能に
+    
     return hourOptions.filter(option => {
       const hour = parseInt(option.value, 10);
-      return hour >= startHour;
+      
+      // 開始時間以降
+      if (hour < startHour) return false;
+      
+      // 次の予約がある場合、その開始時間以前
+      if (nextReservationLimit) {
+        const nextHour = parseInt(nextReservationLimit.hours, 10);
+        if (hour > nextHour) return false;
+      }
+      
+      return true;
     });
-  }, [startTime]);
+  }, [startTime, nextReservationLimit]);
 
-  // 選択可能な分オプションを計算（開始時間以降）
+  // 選択可能な分オプションを計算（開始時間以降、次の予約開始時間以前）
   const availableMinuteOptions = useMemo(() => {
     if (!startTime) return minuteOptions;
     
@@ -136,6 +169,14 @@ function TimeSelection() {
     // 18時の場合は00分のみ選択可能
     if (selectedHour === 18) {
       return minuteOptions.filter(option => option.value === "00");
+    }
+    
+    // 次の予約の開始時間と同じ時間の場合
+    if (nextReservationLimit && selectedHour === parseInt(nextReservationLimit.hours, 10)) {
+      return minuteOptions.filter(option => {
+        const minute = parseInt(option.value, 10);
+        return minute < parseInt(nextReservationLimit.minutes, 10);
+      });
     }
     
     // 選択した時間が開始時間と同じ場合、開始時間の分以上の値のみを選択可能に
@@ -148,7 +189,7 @@ function TimeSelection() {
     
     // 選択した時間が開始時間より後の場合、すべての分を選択可能に
     return minuteOptions;
-  }, [startTime, endHour]);
+  }, [startTime, endHour, nextReservationLimit]);
 
   const handleNext = () => {
     if (startTime && endTime && room) {
@@ -195,6 +236,13 @@ function TimeSelection() {
           <CardContent>
             {startTime ? (
               <div className="flex flex-col items-center">
+                {/* 次の予約がある場合は表示 */}
+                {nextReservationLimit && (
+                  <div className="mb-4 p-3 bg-yellow-100 rounded-md text-center">
+                    <p className="font-medium">次の予約: {nextReservationLimit.timeString}〜</p>
+                    <p className="text-sm text-gray-600">※終了時間は次の予約開始時間を超えて設定できません</p>
+                  </div>
+                )}
                 <div className="flex justify-center items-center gap-8 mb-6">
                   {/* 時間選択ホイールピッカー */}
                   <div className="flex flex-col items-center">

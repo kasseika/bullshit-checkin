@@ -140,8 +140,15 @@ function ReservationSelection() {
   // 予約なしで続ける場合
   const handleNoReservation = () => {
     if (room) {
-      // 時間選択画面に遷移
-      router.push(`/checkin/time?room=${room}`);
+      // 時間選択画面に遷移（次の予約情報があれば渡す）
+      let url = `/checkin/time?room=${room}`;
+      
+      // 次の予約がある場合は、その開始時間を終了時間の上限として渡す
+      if (nextReservation) {
+        url += `&nextReservationStart=${nextReservation.startTime}`;
+      }
+      
+      router.push(url);
     }
   };
 
