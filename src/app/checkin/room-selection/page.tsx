@@ -35,8 +35,14 @@ function RoomSelectionContent() {
       // 予約ありの場合は予約選択画面へ
       router.push(`/checkin/reservation?room=${roomId}`);
     } else {
-      // 予約なしの場合は直接時間選択画面へ
-      router.push(`/checkin/time?room=${roomId}`);
+      // 予約なしの場合
+      if (roomId === "private4" || roomId === "large6") {
+        // 4番個室・6番大部屋の場合は予約情報確認画面へ
+        router.push(`/checkin/reservation?room=${roomId}&noReservation=true`);
+      } else {
+        // その他の部屋は直接時間選択画面へ
+        router.push(`/checkin/time?room=${roomId}`);
+      }
     }
   };
   

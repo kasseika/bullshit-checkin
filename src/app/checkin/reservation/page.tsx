@@ -18,11 +18,14 @@ function ReservationSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const room = searchParams.get("room");
+  const noReservation = searchParams.get("noReservation") === "true";
   
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<{ status: string; isAvailable: boolean }>({ status: "読み込み中...", isAvailable: false });
+  const [nextReservation, setNextReservation] = useState<Reservation | null>(null);
 
   // UTCの時間文字列をJST（UTC+9）に変換する関数
   const convertToJST = (timeStr: string): string => {
@@ -65,11 +68,56 @@ function ReservationSelection() {
       }));
       
       setReservations(jstReservations);
+      
+      // 現在の使用状況と次の予約を設定
+      setCurrentStatus(determineCurrentStatus(jstReservations));
+      setNextReservation(findNextReservation(jstReservations));
     } catch (error) {
       console.error('Error fetching reservations:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // 現在の使用状況を判断する関数
+  const determineCurrentStatus = (reservations: Reservation[]): { status: string; isAvailable: boolean } => {
+    if (reservations.length === 0) return { status: "使用可能", isAvailable: true };
+    
+    // 現在の時刻を取得
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+    
+    // 現在時刻が予約時間内にあるかチェック
+    for (const reservation of reservations) {
+      if (reservation.startTime <= currentTimeStr && currentTimeStr < reservation.endTime) {
+        return {
+          status: `使用中: ${reservation.title} (${reservation.startTime}〜${reservation.endTime})`,
+          isAvailable: false
+        };
+      }
+    }
+    
+    return { status: "使用可能", isAvailable: true };
+  };
+
+  // 次の予約を取得する関数
+  const findNextReservation = (reservations: Reservation[]): Reservation | null => {
+    if (reservations.length === 0) return null;
+    
+    // 現在の時刻を取得
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+    
+    // 現在時刻以降の予約を時間順にソート
+    const futureReservations = reservations
+      .filter(res => res.startTime > currentTimeStr)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+    
+    return futureReservations.length > 0 ? futureReservations[0] : null;
   };
 
   // 予約を選択した場合
@@ -100,17 +148,72 @@ function ReservationSelection() {
   // 戻るボタンを押した場合
   const handleBack = () => {
     // 部屋選択画面に戻る
-    router.push("/checkin/room-selection?hasReservation=true");
+    if (noReservation) {
+      router.push("/checkin/room-selection?hasReservation=false");
+    } else {
+      router.push("/checkin/room-selection?hasReservation=true");
+    }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-3xl font-bold mb-8">本日の予約一覧</h1>
+      <h1 className="text-3xl font-bold mb-8">
+        {noReservation ? `${ROOM_NAMES[room || '']}の予約状況` : '本日の予約一覧'}
+      </h1>
       <div className="w-full max-w-2xl mb-8">
         {loading ? (
           <div className="text-center py-12">
             <p className="text-xl">予約情報を取得中...</p>
           </div>
+        ) : noReservation ? (
+          // 予約なしモードの場合は現在の使用状況と次の予約を表示
+          <Card className={currentStatus.isAvailable ? "border-green-500" : "border-yellow-500 border-2"}>
+            <CardHeader className={currentStatus.isAvailable ? "bg-green-50" : "bg-yellow-50"}>
+              <CardTitle className="text-xl text-center">
+                {currentStatus.isAvailable
+                  ? `${ROOM_NAMES[room || '']}の予約状況`
+                  : `${ROOM_NAMES[room || '']}は現在ご利用できません`}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">現在の使用状況</h3>
+                  <p className={`p-3 rounded-md ${currentStatus.isAvailable ? "bg-green-50 text-green-800" : "bg-yellow-50 text-yellow-800"}`}>
+                    {currentStatus.status}
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">次の予約</h3>
+                  {nextReservation ? (
+                    <div className="p-3 bg-gray-50 rounded-md">
+                      <p className="font-medium">{nextReservation.title}</p>
+                      <p className="text-gray-600">{nextReservation.startTime} 〜 {nextReservation.endTime}</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-700 p-3 bg-gray-50 rounded-md">なし</p>
+                  )}
+                </div>
+              </div>
+              
+              {currentStatus.isAvailable ? (
+                <Button
+                  className="w-full mt-6 bg-green-600 hover:bg-green-700"
+                  onClick={handleNoReservation}
+                >
+                  この部屋を使用する
+                </Button>
+              ) : (
+                <Button
+                  className="w-full mt-6"
+                  disabled
+                >
+                  現在使用できません
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         ) : reservations.length > 0 ? (
           <div className="grid grid-cols-1 gap-4">
             {reservations.map((reservation) => (
