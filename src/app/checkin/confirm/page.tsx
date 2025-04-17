@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Suspense, useState, useEffect } from "react";
 import { saveCheckInData } from "@/lib/firestore";
+import { addCheckInEvent } from "@/lib/googleCalendar";
 import { toast } from "sonner";
 
 // 部屋名のマッピング
@@ -137,6 +138,31 @@ function Confirm() {
           
           // オフライン保存の場合はここで処理を終了
           return;
+        }
+        
+        // 予約なしで4番個室または6番大部屋を選択した場合、Googleカレンダーに予定を追加
+        if (navigator.onLine && !reservationId && (room === "private4" || room === "large6")) {
+          try {
+            console.log(`${roomNames[room]}のチェックインをカレンダーに追加します。部屋ID: ${room}`);
+            const calendarSuccess = await addCheckInEvent(room, startTime, endTime);
+            if (calendarSuccess) {
+              console.log(`${roomNames[room]}のチェックインをカレンダーに追加しました`);
+              toast.success(`${roomNames[room]}のチェックインをカレンダーに追加しました`, {
+                duration: 3000,
+              });
+            } else {
+              console.error(`${roomNames[room]}のチェックインをカレンダーに追加できませんでした。部屋ID: ${room}`);
+              toast.error(`${roomNames[room]}のチェックインをカレンダーに追加できませんでした`, {
+                duration: 5000,
+              });
+            }
+          } catch (error) {
+            console.error("カレンダーへの追加中にエラーが発生しました:", error);
+            toast.error("カレンダーへの追加中にエラーが発生しました", {
+              description: error instanceof Error ? error.message : "不明なエラー",
+              duration: 5000,
+            });
+          }
         }
         
         setSaveStatus('success');
