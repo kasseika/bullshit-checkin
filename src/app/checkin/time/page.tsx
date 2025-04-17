@@ -267,9 +267,12 @@ function TimeSelection() {
                     <p className="text-sm text-gray-600">※終了時間は次の予約開始時間を超えて設定できません</p>
                   </div>
                 )}
-                <div className="mb-4 p-3 bg-yellow-100 rounded-md text-center">
-                  <p className="text-sm text-gray-600">一度確定すると変更できません。次の利用者のために時間内にご退室をお願いします。</p>
-                </div>
+                {/* 4番個室、6番大部屋、6番工作室の場合のみ注意書きを表示 */}
+                {(room === "private4" || room === "large6" || room === "studio6") && (
+                  <div className="mb-4 p-3 bg-yellow-100 rounded-md text-center">
+                    <p className="text-sm text-gray-600">一度確定すると変更できません。次の利用者のために時間内にご退室をお願いします。</p>
+                  </div>
+                )}
                 <div className="flex justify-center items-center gap-8 mb-6">
                   {/* 時間選択ホイールピッカー */}
                   <div className="flex flex-col items-center">
