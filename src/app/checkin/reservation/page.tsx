@@ -169,9 +169,10 @@ function ReservationSelection() {
           // 予約なしモードの場合は現在の使用状況と次の予約を表示
           <Card
             className={currentStatus.isAvailable
-              ? "border-green-500 bg-green-50"
+              ? "border-green-500 bg-green-50 cursor-pointer hover:bg-green-100 transition-colors"
               : "border-red-500 border-2 bg-red-50"
             }
+            onClick={currentStatus.isAvailable ? handleNoReservation : undefined}
           >
             <CardHeader>
               <CardTitle className={"text-xl text-center"}>
