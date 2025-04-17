@@ -167,9 +167,14 @@ function ReservationSelection() {
           </div>
         ) : noReservation ? (
           // 予約なしモードの場合は現在の使用状況と次の予約を表示
-          <Card className={currentStatus.isAvailable ? "border-green-500" : "border-yellow-500 border-2"}>
-            <CardHeader className={currentStatus.isAvailable ? "bg-green-50" : "bg-yellow-50"}>
-              <CardTitle className="text-xl text-center">
+          <Card
+            className={currentStatus.isAvailable
+              ? "border-green-500 bg-green-50"
+              : "border-red-500 border-2 bg-red-50"
+            }
+          >
+            <CardHeader>
+              <CardTitle className={"text-xl text-center"}>
                 {currentStatus.isAvailable
                   ? `${ROOM_NAMES[room || '']}の予約状況`
                   : `${ROOM_NAMES[room || '']}は現在ご利用できません`}
@@ -179,7 +184,7 @@ function ReservationSelection() {
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">現在の使用状況</h3>
-                  <p className={`p-3 rounded-md ${currentStatus.isAvailable ? "bg-green-50 text-green-800" : "bg-yellow-50 text-yellow-800"}`}>
+                  <p className={"p-3 rounded-md bg-white"}>
                     {currentStatus.status}
                   </p>
                 </div>
@@ -187,12 +192,12 @@ function ReservationSelection() {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">次の予約</h3>
                   {nextReservation ? (
-                    <div className="p-3 bg-gray-50 rounded-md">
+                    <div className="p-3 bg-white rounded-md">
                       <p className="font-medium">{nextReservation.title}</p>
                       <p className="text-gray-600">{nextReservation.startTime} 〜 {nextReservation.endTime}</p>
                     </div>
                   ) : (
-                    <p className="text-gray-700 p-3 bg-gray-50 rounded-md">なし</p>
+                    <p className="text-gray-700 p-3 bg-white rounded-md">なし</p>
                   )}
                 </div>
               </div>
@@ -206,7 +211,7 @@ function ReservationSelection() {
                 </Button>
               ) : (
                 <Button
-                  className="w-full mt-6"
+                  className="w-full mt-6 bg-red-600 text-white cursor-not-allowed"
                   disabled
                 >
                   現在使用できません
