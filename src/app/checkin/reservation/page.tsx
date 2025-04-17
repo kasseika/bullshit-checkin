@@ -259,11 +259,17 @@ function ReservationSelection() {
           </Card>
         ) : reservations.length > 0 ? (
           <div className="grid grid-cols-1 gap-4">
-            {reservations.map((reservation) => (
+            {reservations.map((reservation) => {
+              // チェックイン済みかどうかを判定
+              const isCheckedIn = checkedInReservationIds.includes(reservation.id);
+              
+              return (
               <Card
                 key={reservation.id}
-                className="cursor-pointer hover:bg-gray-50"
-                onClick={() => handleSelectReservation(reservation)}
+                className={isCheckedIn
+                  ? "border-green-100 bg-green-50 cursor-not-allowed"
+                  : "cursor-pointer hover:bg-gray-50"}
+                onClick={isCheckedIn ? undefined : () => handleSelectReservation(reservation)}
               >
                 <CardContent className="p-6">
                   <div className="flex justify-between items-center">
@@ -278,11 +284,18 @@ function ReservationSelection() {
                         </p>
                       )}
                     </div>
-                    <Button variant="outline">選択</Button>
+                    {isCheckedIn ? (
+                      <Button variant="outline" disabled className="opacity-50">
+                        選択
+                      </Button>
+                    ) : (
+                      <Button variant="outline">選択</Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            );
+            })}
           </div>
         ) : (
           <Card>
