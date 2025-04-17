@@ -1,4 +1,4 @@
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { firestoreDb } from './firebase';
 import { saveToIndexedDB, getAllPendingCheckins, removeFromIndexedDB, updateAttempts } from './indexedDb';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ export interface CheckInData {
   purpose: string;
   ageGroup: string;
   checkInTime: string;
+  reservationId?: string | null;
 }
 
 /**
@@ -198,5 +199,46 @@ export function startNetworkMonitoring(): void {
     setTimeout(() => {
       resendPendingCheckins();
     }, 3000);
+  }
+}
+
+/**
+ * 本日チェックイン済みの予約IDのリストを取得する関数
+ * @returns チェックイン済みの予約IDのリスト
+ */
+export async function getCheckedInReservationIds(): Promise<string[]> {
+  try {
+    // ネットワーク状態をチェック
+    if (!navigator.onLine) {
+      console.log('オフライン状態のため、チェックイン済み予約の取得をスキップします。');
+      return [];
+    }
+
+    // 当日の日付を取得（YYYY-MM-DD形式）
+    const today = new Date().toISOString().split('T')[0];
+    
+    // 当日のチェックインデータを取得（インデックスが不要なシンプルなクエリ）
+    const checkinsRef = collection(firestoreDb, 'checkins');
+    const q = query(
+      checkinsRef,
+      where('startDate', '==', today)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    
+    // 予約IDのリストを作成
+    const reservationIds: string[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.reservationId) {
+        reservationIds.push(data.reservationId);
+      }
+    });
+    
+    console.log('チェックイン済みの予約ID:', reservationIds);
+    return reservationIds;
+  } catch (error) {
+    console.error('チェックイン済み予約の取得中にエラーが発生しました:', error);
+    return [];
   }
 }

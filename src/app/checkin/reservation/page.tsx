@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Suspense, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTodayReservations, Reservation } from "@/lib/googleCalendar";
+import { getCheckedInReservationIds } from "@/lib/firestore";
 
 // 部屋名のマッピング
 const ROOM_NAMES: Record<string, string> = {
@@ -23,6 +24,7 @@ function ReservationSelection() {
   const [loading, setLoading] = useState(true);
   const [currentStatus, setCurrentStatus] = useState<{ status: string; isAvailable: boolean }>({ status: "読み込み中...", isAvailable: false });
   const [nextReservation, setNextReservation] = useState<Reservation | null>(null);
+  const [checkedInReservationIds, setCheckedInReservationIds] = useState<string[]>([]);
 
   // UTCの時間文字列をJST（UTC+9）に変換する関数
   const convertToJST = (timeStr: string): string => {
@@ -54,8 +56,14 @@ function ReservationSelection() {
     
     setLoading(true);
     try {
+      // 予約データを取得
       const data = await getTodayReservations(room);
       console.log('Fetched reservations:', data);
+      
+      // チェックイン済みの予約IDを取得
+      const checkedInIds = await getCheckedInReservationIds();
+      setCheckedInReservationIds(checkedInIds);
+      console.log('Checked-in reservation IDs:', checkedInIds);
       
       // 予約データの時間をJSTに変換
       const jstReservations = data.map(reservation => ({
@@ -264,6 +272,11 @@ function ReservationSelection() {
                       <p className="text-gray-600">
                         {reservation.startTime} 〜 {reservation.endTime}
                       </p>
+                      {checkedInReservationIds.includes(reservation.id) && (
+                        <p className="text-green-600 font-medium mt-1">
+                          ✓ チェックイン済み
+                        </p>
+                      )}
                     </div>
                     <Button variant="outline">選択</Button>
                   </div>
