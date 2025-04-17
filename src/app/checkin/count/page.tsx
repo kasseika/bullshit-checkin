@@ -11,6 +11,7 @@ function CountSelection() {
   const room = searchParams.get("room");
   const startTime = searchParams.get("startTime");
   const endTime = searchParams.get("endTime");
+  const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
 
   const [count, setCount] = useState(1); // 初期値を1に設定
 
@@ -19,16 +20,28 @@ function CountSelection() {
   const handleNext = () => {
     if (room && startTime && endTime && count >= 1) {
       // 次の画面に選択した情報を渡す
-      router.push(
-        `/checkin/purpose?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}`
-      );
+      let url = `/checkin/purpose?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}`;
+      
+      // 予約IDがある場合は追加
+      if (reservationId) {
+        url += `&reservationId=${reservationId}`;
+      }
+      
+      router.push(url);
     }
   };
 
   const handleBack = () => {
     if (room) {
       // 前の画面に戻る（時間選択画面）
-      router.push(`/checkin/time?room=${room}`);
+      let url = `/checkin/time?room=${room}`;
+      
+      // 予約IDがある場合は追加
+      if (reservationId && startTime && endTime) {
+        url += `&reservationId=${reservationId}&startTime=${startTime}&endTime=${endTime}`;
+      }
+      
+      router.push(url);
     }
   };
 

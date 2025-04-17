@@ -21,13 +21,19 @@ function Survey() {
   const endTime = searchParams.get("endTime");
   const count = searchParams.get("count");
   const purpose = searchParams.get("purpose");
+  const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
 
   const handleSelect = (ageGroupId: string) => {
     if (room && startTime && endTime && count && purpose) {
       // 確認画面に遷移する
-      router.push(
-        `/checkin/confirm?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purpose}&ageGroup=${ageGroupId}`
-      );
+      let url = `/checkin/confirm?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purpose}&ageGroup=${ageGroupId}`;
+      
+      // 予約IDがある場合は追加
+      if (reservationId) {
+        url += `&reservationId=${reservationId}`;
+      }
+      
+      router.push(url);
     } else {
       console.error("必要な情報が不足しています。", { room, startTime, endTime, count, purpose });
       // エラー処理: 例えば前の画面に戻るなど
@@ -38,7 +44,14 @@ function Survey() {
   const handleBack = () => {
     if (room && startTime && endTime && count) {
       // 前の画面に戻る（利用用途選択画面）
-      router.push(`/checkin/purpose?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}`);
+      let url = `/checkin/purpose?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}`;
+      
+      // 予約IDがある場合は追加
+      if (reservationId) {
+        url += `&reservationId=${reservationId}`;
+      }
+      
+      router.push(url);
     }
   };
 

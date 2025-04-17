@@ -21,20 +21,33 @@ function PurposeSelection() {
   const startTime = searchParams.get("startTime");
   const endTime = searchParams.get("endTime");
   const count = searchParams.get("count");
+  const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
 
   const handleSelect = (purposeId: string) => {
     if (room && startTime && endTime && count) {
       // 次の画面に選択した情報を渡す
-      router.push(
-        `/checkin/survey?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purposeId}`
-      );
+      let url = `/checkin/survey?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purposeId}`;
+      
+      // 予約IDがある場合は追加
+      if (reservationId) {
+        url += `&reservationId=${reservationId}`;
+      }
+      
+      router.push(url);
     }
   };
 
   const handleBack = () => {
     if (room && startTime && endTime) {
       // 前の画面に戻る（人数選択画面）
-      router.push(`/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}`);
+      let url = `/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}`;
+      
+      // 予約IDがある場合は追加
+      if (reservationId) {
+        url += `&reservationId=${reservationId}`;
+      }
+      
+      router.push(url);
     }
   };
 

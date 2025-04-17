@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Suspense, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTodayReservations, Reservation } from "@/lib/googleCalendar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 // 部屋名のマッピング
 const ROOM_NAMES: Record<string, string> = {
@@ -22,8 +21,6 @@ function ReservationSelection() {
   
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<{ status: string; isAvailable: boolean }>({ status: "読み込み中...", isAvailable: false });
   const [nextReservation, setNextReservation] = useState<Reservation | null>(null);
 
@@ -123,18 +120,43 @@ function ReservationSelection() {
   // 予約を選択した場合
   const handleSelectReservation = (reservation: Reservation) => {
     // 選択された予約の時間もJSTに変換（すでに変換済みのデータを使用）
-    setSelectedReservation(reservation);
-    setShowConfirmDialog(true);
+    // 確認ダイアログを表示せずに直接時間選択画面に遷移
+    if (room) {
+      // 次の予約情報を取得
+      const nextRes = findNextReservationAfter(reservation, reservations);
+      
+      // 時間選択画面に遷移（予約情報と次の予約情報を渡す）
+      let url = `/checkin/time?room=${room}&startTime=${reservation.startTime}&endTime=${reservation.endTime}&reservationId=${reservation.id}`;
+      
+      // 次の予約がある場合は、その開始時間を終了時間の上限として渡す
+      if (nextRes) {
+        url += `&nextReservationStart=${nextRes.startTime}`;
+      }
+      
+      router.push(url);
+    }
   };
 
-  // 予約確認ダイアログで確定を押した場合
-  const handleConfirmReservation = () => {
-    if (selectedReservation && room) {
-      // 人数選択画面に遷移（予約情報を渡す）
-      router.push(
-        `/checkin/count?room=${room}&startTime=${selectedReservation.startTime}&endTime=${selectedReservation.endTime}&reservationId=${selectedReservation.id}`
-      );
+  // 予約確認ダイアログで確定を押した場合の処理は削除（handleSelectReservationに統合）
+
+  // 特定の予約の後の次の予約を見つける関数
+  const findNextReservationAfter = (currentReservation: Reservation, allReservations: Reservation[]): Reservation | null => {
+    if (allReservations.length <= 1) return null;
+    
+    // 予約を時間順にソート
+    const sortedReservations = [...allReservations].sort((a, b) =>
+      a.startTime.localeCompare(b.startTime)
+    );
+    
+    // 現在の予約のインデックスを見つける
+    const currentIndex = sortedReservations.findIndex(res => res.id === currentReservation.id);
+    
+    // 次の予約があれば返す
+    if (currentIndex !== -1 && currentIndex < sortedReservations.length - 1) {
+      return sortedReservations[currentIndex + 1];
     }
+    
+    return null;
   };
 
   // 予約なしで続ける場合
@@ -279,45 +301,7 @@ function ReservationSelection() {
         戻る
       </Button>
 
-      {/* 予約確認ダイアログ */}
-      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">予約の確認</DialogTitle>
-            <DialogDescription className="text-lg pt-2">
-              以下の予約でチェックインしますか？
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedReservation && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-md">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="font-medium">予約名:</div>
-                <div>{selectedReservation.title}</div>
-                
-                <div className="font-medium">利用時間:</div>
-                <div>{selectedReservation.startTime} 〜 {selectedReservation.endTime}</div>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter className="mt-4 flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowConfirmDialog(false)}
-              className="flex-1"
-            >
-              キャンセル
-            </Button>
-            <Button
-              onClick={handleConfirmReservation}
-              className="flex-1"
-            >
-              確定
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* 予約確認ダイアログは不要なため削除 */}
     </div>
   );
 }

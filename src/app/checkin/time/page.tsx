@@ -54,6 +54,9 @@ function TimeSelection() {
   const searchParams = useSearchParams();
   const room = searchParams.get("room"); // 前の画面から部屋情報を取得
   const nextReservationStart = searchParams.get("nextReservationStart"); // 次の予約の開始時間
+  const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
+  const paramStartTime = searchParams.get("startTime"); // URLから開始時間を取得（予約ありからの遷移の場合）
+  const paramEndTime = searchParams.get("endTime"); // URLから終了時間を取得（予約ありからの遷移の場合）
 
   // 開始時間は現在時刻で自動設定
   const [startTime, setStartTime] = useState<string | null>(null);
@@ -80,30 +83,41 @@ function TimeSelection() {
 
   // コンポーネントマウント時に現在時刻を設定
   useEffect(() => {
-    const currentTime = getCurrentOrBusinessTime();
-    setStartTime(currentTime);
-    
-    // 開始時間に基づいて終了時間のデフォルト値を設定
-    if (currentTime) {
-      const [startHour] = currentTime.split(":").map(Number);
-      let defaultEndHour = startHour + 1;
+    // 予約ありからの遷移の場合は、URLパラメータから時間を設定
+    if (paramStartTime && paramEndTime) {
+      setStartTime(paramStartTime);
       
-      // 次の予約がある場合は、その開始時間を上限とする
-      if (nextReservationLimit) {
-        const nextHour = parseInt(nextReservationLimit.hours, 10);
-        if (defaultEndHour > nextHour || (defaultEndHour === nextHour && parseInt(nextReservationLimit.minutes, 10) === 0)) {
-          defaultEndHour = nextHour;
-          setEndMinute(nextReservationLimit.minutes);
+      // 終了時間を設定
+      const [endHourStr, endMinuteStr] = paramEndTime.split(":").map(String);
+      setEndHour(endHourStr);
+      setEndMinute(endMinuteStr);
+    } else {
+      // 予約なしの場合は現在時刻を設定
+      const currentTime = getCurrentOrBusinessTime();
+      setStartTime(currentTime);
+      
+      // 開始時間に基づいて終了時間のデフォルト値を設定
+      if (currentTime) {
+        const [startHour] = currentTime.split(":").map(Number);
+        let defaultEndHour = startHour + 1;
+        
+        // 次の予約がある場合は、その開始時間を上限とする
+        if (nextReservationLimit) {
+          const nextHour = parseInt(nextReservationLimit.hours, 10);
+          if (defaultEndHour > nextHour || (defaultEndHour === nextHour && parseInt(nextReservationLimit.minutes, 10) === 0)) {
+            defaultEndHour = nextHour;
+            setEndMinute(nextReservationLimit.minutes);
+          }
         }
+        
+        // 営業時間内に収まるように調整
+        if (defaultEndHour > 18) defaultEndHour = 18;
+        
+        setEndHour(defaultEndHour.toString().padStart(2, "0"));
+        if (defaultEndHour === 18) setEndMinute("00"); // 18時の場合は00分
       }
-      
-      // 営業時間内に収まるように調整
-      if (defaultEndHour > 18) defaultEndHour = 18;
-      
-      setEndHour(defaultEndHour.toString().padStart(2, "0"));
-      if (defaultEndHour === 18) setEndMinute("00"); // 18時の場合は00分
     }
-  }, [nextReservationLimit]);
+  }, [nextReservationLimit, paramStartTime, paramEndTime]);
 
   // 時間が変更されたときに分を調整する
   useEffect(() => {
@@ -194,16 +208,26 @@ function TimeSelection() {
   const handleNext = () => {
     if (startTime && endTime && room) {
       // 次の画面に部屋情報、開始時間、終了時間を渡す
-      router.push(
-        `/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}`
-      );
+      let url = `/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}`;
+      
+      // 予約IDがある場合は追加
+      if (reservationId) {
+        url += `&reservationId=${reservationId}`;
+      }
+      
+      router.push(url);
     }
   };
 
   const handleBack = () => {
     if (room) {
-      // 前の画面に戻る（部屋選択画面）
-      router.push(`/checkin/room`);
+      if (reservationId) {
+        // 予約ありからの遷移の場合は予約選択画面に戻る
+        router.push(`/checkin/reservation?room=${room}`);
+      } else {
+        // 予約なしの場合は部屋選択画面に戻る
+        router.push(`/checkin/room`);
+      }
     }
   };
 
@@ -231,7 +255,7 @@ function TimeSelection() {
         {/* 終了時間選択（ホイールピッカー） */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">終了時間を選択してください</CardTitle>
+            <CardTitle className="text-2xl">終了時間を変更できます</CardTitle>
           </CardHeader>
           <CardContent>
             {startTime ? (
@@ -243,6 +267,9 @@ function TimeSelection() {
                     <p className="text-sm text-gray-600">※終了時間は次の予約開始時間を超えて設定できません</p>
                   </div>
                 )}
+                <div className="mb-4 p-3 bg-yellow-100 rounded-md text-center">
+                  <p className="text-sm text-gray-600">一度確定すると変更できません。次の利用者のために時間内にご退室をお願いします。</p>
+                </div>
                 <div className="flex justify-center items-center gap-8 mb-6">
                   {/* 時間選択ホイールピッカー */}
                   <div className="flex flex-col items-center">

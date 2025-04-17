@@ -47,6 +47,7 @@ function Confirm() {
   const count = searchParams.get("count");
   const purpose = searchParams.get("purpose");
   const ageGroup = searchParams.get("ageGroup");
+  const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'offline' | 'error'>('idle');
 
@@ -110,6 +111,7 @@ function Confirm() {
       purpose,
       ageGroup,
       checkInTime: new Date().toISOString(),
+      reservationId: reservationId || null, // 予約IDがある場合は追加
     };
 
     try {
@@ -171,7 +173,14 @@ function Confirm() {
 
   const handleBack = () => {
     // 前の画面に戻る（アンケート画面）
-    router.push(`/checkin/survey?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purpose}`);
+    let url = `/checkin/survey?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purpose}`;
+    
+    // 予約IDがある場合は追加
+    if (reservationId) {
+      url += `&reservationId=${reservationId}`;
+    }
+    
+    router.push(url);
   };
 
   // ★ 新しいハンドラを追加
