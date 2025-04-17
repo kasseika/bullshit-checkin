@@ -389,3 +389,116 @@ export const addCalendarEvent = functions.region('asia-northeast1').https.onCall
     );
   }
 });
+
+// Cloud Function: カレンダーの予約の終了時間を更新
+export const updateCalendarEvent = functions.region('asia-northeast1').https.onCall(async (data) => {
+  // ログ情報を格納する配列
+  const logs: string[] = [];
+  logs.push(`Function called with eventId: ${data.eventId}, endTime: ${data.endTime}`);
+  
+  try {
+    const { eventId, endTime } = data;
+
+    if (!eventId || !endTime) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Event ID and end time are required'
+      );
+    }
+
+    // カレンダーIDを取得
+    const config = functions.config();
+    if (!config.calendar || !config.calendar.id) {
+      throw new functions.https.HttpsError(
+        'internal',
+        'Calendar ID not configured. Please set calendar.id using firebase functions:config:set'
+      );
+    }
+    const calendarId = config.calendar.id;
+    logs.push(`Using calendar ID: ${calendarId}`);
+
+    // Google Calendar APIクライアントを初期化
+    const calendar = getCalendarClient();
+    logs.push('Calendar client initialized');
+    
+    // まず、イベントを取得
+    logs.push(`Fetching event with ID: ${eventId}`);
+    const getResponse = await calendar.events.get({
+      calendarId,
+      eventId,
+    });
+    
+    const event = getResponse.data;
+    if (!event) {
+      throw new functions.https.HttpsError(
+        'not-found',
+        `Event with ID ${eventId} not found`
+      );
+    }
+    
+    logs.push(`Event found: ${event.summary}`);
+    
+    // 当日の日付を取得
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const date = today.getDate();
+    
+    // 終了時刻を解析
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+    logs.push(`New end time: ${endHour}:${endMinute}`);
+    
+    // タイムゾーンを考慮した日時文字列を作成（JSTとして扱う）
+    const endDateTimeStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}T${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}:00+09:00`;
+    logs.push(`New end time (JST): ${endDateTimeStr}`);
+    
+    // イベントの終了時間を更新
+    const updatedEvent = {
+      ...event,
+      end: {
+        dateTime: endDateTimeStr,
+        timeZone: 'Asia/Tokyo',
+      },
+    };
+    
+    // カレンダーのイベントを更新
+    logs.push('Updating event in Google Calendar...');
+    logs.push(`Updated event details: ${JSON.stringify(updatedEvent)}`);
+    
+    try {
+      const response = await calendar.events.update({
+        calendarId,
+        eventId,
+        requestBody: updatedEvent,
+      });
+      
+      logs.push(`Event updated successfully. Updated ID: ${response.data.id}`);
+    } catch (updateError) {
+      const errorMessage = updateError instanceof Error ? updateError.message : 'Unknown error';
+      logs.push(`Error updating event: ${errorMessage}`);
+      if (updateError instanceof Error && 'response' in updateError) {
+        // @ts-expect-error Google API error response structure
+        const responseData = updateError.response?.data;
+        if (responseData) {
+          logs.push(`API Error details: ${JSON.stringify(responseData)}`);
+        }
+      }
+      throw updateError;
+    }
+    
+    return {
+      success: true,
+      eventId: eventId,
+      logs
+    };
+  } catch (error) {
+    console.error('Error updating calendar event:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logs.push(`Error: ${errorMessage}`);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to update calendar event',
+      { error: errorMessage, logs }
+    );
+  }
+});

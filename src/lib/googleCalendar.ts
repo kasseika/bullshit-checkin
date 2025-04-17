@@ -143,3 +143,42 @@ export async function addCheckInEvent(room: string, startTime: string, endTime: 
     return false;
   }
 }
+
+// カレンダーの予約の終了時間を更新する関数
+export async function updateReservationEndTime(reservationId: string, endTime: string): Promise<boolean> {
+  try {
+    // Firebase Functionsを呼び出す
+    const updateCalendarEvent = httpsCallable(functions, 'updateCalendarEvent');
+    
+    const result = await updateCalendarEvent({ eventId: reservationId, endTime });
+    const data = result.data as { success: boolean, eventId: string, logs?: string[] };
+    
+    // Cloud Functionsのログ情報をコンソールに表示
+    if (data.logs && data.logs.length > 0) {
+      console.group('Cloud Functions Logs:');
+      data.logs.forEach(log => console.log(log));
+      console.groupEnd();
+    }
+    
+    return data.success;
+  } catch (error) {
+    console.error('Error updating reservation end time:', error);
+    
+    // エラーオブジェクトからログ情報を取得して表示
+    if (error instanceof FirebaseError) {
+      const fbError = error as FirebaseFunctionError;
+      if (fbError.details) {
+        if (fbError.details.logs && fbError.details.logs.length > 0) {
+          console.group('Cloud Functions Error Logs:');
+          fbError.details.logs.forEach(log => console.log(log));
+          console.groupEnd();
+        }
+        if (fbError.details.error) {
+          console.error('Error details:', fbError.details.error);
+        }
+      }
+    }
+    
+    return false;
+  }
+}

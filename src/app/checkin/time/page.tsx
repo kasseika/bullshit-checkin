@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { updateReservationEndTime } from "@/lib/googleCalendar";
+import { toast } from "sonner";
 
 // 注: 以前の30分刻みの時間リストは新しい実装では使用しないため削除
 
@@ -205,8 +207,25 @@ function TimeSelection() {
     return minuteOptions;
   }, [startTime, endHour, nextReservationLimit]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (startTime && endTime && room) {
+      // 予約ありからの遷移で、終了時間が変更された場合
+      if (reservationId && paramEndTime && paramEndTime !== endTime) {
+        try {
+          // カレンダーの予約の終了時間を更新
+          const success = await updateReservationEndTime(reservationId, endTime);
+          if (success) {
+            toast.success("予約の終了時間を更新しました");
+          } else {
+            // 更新に失敗した場合も進めるが、警告を表示
+            toast.warning("予約の終了時間の更新に失敗しましたが、チェックインは続行できます");
+          }
+        } catch (error) {
+          console.error("Error updating reservation end time:", error);
+          toast.error("予約の更新中にエラーが発生しました");
+        }
+      }
+
       // 次の画面に部屋情報、開始時間、終了時間を渡す
       let url = `/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}`;
       
