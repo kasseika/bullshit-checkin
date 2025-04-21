@@ -38,6 +38,9 @@ function RoomSelectionContent() {
       if (roomId === "private4" || roomId === "large6") {
         // 4番個室・6番大部屋の場合は予約情報確認画面へ
         router.push(`/checkin/reservation?room=${roomId}&noReservation=true`);
+      } else if (roomId === "tour") {
+        // 見学の場合は、利用目的を「視察・見学・取材」に自動設定して時間選択画面へ
+        router.push(`/checkin/time?room=${roomId}&purpose=tour`);
       } else {
         // その他の部屋は直接時間選択画面へ
         router.push(`/checkin/time?room=${roomId}`);

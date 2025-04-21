@@ -20,8 +20,17 @@ function CountSelection() {
   const handleDecrement = () => setCount((prev) => Math.max(1, prev - 1)); // 1未満にならないように
   const handleNext = () => {
     if (room && startTime && endTime && count >= 1) {
-      // 次の画面に選択した情報を渡す
-      let url = `/checkin/purpose?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}`;
+      // 見学の場合は利用目的ページをスキップ
+      const purpose = searchParams.get("purpose");
+      
+      let url;
+      if (purpose) {
+        // 見学の場合はアンケートページに直接遷移
+        url = `/checkin/survey?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purpose}`;
+      } else {
+        // 通常の場合は利用目的ページへ
+        url = `/checkin/purpose?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}`;
+      }
       
       // 予約IDがある場合は追加
       if (reservationId) {

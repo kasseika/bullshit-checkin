@@ -49,20 +49,37 @@ function Survey() {
 
   const handleBack = () => {
     if (room && startTime && endTime && count) {
-      // 前の画面に戻る（利用用途選択画面）
-      let url = `/checkin/purpose?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}`;
-      
-      // 予約IDがある場合は追加
-      if (reservationId) {
-        url += `&reservationId=${reservationId}`;
+      // 見学の場合は人数選択画面に戻る
+      if (purpose === "tour") {
+        let url = `/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}&purpose=${purpose}`;
         
-        // 元の終了時間がある場合は追加
-        if (originalEndTime) {
-          url += `&originalEndTime=${originalEndTime}`;
+        // 予約IDがある場合は追加
+        if (reservationId) {
+          url += `&reservationId=${reservationId}`;
+          
+          // 元の終了時間がある場合は追加
+          if (originalEndTime) {
+            url += `&originalEndTime=${originalEndTime}`;
+          }
         }
+        
+        router.push(url);
+      } else {
+        // 通常の場合は利用用途選択画面に戻る
+        let url = `/checkin/purpose?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}`;
+        
+        // 予約IDがある場合は追加
+        if (reservationId) {
+          url += `&reservationId=${reservationId}`;
+          
+          // 元の終了時間がある場合は追加
+          if (originalEndTime) {
+            url += `&originalEndTime=${originalEndTime}`;
+          }
+        }
+        
+        router.push(url);
       }
-      
-      router.push(url);
     }
   };
 

@@ -210,6 +210,12 @@ function TimeSelection() {
       // 次の画面に部屋情報、開始時間、終了時間を渡す
       let url = `/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}`;
       
+      // 見学の場合は利用目的も渡す
+      const purpose = searchParams.get("purpose");
+      if (purpose) {
+        url += `&purpose=${purpose}`;
+      }
+      
       // 予約IDがある場合は追加
       if (reservationId) {
         url += `&reservationId=${reservationId}`;
