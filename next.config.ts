@@ -49,6 +49,10 @@ const pwaConfig = {
 const nextConfig: NextConfig = {
   output: 'export', // Firebase Functionsを使用するため、静的エクスポートを有効化
   distDir: 'out',
+  // 画像最適化を無効化（静的エクスポートと互換性を持たせるため）
+  images: {
+    unoptimized: true,
+  },
   // functionsディレクトリをビルドプロセスから除外
   typescript: {
     ignoreBuildErrors: true, // ビルド時の型エラーを無視

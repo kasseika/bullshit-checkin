@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 
 // useSearchParamsを使用する部分を別コンポーネントに分離
-function CheckinContent() {
+function ReservationSelectionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showDialog, setShowDialog] = useState(false);
@@ -54,6 +54,11 @@ function CheckinContent() {
     router.push("/checkin/room-selection?hasReservation=false");
   };
   
+  // 戻るボタンを押したときの処理
+  const handleBack = () => {
+    router.push("/checkin/parking");
+  };
+  
   return (
     <>
       <div className="grid grid-cols-1 gap-8 w-full max-w-md">
@@ -76,6 +81,16 @@ function CheckinContent() {
           予約なし
         </Button>
       </div>
+      
+      {/* 戻るボタン */}
+      <Button
+        variant="outline"
+        size="lg"
+        onClick={handleBack}
+        className="mt-8 w-full max-w-xs text-xl h-12"
+      >
+        戻る
+      </Button>
 
       {/* チェックイン完了モーダル */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
@@ -122,32 +137,12 @@ function CheckinContent() {
   );
 }
 
-export default function Home() {
-  // クライアントサイドでのリダイレクトを行うためのコンポーネント
-  function RedirectToParkingPage() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    
-    useEffect(() => {
-      // fromParkingパラメータがある場合はリダイレクトしない
-      // これにより、駐車場確認ページからの遷移時には予約選択画面が表示される
-      const fromParking = searchParams.get("fromParking");
-      if (fromParking !== "true") {
-        // 駐車場確認ページにリダイレクト
-        router.push("/checkin/parking");
-      }
-    }, [router, searchParams]);
-    
-    return null;
-  }
-  
+export default function ReservationSelectionPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">予約の有無を選択してください</h1>
       <Suspense fallback={<div>Loading...</div>}>
-        {/* リダイレクト用コンポーネントを追加 */}
-        <RedirectToParkingPage />
-        <CheckinContent />
+        <ReservationSelectionContent />
       </Suspense>
     </div>
   );
