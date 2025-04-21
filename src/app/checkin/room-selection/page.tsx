@@ -13,8 +13,7 @@ function RoomSelectionContent() {
   // 予約ありの場合の部屋リスト
   const reservationRooms = [
     { id: "private4", name: "4番個室" },
-    { id: "large6", name: "6番大部屋" },
-    { id: "studio6", name: "6番工作室" },
+    { id: "large6", name: "6番 大部屋・工作室" },
   ];
   
   // 予約なしの場合の部屋リスト
@@ -22,7 +21,7 @@ function RoomSelectionContent() {
     { id: "room1", name: "1番" },
     { id: "private4", name: "4番個室" },
     { id: "large4", name: "4番大部屋" },
-    { id: "large6", name: "6番大部屋" },
+    { id: "large6", name: "6番 大部屋・工作室" },
     { id: "tour", name: "見学" },
   ];
   
@@ -55,7 +54,7 @@ function RoomSelectionContent() {
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">使用する部屋を選択してください</h1>
       
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-2xl mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-6 w-full max-w-2xl mb-8">
         {rooms.map((room) => (
           <Button
             key={room.id}

@@ -10,8 +10,8 @@ import { getCheckedInReservationIds } from "@/lib/firestore";
 // 部屋名のマッピング
 const ROOM_NAMES: Record<string, string> = {
   'private4': '4番個室',
-  'large6': '6番大部屋',
-  'studio6': '6番工作室',
+  'large6': '6番 大部屋・工作室',
+  'studio6': '6番 大部屋・工作室',
 };
 
 function ReservationSelection() {
