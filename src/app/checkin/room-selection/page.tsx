@@ -21,7 +21,7 @@ function RoomSelectionContent() {
     { id: "room1", name: "1番" },
     { id: "private4", name: "4番個室" },
     { id: "large4", name: "4番大部屋" },
-    { id: "large6", name: "6番 大部屋・工作室" },
+    { id: "large6", name: "6番大部屋" },
     { id: "tour", name: "見学" },
   ];
   

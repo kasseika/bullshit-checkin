@@ -195,7 +195,9 @@ function ReservationSelection() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-3xl font-bold mb-8">
-        {noReservation ? `${ROOM_NAMES[room || '']}の予約状況` : '本日の予約一覧'}
+        {noReservation
+          ? `${room === 'large6' ? '6番大部屋' : ROOM_NAMES[room || '']}の予約状況`
+          : '本日の予約一覧'}
       </h1>
       <div className="w-full max-w-2xl mb-8">
         {loading ? (
@@ -214,8 +216,8 @@ function ReservationSelection() {
             <CardHeader>
               <CardTitle className={"text-xl text-center"}>
                 {currentStatus.isAvailable
-                  ? `${ROOM_NAMES[room || '']}の予約状況`
-                  : `${ROOM_NAMES[room || '']}は現在ご利用できません`}
+                  ? `${room === 'large6' && noReservation ? '6番大部屋' : ROOM_NAMES[room || '']}の予約状況`
+                  : `${room === 'large6' && noReservation ? '6番大部屋' : ROOM_NAMES[room || '']}は現在ご利用できません`}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -304,7 +306,7 @@ function ReservationSelection() {
             </CardHeader>
             <CardContent>
               <p className="text-center text-gray-600 mb-4">
-                本日の{ROOM_NAMES[room || '']}の予約はありません。
+                本日の{room === 'large6' && noReservation ? '6番大部屋' : ROOM_NAMES[room || '']}の予約はありません。
               </p>
               <Button
                 className="w-full"
