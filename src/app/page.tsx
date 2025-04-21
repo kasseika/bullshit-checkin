@@ -124,17 +124,23 @@ function CheckinContent() {
 
 export default function Home() {
   // クライアントサイドでのリダイレクトを行うためのコンポーネント
-  function RedirectToParkingPage() {
+  function RedirectToWelcomePage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     
     useEffect(() => {
-      // fromParkingパラメータがある場合はリダイレクトしない
-      // これにより、駐車場確認ページからの遷移時には予約選択画面が表示される
-      const fromParking = searchParams.get("fromParking");
-      if (fromParking !== "true") {
+      // fromWelcomeとfromParkingパラメータをチェック
+      const fromWelcome = searchParams.get("fromWelcome") === "true";
+      const fromParking = searchParams.get("fromParking") === "true";
+      
+      // 両方のパラメータがある場合はリダイレクトしない
+      // これにより、ウェルカムページと駐車場確認ページの両方を通過した場合のみ予約選択画面が表示される
+      if (!fromWelcome) {
+        // ウェルカムページにリダイレクト
+        router.push("/checkin/welcome");
+      } else if (fromWelcome && !fromParking) {
         // 駐車場確認ページにリダイレクト
-        router.push("/checkin/parking");
+        router.push("/checkin/parking?fromWelcome=true");
       }
     }, [router, searchParams]);
     
@@ -146,7 +152,7 @@ export default function Home() {
       <h1 className="text-4xl font-bold mb-12">予約の有無を選択してください</h1>
       <Suspense fallback={<div>Loading...</div>}>
         {/* リダイレクト用コンポーネントを追加 */}
-        <RedirectToParkingPage />
+        <RedirectToWelcomePage />
         <CheckinContent />
       </Suspense>
     </div>

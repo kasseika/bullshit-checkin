@@ -10,8 +10,15 @@ function ParkingConfirmation() {
 
   // 次へボタンを押したときの処理
   const handleNext = () => {
-    // ルートページに遷移（fromParkingパラメータを追加）
-    router.push("/?fromParking=true");
+    const searchParams = new URLSearchParams(window.location.search);
+    const fromWelcome = searchParams.get("fromWelcome") === "true";
+    
+    // ルートページに遷移（fromWelcomeとfromParkingパラメータを追加）
+    if (fromWelcome) {
+      router.push("/?fromWelcome=true&fromParking=true");
+    } else {
+      router.push("/?fromParking=true");
+    }
   };
 
   return (
