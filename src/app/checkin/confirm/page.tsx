@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Suspense, useState, useEffect } from "react";
 import { saveCheckInData } from "@/lib/firestore";
-import { addCheckInEvent } from "@/lib/googleCalendar";
+import { addCheckInEvent, updateReservationEndTime } from "@/lib/googleCalendar";
 import { toast } from "sonner";
 
 // 部屋名のマッピング
@@ -49,6 +49,7 @@ function Confirm() {
   const purpose = searchParams.get("purpose");
   const ageGroup = searchParams.get("ageGroup");
   const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
+  const originalEndTime = searchParams.get("originalEndTime"); // 元の終了時間（予約時間変更の検出用）
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'offline' | 'error'>('idle');
 
@@ -140,8 +141,33 @@ function Confirm() {
           return;
         }
         
-        // 予約なしで4番個室または6番大部屋を選択した場合、Googleカレンダーに予定を追加
-        if (navigator.onLine && !reservationId && (room === "private4" || room === "large6")) {
+        // 予約ありからの遷移で、終了時間が変更された場合、Googleカレンダーの予約を更新
+        if (navigator.onLine && reservationId && originalEndTime && originalEndTime !== endTime) {
+          try {
+            console.log(`予約ID: ${reservationId} の終了時間を ${originalEndTime} から ${endTime} に更新します`);
+            const updateSuccess = await updateReservationEndTime(reservationId, endTime);
+            if (updateSuccess) {
+              console.log(`予約の終了時間を更新しました`);
+              toast.success("予約の終了時間を更新しました", {
+                duration: 3000,
+              });
+            } else {
+              console.error(`予約の終了時間の更新に失敗しました`);
+              toast.warning("予約の終了時間の更新に失敗しましたが、チェックインは続行できます", {
+                duration: 5000,
+              });
+            }
+          } catch (error) {
+            console.error("予約の更新中にエラーが発生しました:", error);
+            toast.error("予約の更新中にエラーが発生しました", {
+              description: error instanceof Error ? error.message : "不明なエラー",
+              duration: 5000,
+            });
+          }
+        }
+        
+        // 予約なしで4番個室または6番大部屋または6番工作室を選択した場合、Googleカレンダーに予定を追加
+        if (navigator.onLine && !reservationId && (room === "private4" || room === "large6" || room === "studio6")) {
           try {
             console.log(`${roomNames[room]}のチェックインをカレンダーに追加します。部屋ID: ${room}`);
             const calendarSuccess = await addCheckInEvent(room, startTime, endTime);

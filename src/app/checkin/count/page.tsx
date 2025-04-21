@@ -12,6 +12,7 @@ function CountSelection() {
   const startTime = searchParams.get("startTime");
   const endTime = searchParams.get("endTime");
   const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
+  const originalEndTime = searchParams.get("originalEndTime"); // 元の終了時間（予約時間変更の検出用）
 
   const [count, setCount] = useState(1); // 初期値を1に設定
 
@@ -25,6 +26,11 @@ function CountSelection() {
       // 予約IDがある場合は追加
       if (reservationId) {
         url += `&reservationId=${reservationId}`;
+        
+        // 元の終了時間がある場合は追加
+        if (originalEndTime) {
+          url += `&originalEndTime=${originalEndTime}`;
+        }
       }
       
       router.push(url);
@@ -39,6 +45,11 @@ function CountSelection() {
       // 予約IDがある場合は追加
       if (reservationId && startTime && endTime) {
         url += `&reservationId=${reservationId}&startTime=${startTime}&endTime=${endTime}`;
+        
+        // 元の終了時間がある場合は追加
+        if (originalEndTime) {
+          url += `&originalEndTime=${originalEndTime}`;
+        }
       }
       
       router.push(url);

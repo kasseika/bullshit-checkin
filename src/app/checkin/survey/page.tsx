@@ -22,6 +22,7 @@ function Survey() {
   const count = searchParams.get("count");
   const purpose = searchParams.get("purpose");
   const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
+  const originalEndTime = searchParams.get("originalEndTime"); // 元の終了時間（予約時間変更の検出用）
 
   const handleSelect = (ageGroupId: string) => {
     if (room && startTime && endTime && count && purpose) {
@@ -31,6 +32,11 @@ function Survey() {
       // 予約IDがある場合は追加
       if (reservationId) {
         url += `&reservationId=${reservationId}`;
+        
+        // 元の終了時間がある場合は追加
+        if (originalEndTime) {
+          url += `&originalEndTime=${originalEndTime}`;
+        }
       }
       
       router.push(url);
@@ -49,6 +55,11 @@ function Survey() {
       // 予約IDがある場合は追加
       if (reservationId) {
         url += `&reservationId=${reservationId}`;
+        
+        // 元の終了時間がある場合は追加
+        if (originalEndTime) {
+          url += `&originalEndTime=${originalEndTime}`;
+        }
       }
       
       router.push(url);
