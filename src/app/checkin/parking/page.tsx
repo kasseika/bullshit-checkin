@@ -2,14 +2,17 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
 function ParkingConfirmation() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   // 次へボタンを押したときの処理
   const handleNext = () => {
+    setIsLoading(true);
+    
     const searchParams = new URLSearchParams(window.location.search);
     const fromWelcome = searchParams.get("fromWelcome") === "true";
     
@@ -48,6 +51,7 @@ function ParkingConfirmation() {
             size="lg"
             className="w-full h-14 text-xl"
             onClick={handleNext}
+            isLoading={isLoading}
           >
             確認しました
           </Button>

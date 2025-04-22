@@ -17,6 +17,7 @@ function CheckinContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showDialog, setShowDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState<'reservation' | 'noReservation' | null>(null);
   
   // 予約情報を取得
   const checkinInfo = {
@@ -46,11 +47,13 @@ function CheckinContent() {
 
   // 予約ありを選択したときの処理
   const handleHasReservation = () => {
+    setIsLoading('reservation');
     router.push("/checkin/room-selection?hasReservation=true");
   };
 
   // 予約なしを選択したときの処理
   const handleNoReservation = () => {
+    setIsLoading('noReservation');
     router.push("/checkin/room-selection?hasReservation=false");
   };
   
@@ -63,6 +66,7 @@ function CheckinContent() {
           size="lg"
           className="h-24 text-2xl"
           onClick={handleHasReservation}
+          isLoading={isLoading === 'reservation'}
         >
           予約あり
         </Button>
@@ -72,6 +76,7 @@ function CheckinContent() {
           size="lg"
           className="w-full h-24 text-2xl"
           onClick={handleNoReservation}
+          isLoading={isLoading === 'noReservation'}
         >
           予約なし
         </Button>
@@ -112,7 +117,10 @@ function CheckinContent() {
           )}
           
           <DialogFooter className="mt-4">
-            <Button onClick={() => setShowDialog(false)} className="w-full">
+            <Button
+              onClick={() => setShowDialog(false)}
+              className="w-full"
+            >
               OK
             </Button>
           </DialogFooter>

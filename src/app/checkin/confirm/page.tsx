@@ -51,6 +51,7 @@ function Confirm() {
   const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
   const originalEndTime = searchParams.get("originalEndTime"); // 元の終了時間（予約時間変更の検出用）
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNavigating, setIsNavigating] = useState<'back' | 'reset' | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'offline' | 'error'>('idle');
 
   // ネットワーク状態の監視
@@ -224,6 +225,8 @@ function Confirm() {
   };
 
   const handleBack = () => {
+    setIsNavigating('back');
+    
     // 前の画面に戻る（アンケート画面）
     let url = `/checkin/survey?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purpose}`;
     
@@ -237,6 +240,7 @@ function Confirm() {
 
   // ★ 新しいハンドラを追加
   const handleReset = () => {
+    setIsNavigating('reset');
     router.push("/");
   };
 
@@ -274,7 +278,8 @@ function Confirm() {
         size="lg"
         onClick={handleConfirm}
         className="w-full max-w-xs text-xl h-16 mb-4"
-        disabled={isSubmitting || saveStatus === 'offline' || !navigator.onLine}
+        isLoading={isSubmitting}
+        disabled={saveStatus === 'offline' || !navigator.onLine}
       >
         {isSubmitting ? "保存中..." : "確定する"}
       </Button>
@@ -285,6 +290,7 @@ function Confirm() {
         size="lg"
         onClick={handleBack}
         className="w-full max-w-xs text-xl h-12"
+        isLoading={isNavigating === 'back'}
       >
         戻る
       </Button>
@@ -295,6 +301,7 @@ function Confirm() {
         size="lg"
         onClick={handleReset}
         className="w-full max-w-xs text-xl h-12 mt-4" // 少しマージンを追加
+        isLoading={isNavigating === 'reset'}
       >
         最初からやり直す
       </Button>

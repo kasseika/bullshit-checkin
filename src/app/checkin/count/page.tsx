@@ -15,11 +15,14 @@ function CountSelection() {
   const originalEndTime = searchParams.get("originalEndTime"); // 元の終了時間（予約時間変更の検出用）
 
   const [count, setCount] = useState(1); // 初期値を1に設定
+  const [isLoading, setIsLoading] = useState<'next' | 'back' | null>(null);
 
   const handleIncrement = () => setCount((prev) => prev + 1);
   const handleDecrement = () => setCount((prev) => Math.max(1, prev - 1)); // 1未満にならないように
   const handleNext = () => {
     if (room && startTime && endTime && count >= 1) {
+      setIsLoading('next');
+      
       // 見学の場合は利用目的ページをスキップ
       const purpose = searchParams.get("purpose");
       
@@ -48,6 +51,8 @@ function CountSelection() {
 
   const handleBack = () => {
     if (room) {
+      setIsLoading('back');
+      
       // 前の画面に戻る（時間選択画面）
       let url = `/checkin/time?room=${room}`;
       
@@ -107,6 +112,7 @@ function CountSelection() {
         onClick={handleNext}
         disabled={count < 1}
         className="mt-16 w-full max-w-xs text-xl h-16" // マージン調整
+        isLoading={isLoading === 'next'}
       >
         次へ
       </Button>
@@ -117,6 +123,7 @@ function CountSelection() {
         size="lg"
         onClick={handleBack}
         className="mt-4 w-full max-w-xs text-xl h-12"
+        isLoading={isLoading === 'back'}
       >
         戻る
       </Button>

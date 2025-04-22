@@ -2,14 +2,16 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
 function WelcomeContent() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   // 次へボタンを押したときの処理
   const handleNext = () => {
+    setIsLoading(true);
     // fromWelcomeパラメータを付けて駐車場確認ページに遷移
     router.push("/checkin/parking?fromWelcome=true");
   };
@@ -31,6 +33,7 @@ function WelcomeContent() {
             size="lg"
             className="w-full h-14 text-xl"
             onClick={handleNext}
+            isLoading={isLoading}
           >
             チェックインを開始する
           </Button>

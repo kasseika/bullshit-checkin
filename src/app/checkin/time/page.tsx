@@ -57,6 +57,7 @@ function TimeSelection() {
   const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
   const paramStartTime = searchParams.get("startTime"); // URLから開始時間を取得（予約ありからの遷移の場合）
   const paramEndTime = searchParams.get("endTime"); // URLから終了時間を取得（予約ありからの遷移の場合）
+  const [isLoading, setIsLoading] = useState<'next' | 'back' | null>(null);
 
   // 開始時間は現在時刻で自動設定
   const [startTime, setStartTime] = useState<string | null>(null);
@@ -207,6 +208,8 @@ function TimeSelection() {
 
   const handleNext = () => {
     if (startTime && endTime && room) {
+      setIsLoading('next');
+      
       // 次の画面に部屋情報、開始時間、終了時間を渡す
       let url = `/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}`;
       
@@ -232,6 +235,8 @@ function TimeSelection() {
 
   const handleBack = () => {
     if (room) {
+      setIsLoading('back');
+      
       if (reservationId) {
         // 予約ありからの遷移の場合は予約選択画面に戻る
         router.push(`/checkin/reservation?room=${room}`);
@@ -393,6 +398,7 @@ function TimeSelection() {
         onClick={handleNext}
         disabled={!startTime || !endTime} // 開始時間と終了時間が選択されるまで無効
         className="mt-12 w-full max-w-xs text-2xl h-20 rounded-xl"
+        isLoading={isLoading === 'next'}
       >
         次へ
       </Button>
@@ -403,6 +409,7 @@ function TimeSelection() {
         size="lg"
         onClick={handleBack}
         className="mt-4 w-full max-w-xs text-xl h-14 rounded-xl"
+        isLoading={isLoading === 'back'}
       >
         戻る
       </Button>

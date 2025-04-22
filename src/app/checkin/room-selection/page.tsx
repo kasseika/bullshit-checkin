@@ -2,13 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 // 部屋選択画面のコンポーネント
 function RoomSelectionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const hasReservation = searchParams.get("hasReservation") === "true";
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   
   // 予約ありの場合の部屋リスト
   const reservationRooms = [
@@ -30,6 +32,9 @@ function RoomSelectionContent() {
   
   // 部屋を選択したときの処理
   const handleRoomSelect = (roomId: string) => {
+    setIsLoading(true);
+    setSelectedRoomId(roomId);
+    
     if (hasReservation) {
       // 予約ありの場合は予約選択画面へ
       router.push(`/checkin/reservation?room=${roomId}`);
@@ -50,6 +55,7 @@ function RoomSelectionContent() {
   
   // 戻るボタンを押したときの処理
   const handleBack = () => {
+    setIsLoading(true);
     router.push("/");
   };
   
@@ -65,6 +71,7 @@ function RoomSelectionContent() {
             size="lg"
             className="w-full h-24 text-xl"
             onClick={() => handleRoomSelect(room.id)}
+            isLoading={isLoading && selectedRoomId === room.id}
           >
             {room.name}
           </Button>
@@ -77,6 +84,7 @@ function RoomSelectionContent() {
         size="lg"
         onClick={handleBack}
         className="mt-4 w-full max-w-xs text-xl h-12"
+        isLoading={isLoading && selectedRoomId === null}
       >
         戻る
       </Button>

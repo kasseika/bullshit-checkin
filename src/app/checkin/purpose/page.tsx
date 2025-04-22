@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 const purposes = [
   { id: "meeting", name: "会議・打合せ" },
@@ -23,9 +23,14 @@ function PurposeSelection() {
   const count = searchParams.get("count");
   const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
   const originalEndTime = searchParams.get("originalEndTime"); // 元の終了時間（予約時間変更の検出用）
+  const [isLoading, setIsLoading] = useState<'select' | 'back' | null>(null);
+  const [selectedPurposeId, setSelectedPurposeId] = useState<string | null>(null);
 
   const handleSelect = (purposeId: string) => {
     if (room && startTime && endTime && count) {
+      setIsLoading('select');
+      setSelectedPurposeId(purposeId);
+      
       // 次の画面に選択した情報を渡す
       let url = `/checkin/survey?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purposeId}`;
       
@@ -45,6 +50,9 @@ function PurposeSelection() {
 
   const handleBack = () => {
     if (room && startTime && endTime) {
+      setIsLoading('back');
+      setSelectedPurposeId(null);
+      
       // 前の画面に戻る（人数選択画面）
       let url = `/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}`;
       
@@ -73,6 +81,7 @@ function PurposeSelection() {
             size="lg"
             onClick={() => handleSelect(purpose.id)}
             className="w-full h-24 text-xl" // ボタンの高さを調整
+            isLoading={isLoading === 'select' && selectedPurposeId === purpose.id}
           >
             {purpose.name}
           </Button>
@@ -85,6 +94,7 @@ function PurposeSelection() {
         size="lg"
         onClick={handleBack}
         className="mt-12 w-full max-w-xs text-xl h-12"
+        isLoading={isLoading === 'back'}
       >
         戻る
       </Button>

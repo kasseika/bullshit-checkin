@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 const ageGroups = [
   { id: "under10s", name: "10代以下" },
@@ -23,9 +23,14 @@ function Survey() {
   const purpose = searchParams.get("purpose");
   const reservationId = searchParams.get("reservationId"); // 予約ID（予約ありからの遷移の場合）
   const originalEndTime = searchParams.get("originalEndTime"); // 元の終了時間（予約時間変更の検出用）
+  const [isLoading, setIsLoading] = useState<'select' | 'back' | null>(null);
+  const [selectedAgeGroupId, setSelectedAgeGroupId] = useState<string | null>(null);
 
   const handleSelect = (ageGroupId: string) => {
     if (room && startTime && endTime && count && purpose) {
+      setIsLoading('select');
+      setSelectedAgeGroupId(ageGroupId);
+      
       // 確認画面に遷移する
       let url = `/checkin/confirm?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purpose}&ageGroup=${ageGroupId}`;
       
@@ -49,6 +54,9 @@ function Survey() {
 
   const handleBack = () => {
     if (room && startTime && endTime && count) {
+      setIsLoading('back');
+      setSelectedAgeGroupId(null);
+      
       // 見学の場合は人数選択画面に戻る
       if (purpose === "tour") {
         let url = `/checkin/count?room=${room}&startTime=${startTime}&endTime=${endTime}&purpose=${purpose}`;
@@ -95,6 +103,7 @@ function Survey() {
             size="lg"
             onClick={() => handleSelect(ageGroup.id)}
             className="w-full h-24 text-xl"
+            isLoading={isLoading === 'select' && selectedAgeGroupId === ageGroup.id}
           >
             {ageGroup.name}
           </Button>
@@ -107,6 +116,7 @@ function Survey() {
         size="lg"
         onClick={handleBack}
         className="mt-12 w-full max-w-xs text-xl h-12"
+        isLoading={isLoading === 'back'}
       >
         戻る
       </Button>
