@@ -13,15 +13,8 @@ function ParkingConfirmation() {
   const handleNext = () => {
     setIsLoading(true);
     
-    const searchParams = new URLSearchParams(window.location.search);
-    const fromWelcome = searchParams.get("fromWelcome") === "true";
-    
-    // ルートページに遷移（fromWelcomeとfromParkingパラメータを追加）
-    if (fromWelcome) {
-      router.push("/?fromWelcome=true&fromParking=true");
-    } else {
-      router.push("/?fromParking=true");
-    }
+    // 予約の有無を選択する画面に直接遷移
+    router.push("/checkin/reservation-selection");
   };
 
   return (
