@@ -56,7 +56,7 @@ function RoomSelectionContent() {
   // 戻るボタンを押したときの処理
   const handleBack = () => {
     setIsLoading(true);
-    router.push("/");
+    router.push("/checkin/reservation-selection");
   };
   
   return (

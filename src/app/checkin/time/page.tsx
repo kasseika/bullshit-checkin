@@ -242,7 +242,7 @@ function TimeSelection() {
         router.push(`/checkin/reservation?room=${room}`);
       } else {
         // 予約なしの場合は部屋選択画面に戻る
-        router.push(`/checkin/room`);
+        router.push(`/checkin/room-selection`);
       }
     }
   };
