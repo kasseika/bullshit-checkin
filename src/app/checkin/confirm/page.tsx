@@ -7,6 +7,7 @@ import { Suspense, useState, useEffect } from "react";
 import { saveCheckInData } from "@/lib/firestore";
 import { addCheckInEvent, updateReservationEndTime } from "@/lib/googleCalendar";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 // 部屋名のマッピング
 const roomNames: Record<string, string> = {
@@ -53,6 +54,18 @@ function Confirm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isNavigating, setIsNavigating] = useState<'back' | 'reset' | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'offline' | 'error'>('idle');
+  const [showCompletionDialog, setShowCompletionDialog] = useState(false);
+  const [completionData, setCompletionData] = useState<{
+    room: string;
+    roomName: string;
+    startTime: string;
+    endTime: string;
+    count: string;
+    purpose: string;
+    ageGroup: string;
+  } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [countdown, setCountdown] = useState(10); // 10秒カウントダウン用（内部処理のみで使用）
 
   // ネットワーク状態の監視
   useEffect(() => {
@@ -89,6 +102,34 @@ function Confirm() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+  
+  // モーダル表示時の自動遷移タイマー
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (showCompletionDialog) {
+      // カウントダウンを10秒にリセット
+      setCountdown(10);
+      
+      // 1秒ごとにカウントダウン
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          // 0になったらトップページに遷移
+          if (prev <= 1) {
+            clearInterval(timer);
+            router.push("/");
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    // クリーンアップ関数
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [showCompletionDialog, router]);
 
   // 必要なデータがない場合はトップページにリダイレクト
   if (!room || !startTime || !endTime || !count || !purpose || !ageGroup) {
@@ -194,10 +235,8 @@ function Confirm() {
         
         setSaveStatus('success');
         
-        // チェックイン完了画面（今回はトップに戻る）
-        // チェックイン完了のフラグと予約内容を付けてトップページに遷移
-        const queryParams = new URLSearchParams({
-          checkinComplete: "true",
+        // チェックイン完了モーダルを表示するためのデータをセット
+        setCompletionData({
           room,
           roomName: roomNames[room] || room,
           startTime,
@@ -205,9 +244,13 @@ function Confirm() {
           count,
           purpose: purposeNames[purpose] || purpose,
           ageGroup: ageGroupNames[ageGroup] || ageGroup
-        }).toString();
+        });
         
-        router.push(`/?${queryParams}`);
+        // モーダルを表示
+        setShowCompletionDialog(true);
+        
+        // 送信中状態を解除
+        setIsSubmitting(false);
       } else {
         // 保存に失敗した場合
         setSaveStatus('error');
@@ -241,6 +284,11 @@ function Confirm() {
   // ★ 新しいハンドラを追加
   const handleReset = () => {
     setIsNavigating('reset');
+    router.push("/");
+  };
+
+  // トップページに戻る処理
+  const handleGoToTop = () => {
     router.push("/");
   };
 
@@ -305,6 +353,47 @@ function Confirm() {
       >
         最初からやり直す
       </Button>
+      
+      {/* チェックイン完了モーダル */}
+      <Dialog open={showCompletionDialog} onOpenChange={setShowCompletionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">チェックイン完了</DialogTitle>
+            <DialogDescription className="text-lg">
+              チェックインが完了しました。以下の内容でご利用ください。
+            </DialogDescription>
+          </DialogHeader>
+          
+          {completionData && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="font-semibold">利用部屋:</div>
+              <div>{completionData.roomName}</div>
+              
+              <div className="font-semibold">利用時間:</div>
+              <div>{completionData.startTime} 〜 {completionData.endTime}</div>
+              
+              <div className="font-semibold">利用人数:</div>
+              <div>{completionData.count}人</div>
+              
+              <div className="font-semibold">利用目的:</div>
+              <div>{completionData.purpose}</div>
+              
+              <div className="font-semibold">年代:</div>
+              <div>{completionData.ageGroup}</div>
+            </div>
+          )}
+          
+          <DialogFooter className="sm:justify-center">
+            <Button
+              size="lg"
+              onClick={handleGoToTop}
+              className="w-full text-xl h-14"
+            >
+              トップページに戻る
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
