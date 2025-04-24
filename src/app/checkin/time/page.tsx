@@ -3,8 +3,8 @@
 import { useState, useMemo, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronUp, ChevronDown, ChevronsRight } from "lucide-react";
 
 // 注: 以前の30分刻みの時間リストは新しい実装では使用しないため削除
 
@@ -49,6 +49,23 @@ const minuteOptions = Array.from({ length: 6 }, (_, i) => {
   };
 });
 
+// 部屋コードから表示用の部屋名を取得する関数
+const getRoomDisplayName = (roomCode: string | null): string => {
+  if (!roomCode) return "不明な部屋";
+  
+  const roomMap: Record<string, string> = {
+    "room1": "1番",
+    "private4": "4番個室",
+    "large4": "4番大部屋",
+    "large6": "6番大部屋",
+    "studio6": "6番工作室",
+    "tour": "見学",
+    // 必要に応じて他の部屋も追加
+  };
+  
+  return roomMap[roomCode] || roomCode;
+};
+
 function TimeSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,6 +75,9 @@ function TimeSelection() {
   const paramStartTime = searchParams.get("startTime"); // URLから開始時間を取得（予約ありからの遷移の場合）
   const paramEndTime = searchParams.get("endTime"); // URLから終了時間を取得（予約ありからの遷移の場合）
   const [isLoading, setIsLoading] = useState<'next' | 'back' | null>(null);
+  
+  // 部屋の表示名を取得
+  const roomDisplayName = getRoomDisplayName(room);
 
   // 開始時間は現在時刻で自動設定
   const [startTime, setStartTime] = useState<string | null>(null);
@@ -252,13 +272,10 @@ function TimeSelection() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-4xl font-bold mb-12">利用時間を選択してください</h1>
+      <h1 className="text-4xl font-bold mb-12">何時までご利用されますか？</h1>
       <div className="w-full max-w-3xl">
         <div className="flex flex-col md:flex-row gap-6 mb-8">
           <Card className="flex-1">
-            <CardHeader>
-              <CardTitle className="text-2xl">終了時間を変更できます</CardTitle>
-            </CardHeader>
             <CardContent>
             {startTime ? (
               <div className="flex flex-col items-center">
@@ -269,10 +286,14 @@ function TimeSelection() {
                     <p className="text-sm text-gray-600">※終了時間は次の予約開始時間を超えて設定できません</p>
                   </div>
                 )}
-                {/* 4番個室、6番大部屋、6番工作室の場合のみ注意書きを表示 */}
-                {(room === "private4" || room === "large6" || room === "studio6") && (
+                {/* 部屋タイプに応じた注意書きを表示 */}
+                {(room === "private4" || room === "large6" || room === "studio6") ? (
                   <div className="mb-4 p-3 bg-yellow-100 rounded-md text-center">
                     <p className="text-sm text-gray-600">一度確定すると変更できません。<br />次の利用者のために時間内にご退室をお願いします。</p>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-3 bg-blue-50 rounded-md text-center">
+                    <p className="text-sm text-gray-600">{roomDisplayName}はオープン席です。空いている席をご自由にお使いください。<br />終了時間は目安でご入力ください。</p>
                   </div>
                 )}
                 <div className="flex justify-center items-center gap-8 mb-6">
@@ -365,9 +386,26 @@ function TimeSelection() {
                   </div>
                 </div>
 
-                <div className="text-3xl font-bold py-4 px-8 bg-primary text-primary-foreground rounded-md">
-                  {endHour}:{endMinute}
+                <div className="flex items-center space-x-4">
+                  {/* 開始時刻 */}
+                  <div className="flex flex-col items-center">
+                    <div className="text-3xl font-bold py-4 px-8 bg-primary text-primary-foreground rounded-md">
+                      {startTime || "読み込み中..."}
+                    </div>
+                    <span className="mt-2 text-sm">開始時刻</span>
+                  </div>
+
+                  <ChevronsRight className="h-8 w-8" />
+
+                  {/* 終了時刻 */}
+                  <div className="flex flex-col items-center">
+                    <div className="text-3xl font-bold py-4 px-8 bg-primary text-primary-foreground rounded-md">
+                      {endHour}:{endMinute}
+                    </div>
+                    <span className="mt-2 text-sm">終了時刻</span>
+                  </div>
                 </div>
+
               </div>
             ) : (
               <p className="text-center text-muted-foreground">
