@@ -7,7 +7,14 @@
       "**/node_modules/**"
     ],
     "cleanUrls": true,
-    "trailingSlash": false
+    "trailingSlash": false,
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "/checkin/welcome",
+        "type": 301
+      }
+    ]
   },
   "firestore": {
     "rules": "firestore.rules",
