@@ -254,26 +254,12 @@ function TimeSelection() {
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">利用時間を選択してください</h1>
       <div className="w-full max-w-3xl">
-        {/* 開始時間の表示 */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-2xl">開始時間（現在時刻）</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-center">
-              <div className="text-3xl font-bold py-4 px-8 bg-primary text-primary-foreground rounded-md">
-                {startTime || "読み込み中..."}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 終了時間選択（ホイールピッカー） */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">終了時間を変更できます</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="flex flex-col md:flex-row gap-6 mb-8">
+          <Card className="flex-1">
+            <CardHeader>
+              <CardTitle className="text-2xl">終了時間を変更できます</CardTitle>
+            </CardHeader>
+            <CardContent>
             {startTime ? (
               <div className="flex flex-col items-center">
                 {/* 次の予約がある場合は表示 */}
@@ -286,7 +272,7 @@ function TimeSelection() {
                 {/* 4番個室、6番大部屋、6番工作室の場合のみ注意書きを表示 */}
                 {(room === "private4" || room === "large6" || room === "studio6") && (
                   <div className="mb-4 p-3 bg-yellow-100 rounded-md text-center">
-                    <p className="text-sm text-gray-600">一度確定すると変更できません。次の利用者のために時間内にご退室をお願いします。</p>
+                    <p className="text-sm text-gray-600">一度確定すると変更できません。<br />次の利用者のために時間内にご退室をお願いします。</p>
                   </div>
                 )}
                 <div className="flex justify-center items-center gap-8 mb-6">
@@ -379,7 +365,7 @@ function TimeSelection() {
                   </div>
                 </div>
 
-                <div className="text-3xl font-bold py-3 px-8 bg-primary text-primary-foreground rounded-md">
+                <div className="text-3xl font-bold py-4 px-8 bg-primary text-primary-foreground rounded-md">
                   {endHour}:{endMinute}
                 </div>
               </div>
@@ -388,8 +374,9 @@ function TimeSelection() {
                 開始時間を計算中...
               </p>
             )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* 次へボタン */}
