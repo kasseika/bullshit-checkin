@@ -113,10 +113,27 @@
 }
 
 @layer base {
+  html {
+    font-size: 20px; /* ベースフォントサイズを大きくする */
+  }
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* タッチ操作向けに要素のサイズを大きくする */
+  button, a, input, select, textarea {
+    @apply text-lg; /* 大きめのテキストサイズ */
+  }
+  /* 見出しのサイズも調整 */
+  h1 {
+    @apply text-4xl;
+  }
+  h2 {
+    @apply text-3xl;
+  }
+  h3 {
+    @apply text-2xl;
   }
 }
