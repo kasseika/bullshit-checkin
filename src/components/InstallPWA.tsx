@@ -3,11 +3,16 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import type { BeforeInstallPromptEvent } from '@/types/pwa';
+import { usePathname } from 'next/navigation';
 
 export function InstallPWA() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const pathname = usePathname();
+  
+  // トップページ（/checkin/welcome）でのみ表示する
+  const isTopPage = pathname === '/checkin/welcome';
 
   useEffect(() => {
     // beforeinstallpromptイベントをキャプチャ
@@ -67,8 +72,8 @@ export function InstallPWA() {
     setIsInstallable(false);
   };
 
-  // インストール可能でない場合は何も表示しない
-  if (!isInstallable || isInstalled) return null;
+  // インストール可能でない場合、またはトップページでない場合は何も表示しない
+  if (!isInstallable || isInstalled || !isTopPage) return null;
 
   return (
     <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50">
