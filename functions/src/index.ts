@@ -55,13 +55,7 @@ export const buildOpeningDays = onSchedule({
       singleEvents: true,
     });
     
-    // イベントのタイトルをログに出力（最初の10件）
     const events = response.data.items || [];
-    console.log(`Found ${events.length} events in calendar`);
-    console.log('Event titles (first 10):');
-    events.slice(0, 10).forEach((event, index) => {
-      console.log(`  ${index + 1}. ${event.summary || '(no title)'}`);
-    });
     
     // 現在の月の初日を取得（前月以前のデータを除外するため）
     const currentMonth = new Date();
@@ -72,14 +66,7 @@ export const buildOpeningDays = onSchedule({
     
     // 「開館」イベントのみをフィルタリング
     const openingDays = events
-      .filter(event => {
-        const isOpeningEvent = event.summary === '開館';
-        if (isOpeningEvent) {
-          const eventDate = event.start?.date || (event.start?.dateTime ? new Date(event.start.dateTime).toISOString().split('T')[0] : undefined);
-          console.log(`Found opening event: ${event.summary}, date: ${eventDate}, original: date=${event.start?.date}, dateTime=${event.start?.dateTime}`);
-        }
-        return isOpeningEvent;
-      })
+      .filter(event => event.summary === '開館')
       .map(event => {
         // 日付を取得（全日イベントの場合はdate、時間指定イベントの場合はdateTimeから日付部分を抽出）
         if (event.start?.date) {
@@ -99,9 +86,6 @@ export const buildOpeningDays = onSchedule({
     
     // JSONに変換
     const json = JSON.stringify(filteredOpeningDays);
-    
-    // デバッグ用に開館日データをログに出力
-    console.log('Opening days data:', json);
     
     try {
       // Cloud Storageにアップロード
