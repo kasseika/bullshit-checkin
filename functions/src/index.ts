@@ -2,112 +2,9 @@ import * as functions from 'firebase-functions';
 import * as express from 'express';
 import * as admin from 'firebase-admin';
 import { google, calendar_v3 } from 'googleapis';
-import { onSchedule } from "firebase-functions/v2/scheduler";
 
 // Firebase初期化
 admin.initializeApp();
-
-// 開館日を取得してCloud Storageに保存するスケジュール関数（v2形式）
-export const buildOpeningDays = onSchedule({
-  schedule: "0 3 1 * *",
-  timeZone: "Asia/Tokyo",
-  region: "asia-northeast1" // 既存の関数と同じリージョンを指定
-}, async (event) => {
-  console.log('Starting buildOpeningDays function', event.jobName);
-  try {
-    // Google Calendar APIのクライアントを初期化（既存の関数を使用）
-    const calendar = getCalendarClient();
-    console.log('Calendar client initialized');
-    
-    // カレンダーIDを取得（v2では環境変数の取得方法が異なる場合がある）
-    let calendarId;
-    try {
-      // まずv1の方法で試す
-      const config = functions.config();
-      if (config.calendar && config.calendar.opening_id) {
-        calendarId = config.calendar.opening_id;
-      } else {
-        // v2の方法で試す
-        calendarId = process.env.CALENDAR_OPENING_ID;
-      }
-      
-      if (!calendarId) {
-        throw new Error('Opening calendar ID not configured');
-      }
-      
-      console.log(`Using opening calendar ID: ${calendarId}`);
-    } catch (error) {
-      console.error('Error getting calendar ID:', error);
-      throw new Error('Opening calendar ID not configured. Please set calendar.opening_id using firebase functions:config:set');
-    }
-    
-    // 現在の日付から1年後までの範囲を設定
-    const now = new Date();
-    const end = new Date(now.getFullYear() + 1, 11, 31);
-    console.log(`Date range: ${now.toISOString()} to ${end.toISOString()}`);
-    
-    // イベントを取得
-    console.log('Fetching events from Google Calendar...');
-    const response = await calendar.events.list({
-      calendarId,
-      timeMin: now.toISOString(),
-      timeMax: end.toISOString(),
-      singleEvents: true,
-    });
-    
-    const events = response.data.items || [];
-    
-    // 現在の月の初日を取得（前月以前のデータを除外するため）
-    const currentMonth = new Date();
-    currentMonth.setDate(1);
-    currentMonth.setHours(0, 0, 0, 0);
-    const currentMonthStr = currentMonth.toISOString().split('T')[0];
-    console.log(`Current month start: ${currentMonthStr}`);
-    
-    // 「開館」イベントのみをフィルタリング
-    const openingDays = events
-      .filter(event => event.summary === '開館')
-      .map(event => {
-        // 日付を取得（全日イベントの場合はdate、時間指定イベントの場合はdateTimeから日付部分を抽出）
-        if (event.start?.date) {
-          return event.start.date;
-        } else if (event.start?.dateTime) {
-          // dateTimeから日付部分（YYYY-MM-DD）を抽出
-          return new Date(event.start.dateTime).toISOString().split('T')[0];
-        }
-        return undefined;
-      })
-      .filter(date => date !== undefined) as string[];
-    
-    // 現在の月以降のデータのみを保持
-    const filteredOpeningDays = openingDays.filter(date => date >= currentMonthStr);
-    
-    console.log(`Filtered ${openingDays.length} opening days, keeping ${filteredOpeningDays.length} days from current month onwards`);
-    
-    // JSONに変換
-    const json = JSON.stringify(filteredOpeningDays);
-    
-    try {
-      // Cloud Storageにアップロード
-      const bucket = admin.storage().bucket();
-      await bucket.file("opening-days/current.json").save(json, {
-        contentType: "application/json",
-        metadata: { cacheControl: "public,max-age=31536000,immutable" },
-        public: true,
-      });
-      
-      console.log('Successfully uploaded opening days to Cloud Storage');
-    } catch (storageError) {
-      // Cloud Storageへのアップロードに失敗した場合もエラーをログに出力するだけで続行
-      console.error('Failed to upload to Cloud Storage:', storageError);
-      console.log('Continuing without uploading to Cloud Storage');
-    }
-    // 戻り値を返さない（void）
-  } catch (error) {
-    console.error('Error building opening days:', error);
-    throw error;
-  }
-});
 
 // 部屋の識別子を抽出する関数
 function extractRoomIdentifier(title: string): string | null {
@@ -128,16 +25,11 @@ function getCalendarClient(): calendar_v3.Calendar {
     const email = config.calendar.email;
     const key = config.calendar.key.replace(/\\n/g, '\n');
 
-    // JWTクライアントの設定を修正
     const auth = new google.auth.JWT({
       email: email,
       key: key,
-      scopes: ['https://www.googleapis.com/auth/calendar', 'https://www.googleapis.com/auth/devstorage.full_control'],
-      subject: email // サービスアカウントの委任を明示的に指定
+      scopes: ['https://www.googleapis.com/auth/calendar'],
     });
-
-    // 明示的に認証を行う
-    console.log('Initializing JWT auth client with email:', email);
 
     return google.calendar({ version: 'v3', auth });
   } catch (error) {

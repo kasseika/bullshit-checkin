@@ -2,7 +2,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getFunctions, type Functions } from 'firebase/functions';
-import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 // Firebaseの設定
 // 環境変数から設定を読み込む
@@ -21,7 +20,6 @@ const firebaseConfig = {
 let firebaseApp;
 let firestoreDb: Firestore;
 let functions: Functions;
-let storage: FirebaseStorage;
 
 if (typeof window !== 'undefined') {
   // クライアントサイドの場合
@@ -29,7 +27,6 @@ if (typeof window !== 'undefined') {
     firebaseApp = initializeApp(firebaseConfig);
     firestoreDb = getFirestore(firebaseApp);
     functions = getFunctions(firebaseApp, 'asia-northeast1');
-    storage = getStorage(firebaseApp);
     
     // ローカル開発環境の場合はエミュレータに接続
     // if (process.env.NODE_ENV === 'development') {
@@ -43,7 +40,6 @@ if (typeof window !== 'undefined') {
   firebaseApp = initializeApp(firebaseConfig);
   firestoreDb = getFirestore(firebaseApp);
   functions = getFunctions(firebaseApp, 'asia-northeast1');
-  storage = getStorage(firebaseApp);
 }
 
-export { firestoreDb, functions, storage };
+export { firestoreDb, functions };

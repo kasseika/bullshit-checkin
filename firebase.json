@@ -14,20 +14,11 @@
         "destination": "/checkin/welcome",
         "type": 301
       }
-    ],
-    "rewrites": [
-      {
-        "source": "/opening-days-current.json",
-        "destination": "/__/storage/v1/b/bullshit-checkin.appspot.com/o/opening-days%2Fcurrent.json?alt=media"
-      }
     ]
   },
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
-  },
-  "storage": {
-    "rules": "storage.rules"
   },
   "functions": {
     "source": "functions",
