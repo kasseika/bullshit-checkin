@@ -1,0 +1,24 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // デフォルトでは読み取りのみを許可し、書き込みは禁止
+    match /{allPaths=**} {
+      allow read;
+      allow write: if false;
+    }
+    
+    // opening-daysフォルダは管理者のみ書き込み可能（後で認証機能を追加する場合に更新）
+    match /opening-days/{document=**} {
+      allow read;
+      allow write: if false; // 現時点では書き込みはFunctionsからのみ許可
+    }
+    
+    // uploadsフォルダはアプリからの書き込みを許可
+    // 実際のアプリケーションの要件に合わせて調整してください
+    match /uploads/{userId}/{document=**} {
+      allow read;
+      allow write: if true; // 認証機能を追加する場合は、request.auth != null && request.auth.uid == userId に変更
+    }
+  }
+}

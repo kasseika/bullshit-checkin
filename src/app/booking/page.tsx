@@ -1,15 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
+import { getOpeningDays, isOpeningDay } from "@/lib/openingDays";
 
 export default function BookingPage() {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [openingDays, setOpeningDays] = useState<string[]>([]);
+  const [isLoadingOpeningDays, setIsLoadingOpeningDays] = useState(true);
+
+  // 開館日を取得
+  useEffect(() => {
+    async function fetchOpeningDays() {
+      setIsLoadingOpeningDays(true);
+      try {
+        const days = await getOpeningDays();
+        setOpeningDays(days);
+        console.log('Opening days loaded:', days);
+      } catch (error) {
+        console.error('Failed to load opening days:', error);
+      } finally {
+        setIsLoadingOpeningDays(false);
+      }
+    }
+
+    fetchOpeningDays();
+  }, []);
 
   // 予約を進めるボタンを押したときの処理
   const handleReservation = () => {
@@ -23,6 +44,20 @@ export default function BookingPage() {
     // 現時点ではUIだけなので、アラートを表示
     alert(`${format(date, 'yyyy年MM月dd日')}を選択しました。この後、部屋選択画面に進みます。`);
     setIsLoading(false);
+  };
+
+  // 日付が選択可能かどうかを判定する関数
+  const isDateDisabled = (date: Date) => {
+    // 今日より前の日付は選択不可
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (date < today) {
+      return true;
+    }
+    
+    // 開館日でない日は選択不可
+    return !isOpeningDay(date, openingDays);
   };
 
   return (
@@ -43,16 +78,29 @@ export default function BookingPage() {
               onSelect={setDate}
               locale={ja}
               className="rounded-md border"
-              // 今日より前の日付は選択できないようにする
-              disabled={{ before: new Date() }}
+              // ローディング中は選択不可、それ以外は開館日のみ選択可能
+              disabled={isLoadingOpeningDays ? { before: new Date(2099, 0, 1) } : isDateDisabled}
             />
           </div>
           
-          {date && (
+          {isLoadingOpeningDays ? (
+            <div className="text-center mb-6">
+              <p className="text-lg">開館日を読み込み中...</p>
+            </div>
+          ) : openingDays.length === 0 ? (
+            <div className="text-center mb-6">
+              <p className="text-lg text-red-500">開館日情報の取得に失敗しました</p>
+            </div>
+          ) : date ? (
             <div className="text-center mb-6">
               <p className="text-lg">
                 選択した日付: <span className="font-bold">{format(date, 'yyyy年MM月dd日 (eee)', { locale: ja })}</span>
               </p>
+            </div>
+          ) : (
+            <div className="text-center mb-6">
+              <p className="text-lg">カレンダーから開館日を選択してください</p>
+              <p className="text-sm text-gray-500 mt-1">（白色の日付が開館日です）</p>
             </div>
           )}
           
@@ -60,7 +108,7 @@ export default function BookingPage() {
             size="lg"
             className="w-full h-14 text-xl"
             onClick={handleReservation}
-            disabled={!date}
+            disabled={!date || isLoadingOpeningDays}
             isLoading={isLoading}
           >
             予約を進める
