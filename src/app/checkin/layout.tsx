@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { Home, Phone, X } from "lucide-react";
 import { toast } from "sonner";
@@ -26,6 +26,7 @@ export default function CheckinLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const [isPhoneDialogOpen, setIsPhoneDialogOpen] = useState(false);
   const [lastActivity, setLastActivity] = useState(Date.now());
@@ -43,6 +44,14 @@ export default function CheckinLayout({
     setLastActivity(Date.now());
     setWarningShown({ first: false, second: false });
   }, []);
+
+  // welcomeページからの遷移時にタイマーをリセット
+  useEffect(() => {
+    const fromWelcome = searchParams.get('fromWelcome') === 'true';
+    if (fromWelcome) {
+      resetInactivityTimer();
+    }
+  }, [searchParams, resetInactivityTimer]);
 
   // ユーザーの操作を検知するイベントリスナー
   useEffect(() => {
