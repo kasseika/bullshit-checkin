@@ -7,6 +7,7 @@ const pwaConfig = {
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
+  sw: 'sw.js',
   // キャッシュ戦略の設定
   runtimeCaching: [
     {
@@ -14,10 +15,13 @@ const pwaConfig = {
       urlPattern: /^https:\/\/[^\/]+\/(_next\/static|_next\/image|icons\/)/,
       handler: 'CacheFirst',
       options: {
-        cacheName: 'app-core',
+        cacheName: 'app-core-v1',
         expiration: {
           maxEntries: 200,
           maxAgeSeconds: 30 * 24 * 60 * 60, // 30日
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
         },
       },
     },
@@ -26,7 +30,7 @@ const pwaConfig = {
       urlPattern: /^https:\/\/[^\/]+\/(checkin|)/,
       handler: 'NetworkFirst',
       options: {
-        cacheName: 'app-routes',
+        cacheName: 'app-routes-v1',
         expiration: {
           maxEntries: 50,
           maxAgeSeconds: 7 * 24 * 60 * 60, // 7日
@@ -35,6 +39,31 @@ const pwaConfig = {
         // オフラインフォールバックページの設定
         precacheFallback: {
           fallbackURL: '/offline.html',
+        },
+        cacheableResponse: {
+          statuses: [0, 200],
+        },
+      },
+    },
+    {
+      urlPattern: /\.(?:css|woff2|woff|ttf)$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'assets-v1',
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30日
+        },
+      },
+    },
+    {
+      urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'images-v1',
+        expiration: {
+          maxEntries: 60,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30日
         },
       },
     },

@@ -101,9 +101,27 @@ export function NetworkMonitor() {
         checkPendingData();
       };
       
+      const handleServiceWorkerMessage = (event: MessageEvent) => {
+        if (event.data && event.data.type === 'SYNC_STARTED') {
+          toast.loading('オフラインデータを同期中...', {
+            id: 'sync-checkins',
+            duration: 3000,
+          });
+        } else if (event.data && event.data.type === 'SYNC_COMPLETED') {
+          toast.success('データの同期が完了しました', {
+            id: 'sync-checkins',
+            duration: 3000,
+          });
+          // 同期完了後に未送信データの数を更新
+          checkPendingData();
+        }
+      };
+      
       // カスタムイベントリスナーを登録
       document.addEventListener('app-online', handleOnline);
       document.addEventListener('app-offline', handleOffline);
+      
+      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
       
       // 標準のオンライン/オフラインイベントも監視
       window.addEventListener('online', handleOnline);
@@ -119,6 +137,7 @@ export function NetworkMonitor() {
         // クリーンアップ
         document.removeEventListener('app-online', handleOnline);
         document.removeEventListener('app-offline', handleOffline);
+        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
         clearInterval(intervalId);

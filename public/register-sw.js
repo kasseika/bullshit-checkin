@@ -20,6 +20,26 @@ if ('serviceWorker' in navigator) {
             }
           });
         });
+
+        if ('caches' in window) {
+          caches.keys().then(cacheNames => {
+            const currentVersion = '-v1';
+            
+            const oldCaches = cacheNames.filter(name => {
+              return !name.endsWith(currentVersion) && 
+                     (name.startsWith('app-') || 
+                      name.startsWith('images-') || 
+                      name.startsWith('assets-'));
+            });
+            
+            return Promise.all(
+              oldCaches.map(cacheName => {
+                console.log(`古いキャッシュを削除します: ${cacheName}`);
+                return caches.delete(cacheName);
+              })
+            );
+          });
+        }
       })
       .catch((error) => {
         console.error('サービスワーカーの登録に失敗しました:', error);

@@ -10,6 +10,11 @@ export interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+export interface SyncManager {
+  register(tag: string): Promise<void>;
+  getTags(): Promise<string[]>;
+}
+
 // グローバル型の拡張
 declare global {
   interface WindowEventMap {
@@ -20,6 +25,14 @@ declare global {
   // NavigatorのPWA拡張
   interface Navigator {
     standalone?: boolean;
+  }
+
+  interface ServiceWorkerRegistration {
+    sync: SyncManager;
+  }
+
+  interface Window {
+    SyncManager: SyncManager;
   }
 }
 

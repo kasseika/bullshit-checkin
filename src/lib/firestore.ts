@@ -27,7 +27,14 @@ export async function saveCheckInData(data: CheckInData): Promise<boolean> {
     // ネットワーク状態をチェック
     if (!navigator.onLine) {
       console.log('オフライン状態を検出しました。データをIndexedDBに保存します。');
-      return await saveToIndexedDB(data);
+      const result = await saveToIndexedDB(data);
+      
+      if (result && typeof window !== 'undefined') {
+        const { registerBackgroundSync } = await import('./workboxSync');
+        await registerBackgroundSync();
+      }
+      
+      return result;
     }
 
     // 当日の日付を取得（YYYY-MM-DD形式）
@@ -57,7 +64,14 @@ export async function saveCheckInData(data: CheckInData): Promise<boolean> {
     } catch (error) {
       console.error('チェックインデータの保存に失敗しました:', error);
       console.log('データをIndexedDBに保存します。');
-      return await saveToIndexedDB(data);
+      const result = await saveToIndexedDB(data);
+      
+      if (result && typeof window !== 'undefined') {
+        const { registerBackgroundSync } = await import('./workboxSync');
+        await registerBackgroundSync();
+      }
+      
+      return result;
     }
   } catch (error) {
     console.error('チェックインデータの保存処理中にエラーが発生しました:', error);

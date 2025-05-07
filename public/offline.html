@@ -73,6 +73,7 @@
     <p>現在オフラインモードで動作しています。インターネット接続が回復すると、自動的に保存されたデータが送信されます。</p>
     
     <a href="/" class="button">再読み込み</a>
+    <button id="sync-button" class="button" style="background-color: #4caf50; margin-left: 1rem; display: none;">同期</button>
     
     <div class="status">
       <p>オフラインモード: アクティブ</p>
@@ -161,6 +162,17 @@
     
     // ページ読み込み時に未送信データを表示
     window.addEventListener('load', displayPendingData);
+    
+    // 同期ボタンの表示と処理
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+      const syncButton = document.getElementById('sync-button');
+      syncButton.style.display = 'inline-block';
+      syncButton.addEventListener('click', async () => {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.sync.register('sync-checkins');
+        alert('同期を開始しました。インターネット接続が回復すると自動的に送信されます。');
+      });
+    }
     
     // オンライン状態が変わったときのイベントリスナー
     window.addEventListener('online', function() {
