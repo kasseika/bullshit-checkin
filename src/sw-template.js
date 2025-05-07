@@ -13,6 +13,30 @@ self.skipWaiting();
 
 precacheAndRoute(self.__WB_MANIFEST || []);
 
+const pagesToCache = [
+  '/',
+  '/checkin/welcome',
+  '/checkin/room',
+  '/checkin/room-selection',
+  '/checkin/time',
+  '/checkin/count',
+  '/checkin/purpose',
+  '/checkin/parking',
+  '/checkin/survey',
+  '/checkin/reservation',
+  '/checkin/reservation-selection',
+  '/checkin/confirm',
+  '/offline.html'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open('pages-cache-v1').then((cache) => {
+      return cache.addAll(pagesToCache);
+    })
+  );
+});
+
 const bgSyncPlugin = new BackgroundSyncPlugin('checkins-queue', {
   maxRetentionTime: 24 * 60, // 24時間（分単位）
   onSync: async ({ queue }) => {
