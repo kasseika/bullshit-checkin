@@ -28,7 +28,7 @@ const pwaConfig = {
     {
       // アプリケーションのルート
       urlPattern: /^https:\/\/[^\/]+\/(checkin\/.*|)/,
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'app-routes-v1',
         expiration: {
