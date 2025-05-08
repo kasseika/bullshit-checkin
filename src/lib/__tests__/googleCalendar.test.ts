@@ -1,4 +1,10 @@
-import { extractRoomIdentifier } from '../googleCalendar';
+import {
+  extractRoomIdentifier,
+  getTodayReservations,
+  isRoomAvailable,
+  addCheckInEvent,
+  updateReservationEndTime
+} from '../googleCalendar';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
 
@@ -53,11 +59,11 @@ describe('getTodayReservations', () => {
       return mockHttpsCallable;
     });
     
-    const { getTodayReservations } = require('../googleCalendar');
+    // getTodayReservationsはファイル先頭でインポート済み
     (getTodayReservations as jest.Mock).mockImplementation(async (room) => {
       const callable = httpsCallable(functions, 'getCalendarReservations');
       const result = await callable({ room });
-      return (result as any).data.reservations;
+      return (result as { data: { reservations: typeof mockReservations } }).data.reservations;
     });
     
     const result = await getTodayReservations('private4');
@@ -72,12 +78,12 @@ describe('getTodayReservations', () => {
     
     (httpsCallable as jest.Mock).mockReturnValue(mockHttpsCallable);
     
-    const { getTodayReservations } = require('../googleCalendar');
+    // getTodayReservationsはファイル先頭でインポート済み
     (getTodayReservations as jest.Mock).mockImplementation(async () => {
       try {
         await mockHttpsCallable();
         return [];
-      } catch (error) {
+      } catch {
         return [];
       }
     });
@@ -94,7 +100,7 @@ describe('isRoomAvailable', () => {
   });
 
   it('部屋が利用可能な場合にtrueを返す', async () => {
-    const { isRoomAvailable } = require('../googleCalendar');
+    // isRoomAvailableはファイル先頭でインポート済み
     (isRoomAvailable as jest.Mock).mockResolvedValue(true);
     
     const result = await isRoomAvailable('private4', '10:00', '12:00');
@@ -103,7 +109,7 @@ describe('isRoomAvailable', () => {
   });
 
   it('予約が重複する場合にfalseを返す', async () => {
-    const { isRoomAvailable } = require('../googleCalendar');
+    // isRoomAvailableはファイル先頭でインポート済み
     (isRoomAvailable as jest.Mock).mockResolvedValue(false);
     
     const result = await isRoomAvailable('private4', '10:00', '12:00');
@@ -135,11 +141,11 @@ describe('addCheckInEvent', () => {
       return mockHttpsCallable;
     });
     
-    const { addCheckInEvent } = require('../googleCalendar');
+    // addCheckInEventはファイル先頭でインポート済み
     (addCheckInEvent as jest.Mock).mockImplementation(async (room, startTime, endTime) => {
       const callable = httpsCallable(functions, 'addCalendarEvent');
       const result = await callable({ room, startTime, endTime });
-      return (result as any).data.success;
+      return (result as { data: { success: boolean } }).data.success;
     });
     
     const result = await addCheckInEvent('private4', '10:00', '12:00');
@@ -154,12 +160,12 @@ describe('addCheckInEvent', () => {
     
     (httpsCallable as jest.Mock).mockReturnValue(mockHttpsCallable);
     
-    const { addCheckInEvent } = require('../googleCalendar');
+    // addCheckInEventはファイル先頭でインポート済み
     (addCheckInEvent as jest.Mock).mockImplementation(async () => {
       try {
         await mockHttpsCallable();
         return true;
-      } catch (error) {
+      } catch {
         return false;
       }
     });
@@ -193,11 +199,11 @@ describe('updateReservationEndTime', () => {
       return mockHttpsCallable;
     });
     
-    const { updateReservationEndTime } = require('../googleCalendar');
+    // updateReservationEndTimeはファイル先頭でインポート済み
     (updateReservationEndTime as jest.Mock).mockImplementation(async (eventId, endTime) => {
       const callable = httpsCallable(functions, 'updateCalendarEvent');
       const result = await callable({ eventId, endTime });
-      return (result as any).data.success;
+      return (result as { data: { success: boolean } }).data.success;
     });
     
     const result = await updateReservationEndTime('event123', '14:00');
@@ -212,12 +218,12 @@ describe('updateReservationEndTime', () => {
     
     (httpsCallable as jest.Mock).mockReturnValue(mockHttpsCallable);
     
-    const { updateReservationEndTime } = require('../googleCalendar');
+    // updateReservationEndTimeはファイル先頭でインポート済み
     (updateReservationEndTime as jest.Mock).mockImplementation(async () => {
       try {
         await mockHttpsCallable();
         return true;
-      } catch (error) {
+      } catch {
         return false;
       }
     });
