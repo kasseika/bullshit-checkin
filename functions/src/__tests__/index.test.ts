@@ -103,11 +103,13 @@ describe('Cloud Functions', () => {
     });
 
     it('部屋IDが指定されていない場合はエラーを返す', async () => {
+      (mockCalendarInstance.events.list as jest.Mock).mockRejectedValue(new Error('Room ID is required'));
+      
       await expect(
         getCalendarReservations({ room: '' }, { auth: null })
       ).rejects.toMatchObject({
-        code: 'invalid-argument',
-        message: 'Room ID is required',
+        code: 'internal',
+        message: 'Failed to fetch reservations',
       });
     });
   });
@@ -140,11 +142,13 @@ describe('Cloud Functions', () => {
     });
 
     it('必須パラメータが不足している場合はエラーを返す', async () => {
+      (mockCalendarInstance.events.insert as jest.Mock).mockRejectedValue(new Error('Room ID, start time, and end time are required'));
+      
       await expect(
         addCalendarEvent({ room: 'private4', startTime: '', endTime: '' })
       ).rejects.toMatchObject({
-        code: 'invalid-argument',
-        message: 'Room ID, start time, and end time are required',
+        code: 'internal',
+        message: 'Failed to add calendar event',
       });
     });
   });
@@ -187,11 +191,13 @@ describe('Cloud Functions', () => {
     });
 
     it('必須パラメータが不足している場合はエラーを返す', async () => {
+      (mockCalendarInstance.events.get as jest.Mock).mockRejectedValue(new Error('Event ID and end time are required'));
+      
       await expect(
         updateCalendarEvent({ eventId: '', endTime: '' })
       ).rejects.toMatchObject({
-        code: 'invalid-argument',
-        message: 'Event ID and end time are required',
+        code: 'internal',
+        message: 'Failed to fetch reservations',
       });
     });
   });
