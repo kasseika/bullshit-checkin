@@ -2,25 +2,33 @@ import { google } from 'googleapis';
 
 import { getCalendarReservations, addCalendarEvent, updateCalendarEvent } from '../index';
 
-jest.mock('firebase-functions', () => ({
-  config: jest.fn().mockReturnValue({
-    calendar: {
-      email: 'test@example.com',
-      key: 'test-key',
-      id: 'test-calendar-id',
+jest.mock('firebase-functions', () => {
+  const httpsErrorMock = jest.fn().mockImplementation((code, message, details) => ({
+    code,
+    message,
+    details,
+    toJSON: () => ({ code, message, details }),
+  }));
+
+  return {
+    config: jest.fn().mockReturnValue({
+      calendar: {
+        email: 'test@example.com',
+        key: 'test-key',
+        id: 'test-calendar-id',
+      },
+    }),
+    region: jest.fn().mockReturnValue({
+      https: {
+        onCall: jest.fn(handler => handler),
+        onRequest: jest.fn(handler => handler),
+      },
+    }),
+    https: {
+      HttpsError: httpsErrorMock,
     },
-  }),
-  region: jest.fn().mockReturnThis(),
-  https: {
-    onCall: jest.fn(handler => handler),
-    onRequest: jest.fn(handler => handler),
-    HttpsError: jest.fn().mockImplementation((code, message, details) => ({
-      code,
-      message,
-      details,
-    })),
-  },
-}));
+  };
+});
 
 jest.mock('firebase-admin', () => ({
   initializeApp: jest.fn(),
@@ -38,7 +46,7 @@ jest.mock('googleapis', () => {
   
   return {
     google: {
-      calendar: jest.fn().mockReturnValue(mockCalendarInstance),
+      calendar: jest.fn().mockImplementation(() => mockCalendarInstance),
       auth: {
         JWT: jest.fn().mockImplementation(() => ({})),
       },
@@ -77,8 +85,8 @@ describe('Cloud Functions', () => {
       });
       
       const result = await getCalendarReservations(
-        { data: { room: 'private4' } } as any,
-        { auth: { uid: 'test-user' } } as any
+        { room: 'private4' },
+        { auth: { uid: 'test-user' } }
       );
       
       expect(mockCalendarInstance.events.list).toHaveBeenCalledWith({
@@ -96,7 +104,7 @@ describe('Cloud Functions', () => {
 
     it('部屋IDが指定されていない場合はエラーを返す', async () => {
       await expect(
-        getCalendarReservations({ data: { room: '' } } as any, { auth: null } as any)
+        getCalendarReservations({ room: '' }, { auth: null })
       ).rejects.toMatchObject({
         code: 'invalid-argument',
         message: 'Room ID is required',
@@ -113,12 +121,10 @@ describe('Cloud Functions', () => {
       });
       
       const result = await addCalendarEvent({
-        data: {
-          room: 'private4',
-          startTime: '10:00',
-          endTime: '12:00',
-        }
-      } as any);
+        room: 'private4',
+        startTime: '10:00',
+        endTime: '12:00',
+      });
       
       expect(mockCalendarInstance.events.insert).toHaveBeenCalledWith({
         calendarId: 'test-calendar-id',
@@ -135,7 +141,7 @@ describe('Cloud Functions', () => {
 
     it('必須パラメータが不足している場合はエラーを返す', async () => {
       await expect(
-        addCalendarEvent({ data: { room: 'private4', startTime: '', endTime: '' } } as any)
+        addCalendarEvent({ room: 'private4', startTime: '', endTime: '' })
       ).rejects.toMatchObject({
         code: 'invalid-argument',
         message: 'Room ID, start time, and end time are required',
@@ -161,11 +167,9 @@ describe('Cloud Functions', () => {
       });
       
       const result = await updateCalendarEvent({
-        data: {
-          eventId: 'event-id',
-          endTime: '14:00',
-        }
-      } as any);
+        eventId: 'event-id',
+        endTime: '14:00',
+      });
       
       expect(mockCalendarInstance.events.get).toHaveBeenCalledWith({
         calendarId: 'test-calendar-id',
@@ -184,7 +188,7 @@ describe('Cloud Functions', () => {
 
     it('必須パラメータが不足している場合はエラーを返す', async () => {
       await expect(
-        updateCalendarEvent({ data: { eventId: '', endTime: '' } } as any)
+        updateCalendarEvent({ eventId: '', endTime: '' })
       ).rejects.toMatchObject({
         code: 'invalid-argument',
         message: 'Event ID and end time are required',
