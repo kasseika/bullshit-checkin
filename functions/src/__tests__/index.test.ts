@@ -197,7 +197,7 @@ describe('Cloud Functions', () => {
         updateCalendarEvent({ eventId: '', endTime: '' })
       ).rejects.toMatchObject({
         code: 'internal',
-        message: 'Failed to fetch reservations',
+        message: 'Failed to update calendar event',
       });
     });
   });
