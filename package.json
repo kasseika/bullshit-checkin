@@ -7,9 +7,9 @@
     "build": "next build && cd functions && npm install && npm run build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "jest --silent",
+    "test:watch": "jest --watch --silent",
+    "test:coverage": "jest --coverage --silent"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.7",

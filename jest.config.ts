@@ -24,6 +24,13 @@ const config: Config = {
     '!src/**/*.d.ts',
     '!src/types/**',
   ],
+  // ログ出力を最小限にする設定
+  verbose: false,
+  // テスト結果のみを表示するシンプルなレポーター
+  reporters: ['default'],
+  // コンソール出力の制御
+  silent: true,
+  logHeapUsage: false,
 };
 
 export default createJestConfig(config);
