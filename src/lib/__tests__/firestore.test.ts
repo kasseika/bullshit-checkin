@@ -1,6 +1,6 @@
 import { saveCheckInData, resendPendingCheckins, getCheckedInReservationIds } from '../firestore';
 import { saveToIndexedDB, getAllPendingCheckins, removeFromIndexedDB, updateAttempts } from '../indexedDb';
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, getDocs } from 'firebase/firestore';
 import { firestoreDb } from '../firebase';
 
 jest.mock('../indexedDb', () => ({
