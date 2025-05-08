@@ -550,7 +550,7 @@ export const sendCheckinNotification = functions.region('asia-northeast1')
       
       // 通知メッセージを作成
       const message = {
-        text: `📣 新しいチェックインがありました！\n\n` +
+        text: `📣 テレワークセンターに新しいチェックインがありました！\n\n` +
           `📅 チェックイン時刻: ${formattedTime}\n` +
           `🏢 利用部屋: ${roomNames[data.room] || data.room}\n` +
           `⏰ 利用時間: ${data.startTime} 〜 ${data.endTime}\n` +
