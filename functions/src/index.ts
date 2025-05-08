@@ -502,3 +502,76 @@ export const updateCalendarEvent = functions.region('asia-northeast1').https.onC
     );
   }
 });
+// Google ChatにWebhookを送信するCloud Function
+export const sendCheckinNotification = functions.region('asia-northeast1')
+  .firestore.document('checkins/{checkinId}')
+  .onCreate(async (snapshot, context) => {
+    // ログ情報を格納する配列
+    const logs: string[] = [];
+    logs.push(`Function called for checkin ID: ${context.params.checkinId}`);
+    
+    try {
+      // 設定からWebhook URLを取得
+      const config = functions.config();
+      if (!config.chat || !config.chat.webhook_url) {
+        throw new Error('Webhook URL not configured. Please set chat.webhook_url using firebase functions:config:set');
+      }
+      const webhookUrl = config.chat.webhook_url;
+      logs.push(`Using webhook URL from config`);
+      
+      // チェックインデータを取得
+      const data = snapshot.data();
+      logs.push(`Got checkin data: ${JSON.stringify(data)}`);
+      
+      // 部屋名のマッピング
+      const roomNames: Record<string, string> = {
+        "room1": "1番",
+        "private4": "4番個室",
+        "large4": "4番大部屋",
+        "large6": "6番大部屋",
+        "studio6": "6番工作室",
+        "tour": "見学",
+      };
+      
+      // 目的のマッピング
+      const purposeNames: Record<string, string> = {
+        "meeting": "会議・打合せ",
+        "remote": "仕事・テレワーク利用",
+        "study": "学習利用",
+        "event": "イベント・講座",
+        "creation": "デジタル制作",
+        "tour": "視察・見学・取材",
+        "other": "その他",
+      };
+      
+      // チェックイン時刻をフォーマット
+      const checkInTime = data.clientCheckInTime ? new Date(data.clientCheckInTime) : new Date();
+      const formattedTime = `${checkInTime.getFullYear()}年${checkInTime.getMonth() + 1}月${checkInTime.getDate()}日 ${checkInTime.getHours().toString().padStart(2, '0')}:${checkInTime.getMinutes().toString().padStart(2, '0')}`;
+      
+      // 通知メッセージを作成
+      const message = {
+        text: `📣 新しいチェックインがありました！\n\n` +
+          `📅 チェックイン時刻: ${formattedTime}\n` +
+          `🏢 利用部屋: ${roomNames[data.room] || data.room}\n` +
+          `⏰ 利用時間: ${data.startTime} 〜 ${data.endTime}\n` +
+          `👥 利用人数: ${data.count}人\n` +
+          `🎯 利用目的: ${purposeNames[data.purpose] || data.purpose}\n` +
+          `👴 年代: ${data.ageGroup}\n` +
+          `${data.reservationId ? '🔖 予約ID: ' + data.reservationId : '🆓 予約なし'}`
+      };
+      
+      logs.push(`Sending message to Google Chat: ${JSON.stringify(message)}`);
+      
+      // axiosを使用してGoogle ChatにPOSTリクエストを送信
+      const axios = require('axios');
+      await axios.post(webhookUrl, message);
+      
+      logs.push('Notification sent successfully');
+      return { success: true, logs };
+    } catch (error) {
+      console.error('Error sending checkin notification:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logs.push(`Error: ${errorMessage}`);
+      return { success: false, error: errorMessage, logs };
+    }
+  });
