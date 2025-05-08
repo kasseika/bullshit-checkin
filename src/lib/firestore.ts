@@ -24,6 +24,11 @@ export interface CheckInData {
  */
 export async function saveCheckInData(data: CheckInData): Promise<boolean> {
   try {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('開発環境のため、Firestoreへの保存をスキップします:', data);
+      return true;
+    }
+    
     // ネットワーク状態をチェック
     if (!navigator.onLine) {
       console.log('オフライン状態を検出しました。データをIndexedDBに保存します。');
@@ -76,6 +81,32 @@ export async function saveCheckInData(data: CheckInData): Promise<boolean> {
  * @returns 再送信が成功したデータの数
  */
 export async function resendPendingCheckins(): Promise<number> {
+  if (process.env.NODE_ENV === 'development') {
+    // IndexedDBから保存されているデータを取得
+    const pendingCheckins = await getAllPendingCheckins();
+    
+    if (pendingCheckins.length === 0) {
+      console.log('再送信するデータがありません。');
+      return 0;
+    }
+    
+    console.log(`開発環境のため、${pendingCheckins.length}件のデータの再送信をスキップします。`);
+    
+    for (const item of pendingCheckins) {
+      await removeFromIndexedDB(item.id);
+    }
+    
+    // 再送信完了の通知
+    if (pendingCheckins.length > 0) {
+      toast.success(`${pendingCheckins.length}件のデータを送信しました (開発環境)`, {
+        id: 'resending-data',
+        duration: 3000,
+      });
+    }
+    
+    return pendingCheckins.length;
+  }
+  
   // オフライン状態の場合は処理をスキップ
   if (!navigator.onLine) {
     console.log('オフライン状態のため、再送信をスキップします。');
@@ -208,6 +239,11 @@ export function startNetworkMonitoring(): void {
  */
 export async function getCheckedInReservationIds(): Promise<string[]> {
   try {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('開発環境のため、チェックイン済み予約の取得をスキップします。');
+      return [];
+    }
+    
     // ネットワーク状態をチェック
     if (!navigator.onLine) {
       console.log('オフライン状態のため、チェックイン済み予約の取得をスキップします。');
