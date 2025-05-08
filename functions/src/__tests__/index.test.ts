@@ -2,6 +2,25 @@ import { google } from 'googleapis';
 
 import { getCalendarReservations, addCalendarEvent, updateCalendarEvent } from '../index';
 
+type CalendarReservationsData = {
+  room: string;
+};
+
+type CalendarReservationsContext = {
+  auth: { uid: string } | null;
+};
+
+type AddCalendarEventData = {
+  room: string;
+  startTime: string;
+  endTime: string;
+};
+
+type UpdateCalendarEventData = {
+  eventId: string;
+  endTime: string;
+};
+
 jest.mock('firebase-functions', () => {
   const httpsErrorMock = jest.fn().mockImplementation((code, message, details) => ({
     code,
@@ -84,10 +103,10 @@ describe('Cloud Functions', () => {
         },
       });
       
-      const result = await getCalendarReservations(
-        { room: 'private4' },
-        { auth: { uid: 'test-user' } }
-      );
+      const data: CalendarReservationsData = { room: 'private4' };
+      const context: CalendarReservationsContext = { auth: { uid: 'test-user' } };
+      
+      const result = await getCalendarReservations(data, context);
       
       expect(mockCalendarInstance.events.list).toHaveBeenCalledWith({
         calendarId: 'test-calendar-id',
@@ -105,8 +124,11 @@ describe('Cloud Functions', () => {
     it('部屋IDが指定されていない場合はエラーを返す', async () => {
       (mockCalendarInstance.events.list as jest.Mock).mockRejectedValue(new Error('Room ID is required'));
       
+      const data: CalendarReservationsData = { room: '' };
+      const context: CalendarReservationsContext = { auth: null };
+      
       await expect(
-        getCalendarReservations({ room: '' }, { auth: null })
+        getCalendarReservations(data, context)
       ).rejects.toMatchObject({
         code: 'internal',
         message: 'Failed to fetch reservations',
@@ -122,11 +144,14 @@ describe('Cloud Functions', () => {
         },
       });
       
-      const result = await addCalendarEvent({
+      const data: AddCalendarEventData = {
         room: 'private4',
         startTime: '10:00',
         endTime: '12:00',
-      });
+      };
+      const context = { auth: { uid: 'test-user' } };
+      
+      const result = await addCalendarEvent(data, context);
       
       expect(mockCalendarInstance.events.insert).toHaveBeenCalledWith({
         calendarId: 'test-calendar-id',
@@ -144,8 +169,11 @@ describe('Cloud Functions', () => {
     it('必須パラメータが不足している場合はエラーを返す', async () => {
       (mockCalendarInstance.events.insert as jest.Mock).mockRejectedValue(new Error('Room ID, start time, and end time are required'));
       
+      const data: AddCalendarEventData = { room: 'private4', startTime: '', endTime: '' };
+      const context = { auth: null };
+      
       await expect(
-        addCalendarEvent({ room: 'private4', startTime: '', endTime: '' })
+        addCalendarEvent(data, context)
       ).rejects.toMatchObject({
         code: 'internal',
         message: 'Failed to add calendar event',
@@ -170,10 +198,13 @@ describe('Cloud Functions', () => {
         },
       });
       
-      const result = await updateCalendarEvent({
+      const data: UpdateCalendarEventData = {
         eventId: 'event-id',
         endTime: '14:00',
-      });
+      };
+      const context = { auth: { uid: 'test-user' } };
+      
+      const result = await updateCalendarEvent(data, context);
       
       expect(mockCalendarInstance.events.get).toHaveBeenCalledWith({
         calendarId: 'test-calendar-id',
@@ -193,8 +224,11 @@ describe('Cloud Functions', () => {
     it('必須パラメータが不足している場合はエラーを返す', async () => {
       (mockCalendarInstance.events.get as jest.Mock).mockRejectedValue(new Error('Event ID and end time are required'));
       
+      const data: UpdateCalendarEventData = { eventId: '', endTime: '' };
+      const context = { auth: null };
+      
       await expect(
-        updateCalendarEvent({ eventId: '', endTime: '' })
+        updateCalendarEvent(data, context)
       ).rejects.toMatchObject({
         code: 'internal',
         message: 'Failed to update calendar event',
