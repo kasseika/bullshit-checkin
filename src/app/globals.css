@@ -121,6 +121,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* iPadなどでのオーバースクロール（バウンス）を無効化 */
+    overscroll-behavior: none;
+    touch-action: pan-x pan-y;
   }
   /* タッチ操作向けに要素のサイズを大きくする */
   button, a, input, select, textarea {
