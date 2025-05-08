@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { startNetworkMonitoring, resendPendingCheckins } from '@/lib/firestore';
 import { toast } from 'sonner';
 
@@ -9,7 +9,7 @@ export function NetworkMonitor() {
   const [pendingCount, setPendingCount] = useState(0);
 
   // IndexedDBから未送信データの数を取得する関数
-  const checkPendingData = async () => {
+  const checkPendingData = useCallback(async () => {
     try {
       // IndexedDBを開く（バージョン2に更新）
       const request = indexedDB.open('bullshitCheckinDB', 2);
@@ -63,7 +63,7 @@ export function NetworkMonitor() {
     } catch (error) {
       console.error('未送信データの確認中にエラーが発生しました:', error);
     }
-  };
+  }, [isOnline]);
 
   useEffect(() => {
     // クライアントサイドでのみ実行
@@ -124,7 +124,7 @@ export function NetworkMonitor() {
         clearInterval(intervalId);
       };
     }
-  }, []);
+  }, [checkPendingData]);
 
   // オフライン時のみ表示するバナー
   if (!isOnline) {
