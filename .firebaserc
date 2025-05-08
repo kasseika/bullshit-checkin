@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "bullshit-checkin"
+  },
+  "targets": {
+    "bullshit-checkin": {
+      "hosting": {
+        "checkin": [
+          "bullshit-checkin"
+        ],
+        "booking": [
+          "bullshit-booking"
+        ]
+      }
+    }
   }
 }

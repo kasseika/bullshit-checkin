@@ -4,12 +4,19 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:booking": "cd booking && next dev -p 3001",
     "build": "next build && cd functions && npm install && npm run build",
+    "build:booking": "cd booking && next build",
+    "build:all": "npm run build && npm run build:booking",
     "start": "next start",
+    "start:booking": "cd booking && next start -p 3001",
     "lint": "next lint",
     "test": "jest --silent",
     "test:watch": "jest --watch --silent",
-    "test:coverage": "jest --coverage --silent"
+    "test:coverage": "jest --coverage --silent",
+    "deploy:checkin": "firebase deploy --only hosting:checkin",
+    "deploy:booking": "firebase deploy --only hosting:booking",
+    "deploy:all": "npm run build:all && firebase deploy"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.7",
