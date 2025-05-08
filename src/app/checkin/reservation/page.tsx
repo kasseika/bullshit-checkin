@@ -48,7 +48,8 @@ function ReservationSelection() {
     if (room) {
       fetchReservations();
     }
-  }, [room]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room]); // fetchReservationsはコンポーネント内で定義されているため依存配列に含めない
 
   // 予約情報を取得
   const fetchReservations = async () => {
@@ -84,15 +85,20 @@ function ReservationSelection() {
     }
   };
 
+  // 現在時刻をHH:MM形式で取得する関数
+  const getCurrentTimeStr = (): string => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    return `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+  };
+
   // 現在の使用状況を判断する関数
   const determineCurrentStatus = (reservations: Reservation[]): { status: string; isAvailable: boolean } => {
     if (reservations.length === 0) return { status: "使用可能", isAvailable: true };
     
     // 現在の時刻を取得
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentTimeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+    const currentTimeStr = getCurrentTimeStr();
     
     // 現在時刻が予約時間内にあるかチェック
     for (const reservation of reservations) {
@@ -112,10 +118,7 @@ function ReservationSelection() {
     if (reservations.length === 0) return null;
     
     // 現在の時刻を取得
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentTimeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+    const currentTimeStr = getCurrentTimeStr();
     
     // 現在時刻以降の予約を時間順にソート
     const futureReservations = reservations
@@ -196,7 +199,7 @@ function ReservationSelection() {
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-3xl font-bold mb-8">
         {noReservation
-          ? `${room === 'large6' ? '6番大部屋' : ROOM_NAMES[room || '']}の予約状況`
+          ? `${room === 'large6' ? '6番大部屋' : ROOM_NAMES[room ?? '']}の予約状況`
           : '本日の予約一覧'}
       </h1>
       <div className="w-full max-w-2xl mb-8">
@@ -216,8 +219,8 @@ function ReservationSelection() {
             <CardHeader>
               <CardTitle className={"text-xl text-center"}>
                 {currentStatus.isAvailable
-                  ? `${room === 'large6' && noReservation ? '6番大部屋' : ROOM_NAMES[room || '']}の予約状況`
-                  : `${room === 'large6' && noReservation ? '6番大部屋' : ROOM_NAMES[room || '']}は現在ご利用できません`}
+                  ? `${room === 'large6' && noReservation ? '6番大部屋' : ROOM_NAMES[room ?? '']}の予約状況`
+                  : `${room === 'large6' && noReservation ? '6番大部屋' : ROOM_NAMES[room ?? '']}は現在ご利用できません`}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -306,7 +309,7 @@ function ReservationSelection() {
             </CardHeader>
             <CardContent>
               <p className="text-center text-gray-600 mb-4">
-                本日の{room === 'large6' && noReservation ? '6番大部屋' : ROOM_NAMES[room || '']}の予約はありません。
+                本日の{room === 'large6' && noReservation ? '6番大部屋' : ROOM_NAMES[room ?? '']}の予約はありません。
               </p>
               <Button
                 className="w-full"

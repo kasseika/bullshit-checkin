@@ -1,8 +1,56 @@
 import { initIndexedDB, saveToIndexedDB, getAllPendingCheckins, removeFromIndexedDB, updateAttempts } from '../indexedDb';
 import { CheckInData } from '../firestore';
 
+// テスト用のモックイベント型
+interface MockEvent {
+  target: unknown;
+  bubbles?: boolean;
+  cancelable?: boolean;
+  currentTarget?: EventTarget;
+  defaultPrevented?: boolean;
+  eventPhase?: number;
+  isTrusted?: boolean;
+  timeStamp?: number;
+  type?: string;
+}
+
+// モックデータベース型
+interface MockIDBDatabase {
+  objectStoreNames: {
+    contains: jest.Mock;
+  };
+  createObjectStore: jest.Mock;
+  transaction: jest.Mock;
+  close: jest.Mock;
+}
+
+// テスト用のモックインターフェース
+interface MockIDBRequest<T = unknown> {
+  result?: T;
+  error?: DOMException | null;
+  onsuccess?: (event: MockEvent) => void;
+  onerror?: (event: MockEvent) => void;
+}
+
+// MockIDBOpenDBRequestはresultを必須にする
+interface MockIDBOpenDBRequest {
+  result: MockIDBDatabase;
+  error?: DOMException | null;
+  onsuccess?: (event: MockEvent) => void;
+  onerror?: (event: MockEvent) => void;
+  onupgradeneeded?: (event: MockEvent) => void;
+}
+
+// 保存されるチェックインデータの型
+type PendingCheckin = {
+  id: number;
+  data: CheckInData;
+  timestamp: string;
+  attempts: number;
+};
+
 describe('IndexedDB operations', () => {
-  const mockIDBOpenDBRequest = {
+  const mockIDBOpenDBRequest: MockIDBOpenDBRequest = {
     result: {
       objectStoreNames: {
         contains: jest.fn(),
@@ -11,9 +59,9 @@ describe('IndexedDB operations', () => {
       transaction: jest.fn(),
       close: jest.fn(),
     },
-    onupgradeneeded: null as any,
-    onsuccess: null as any,
-    onerror: null as any,
+    onupgradeneeded: undefined,
+    onsuccess: undefined,
+    onerror: undefined,
   };
 
   const mockObjectStore = {
@@ -35,15 +83,15 @@ describe('IndexedDB operations', () => {
       open: jest.fn().mockImplementation(() => {
         setTimeout(() => {
           if (mockIDBOpenDBRequest.onupgradeneeded) {
-            mockIDBOpenDBRequest.onupgradeneeded({ target: mockIDBOpenDBRequest });
+            mockIDBOpenDBRequest.onupgradeneeded?.({ target: mockIDBOpenDBRequest } as MockEvent);
           }
           if (mockIDBOpenDBRequest.onsuccess) {
-            mockIDBOpenDBRequest.onsuccess({ target: mockIDBOpenDBRequest });
+            mockIDBOpenDBRequest.onsuccess?.({ target: mockIDBOpenDBRequest } as MockEvent);
           }
         }, 0);
         return mockIDBOpenDBRequest;
       }),
-    } as any;
+    } as unknown as IDBFactory;
     
     mockIDBOpenDBRequest.result.transaction = jest.fn().mockReturnValue(mockTransaction);
   });
@@ -83,10 +131,10 @@ describe('IndexedDB operations', () => {
       };
       
       mockObjectStore.add.mockImplementation(() => {
-        const request = {} as any;
+        const request: MockIDBRequest<void> = {};
         setTimeout(() => {
           if (request.onsuccess) {
-            request.onsuccess({ target: request });
+            request.onsuccess?.({ target: request } as MockEvent);
           }
         }, 0);
         return request;
@@ -113,13 +161,13 @@ describe('IndexedDB operations', () => {
       };
       
       mockObjectStore.add.mockImplementation(() => {
-        const request = {
-          error: { name: 'TestError', message: 'Test error message' }
-        } as any;
+        const request: MockIDBRequest<void> = {
+          error: new DOMException('Test error message', 'TestError')
+        };
         
         setTimeout(() => {
           if (request.onerror) {
-            request.onerror({ target: request } as any);
+            request.onerror?.({ target: request } as MockEvent);
           }
         }, 0);
         
@@ -143,11 +191,14 @@ describe('IndexedDB operations', () => {
       ];
       
       mockObjectStore.getAll.mockImplementation(() => {
-        const request = {} as any;
+        const request: MockIDBRequest<PendingCheckin[]> = {};
         setTimeout(() => {
-          request.result = mockCheckins;
+          Object.defineProperty(request, 'result', {
+            value: mockCheckins,
+            writable: true
+          });
           if (request.onsuccess) {
-            request.onsuccess({ target: request });
+            request.onsuccess?.({ target: request } as MockEvent);
           }
         }, 0);
         return request;
@@ -163,13 +214,13 @@ describe('IndexedDB operations', () => {
 
     it('エラー発生時に空配列を返す', async () => {
       mockObjectStore.getAll.mockImplementation(() => {
-        const request = {
-          error: { name: 'TestError', message: 'Test error message' }
-        } as any;
+        const request: MockIDBRequest<PendingCheckin[]> = {
+          error: new DOMException('Test error message', 'TestError')
+        };
         
         setTimeout(() => {
           if (request.onerror) {
-            request.onerror({ target: request } as any);
+            request.onerror?.({ target: request } as MockEvent);
           }
         }, 0);
         
@@ -178,7 +229,9 @@ describe('IndexedDB operations', () => {
       
       const result = await Promise.race([
         getAllPendingCheckins(),
-        new Promise<any[]>(resolve => setTimeout(() => resolve([]), 1000))
+        new Promise<PendingCheckin[]>(
+          resolve => setTimeout(() => resolve([]), 1000)
+        )
       ]);
       
       expect(result).toEqual([]);
@@ -188,10 +241,10 @@ describe('IndexedDB operations', () => {
   describe('removeFromIndexedDB', () => {
     it('指定されたIDのデータを削除する', async () => {
       mockObjectStore.delete.mockImplementation(() => {
-        const request = {} as any;
+        const request: MockIDBRequest<void> = {};
         setTimeout(() => {
           if (request.onsuccess) {
-            request.onsuccess({ target: request });
+            request.onsuccess?.({ target: request } as MockEvent);
           }
         }, 0);
         return request;
@@ -207,13 +260,13 @@ describe('IndexedDB operations', () => {
 
     it('エラー発生時にfalseを返す', async () => {
       mockObjectStore.delete.mockImplementation(() => {
-        const request = {
-          error: { name: 'TestError', message: 'Test error message' }
-        } as any;
+        const request: MockIDBRequest<void> = {
+          error: new DOMException('Test error message', 'TestError')
+        };
         
         setTimeout(() => {
           if (request.onerror) {
-            request.onerror({ target: request } as any);
+            request.onerror?.({ target: request } as MockEvent);
           }
         }, 0);
         
@@ -232,21 +285,24 @@ describe('IndexedDB operations', () => {
   describe('updateAttempts', () => {
     it('リトライ回数を更新する', async () => {
       mockObjectStore.get.mockImplementation(() => {
-        const request = {} as any;
+        const request: MockIDBRequest<PendingCheckin> = {};
         setTimeout(() => {
-          request.result = { id: 1, data: {}, timestamp: '', attempts: 0 };
+          Object.defineProperty(request, 'result', {
+            value: { id: 1, data: {}, timestamp: '', attempts: 0 },
+            writable: true
+          });
           if (request.onsuccess) {
-            request.onsuccess({ target: request });
+            request.onsuccess?.({ target: request } as MockEvent);
           }
         }, 0);
         return request;
       });
       
       mockObjectStore.put.mockImplementation(() => {
-        const request = {} as any;
+        const request: MockIDBRequest<PendingCheckin | undefined> = {};
         setTimeout(() => {
           if (request.onsuccess) {
-            request.onsuccess({ target: request });
+            request.onsuccess?.({ target: request } as MockEvent);
           }
         }, 0);
         return request;
@@ -261,11 +317,14 @@ describe('IndexedDB operations', () => {
 
     it('データが存在しない場合はfalseを返す', async () => {
       mockObjectStore.get.mockImplementation(() => {
-        const request = {} as any;
+        const request: MockIDBRequest<void> = {};
         setTimeout(() => {
-          request.result = undefined;
+          Object.defineProperty(request, 'result', {
+            value: undefined,
+            writable: true
+          });
           if (request.onsuccess) {
-            request.onsuccess({ target: request });
+            request.onsuccess?.({ target: request } as MockEvent);
           }
         }, 0);
         return request;

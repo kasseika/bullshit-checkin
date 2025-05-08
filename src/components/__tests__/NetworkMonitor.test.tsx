@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { NetworkMonitor } from '../NetworkMonitor';
 import { startNetworkMonitoring, resendPendingCheckins } from '../../lib/firestore';
@@ -29,13 +29,31 @@ describe('NetworkMonitor', () => {
       value: true,
     });
     
+    // IndexedDBのモックを型安全に定義
     global.indexedDB = {
       open: jest.fn().mockReturnValue({
         onupgradeneeded: null,
         onsuccess: null,
         onerror: null,
+        result: {
+          objectStoreNames: {
+            contains: jest.fn().mockReturnValue(true)
+          },
+          createObjectStore: jest.fn(),
+          transaction: jest.fn().mockReturnValue({
+            objectStore: jest.fn().mockReturnValue({
+              count: jest.fn().mockReturnValue({
+                onsuccess: null,
+                result: 0
+              })
+            })
+          }),
+          close: jest.fn()
+        }
       }),
-    } as any;
+      deleteDatabase: jest.fn(),
+      cmp: jest.fn()
+    } as unknown as IDBFactory;
     
     document.addEventListener = jest.fn();
     document.removeEventListener = jest.fn();
