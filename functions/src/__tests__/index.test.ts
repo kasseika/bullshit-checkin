@@ -1,5 +1,3 @@
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
 import { google } from 'googleapis';
 
 import { getCalendarReservations, addCalendarEvent, updateCalendarEvent } from '../index';
@@ -49,7 +47,7 @@ jest.mock('googleapis', () => {
 });
 
 describe('Cloud Functions', () => {
-  const mockCalendarInstance = google.calendar();
+  const mockCalendarInstance = google.calendar({ version: 'v3' });
   
   beforeEach(() => {
     jest.clearAllMocks();
@@ -79,8 +77,8 @@ describe('Cloud Functions', () => {
       });
       
       const result = await getCalendarReservations(
-        { room: 'private4' },
-        { auth: { uid: 'test-user' } }
+        { data: { room: 'private4' } } as any,
+        { auth: { uid: 'test-user' } } as any
       );
       
       expect(mockCalendarInstance.events.list).toHaveBeenCalledWith({
@@ -91,14 +89,14 @@ describe('Cloud Functions', () => {
         orderBy: 'startTime',
       });
       
-      expect(result.reservations.length).toBe(1);
-      expect(result.reservations[0].roomIdentifier).toBe('4番個室');
-      expect(result.logs).toBeDefined();
+      expect((result as any).reservations.length).toBe(1);
+      expect((result as any).reservations[0].roomIdentifier).toBe('4番個室');
+      expect((result as any).logs).toBeDefined();
     });
 
     it('部屋IDが指定されていない場合はエラーを返す', async () => {
       await expect(
-        getCalendarReservations({ room: '' }, { auth: null })
+        getCalendarReservations({ data: { room: '' } } as any, { auth: null } as any)
       ).rejects.toMatchObject({
         code: 'invalid-argument',
         message: 'Room ID is required',
@@ -115,10 +113,12 @@ describe('Cloud Functions', () => {
       });
       
       const result = await addCalendarEvent({
-        room: 'private4',
-        startTime: '10:00',
-        endTime: '12:00',
-      });
+        data: {
+          room: 'private4',
+          startTime: '10:00',
+          endTime: '12:00',
+        }
+      } as any);
       
       expect(mockCalendarInstance.events.insert).toHaveBeenCalledWith({
         calendarId: 'test-calendar-id',
@@ -129,13 +129,13 @@ describe('Cloud Functions', () => {
         }),
       });
       
-      expect(result.success).toBe(true);
-      expect(result.eventId).toBe('new-event-id');
+      expect((result as any).success).toBe(true);
+      expect((result as any).eventId).toBe('new-event-id');
     });
 
     it('必須パラメータが不足している場合はエラーを返す', async () => {
       await expect(
-        addCalendarEvent({ room: 'private4', startTime: '', endTime: '' })
+        addCalendarEvent({ data: { room: 'private4', startTime: '', endTime: '' } } as any)
       ).rejects.toMatchObject({
         code: 'invalid-argument',
         message: 'Room ID, start time, and end time are required',
@@ -161,9 +161,11 @@ describe('Cloud Functions', () => {
       });
       
       const result = await updateCalendarEvent({
-        eventId: 'event-id',
-        endTime: '14:00',
-      });
+        data: {
+          eventId: 'event-id',
+          endTime: '14:00',
+        }
+      } as any);
       
       expect(mockCalendarInstance.events.get).toHaveBeenCalledWith({
         calendarId: 'test-calendar-id',
@@ -176,13 +178,13 @@ describe('Cloud Functions', () => {
         requestBody: expect.any(Object),
       });
       
-      expect(result.success).toBe(true);
-      expect(result.eventId).toBe('event-id');
+      expect((result as any).success).toBe(true);
+      expect((result as any).eventId).toBe('event-id');
     });
 
     it('必須パラメータが不足している場合はエラーを返す', async () => {
       await expect(
-        updateCalendarEvent({ eventId: '', endTime: '' })
+        updateCalendarEvent({ data: { eventId: '', endTime: '' } } as any)
       ).rejects.toMatchObject({
         code: 'invalid-argument',
         message: 'Event ID and end time are required',
