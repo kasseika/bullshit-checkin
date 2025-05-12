@@ -4,7 +4,7 @@ import { useState, useMemo, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronUp, ChevronDown, ChevronsRight } from "lucide-react";
+import { Plus, Minus, ChevronsRight } from "lucide-react";
 
 // 注: 以前の30分刻みの時間リストは新しい実装では使用しないため削除
 
@@ -307,13 +307,13 @@ function TimeSelection() {
                         className="h-12 w-12 rounded-full shadow-lg"
                         onClick={() => {
                           const currentIndex = availableHourOptions.findIndex(option => option.value === endHour);
-                          if (currentIndex > 0) {
-                            setEndHour(availableHourOptions[currentIndex - 1].value);
+                          if (currentIndex < availableHourOptions.length - 1) {
+                            setEndHour(availableHourOptions[currentIndex + 1].value);
                           }
                         }}
-                        disabled={availableHourOptions.findIndex(option => option.value === endHour) <= 0}
+                        disabled={availableHourOptions.findIndex(option => option.value === endHour) >= availableHourOptions.length - 1}
                       >
-                        <ChevronUp className="h-8 w-8" />
+                        <Plus className="h-8 w-8" />
                       </Button>
                       
                       <Card className="w-32 h-14 flex items-center justify-center shadow-md">
@@ -330,13 +330,13 @@ function TimeSelection() {
                         className="h-12 w-12 rounded-full shadow-lg"
                         onClick={() => {
                           const currentIndex = availableHourOptions.findIndex(option => option.value === endHour);
-                          if (currentIndex < availableHourOptions.length - 1) {
-                            setEndHour(availableHourOptions[currentIndex + 1].value);
+                          if (currentIndex > 0) {
+                            setEndHour(availableHourOptions[currentIndex - 1].value);
                           }
                         }}
-                        disabled={availableHourOptions.findIndex(option => option.value === endHour) >= availableHourOptions.length - 1}
+                        disabled={availableHourOptions.findIndex(option => option.value === endHour) <= 0}
                       >
-                        <ChevronDown className="h-8 w-8" />
+                        <Minus className="h-8 w-8" />
                       </Button>
                     </div>
                   </div>
@@ -351,13 +351,13 @@ function TimeSelection() {
                         className="h-12 w-12 rounded-full shadow-lg"
                         onClick={() => {
                           const currentIndex = availableMinuteOptions.findIndex(option => option.value === endMinute);
-                          if (currentIndex > 0) {
-                            setEndMinute(availableMinuteOptions[currentIndex - 1].value);
+                          if (currentIndex < availableMinuteOptions.length - 1) {
+                            setEndMinute(availableMinuteOptions[currentIndex + 1].value);
                           }
                         }}
-                        disabled={availableMinuteOptions.findIndex(option => option.value === endMinute) <= 0}
+                        disabled={availableMinuteOptions.findIndex(option => option.value === endMinute) >= availableMinuteOptions.length - 1}
                       >
-                        <ChevronUp className="h-8 w-8" />
+                        <Plus className="h-8 w-8" />
                       </Button>
                       
                       <Card className="w-32 h-14 flex items-center justify-center shadow-md">
@@ -374,13 +374,13 @@ function TimeSelection() {
                         className="h-12 w-12 rounded-full shadow-lg"
                         onClick={() => {
                           const currentIndex = availableMinuteOptions.findIndex(option => option.value === endMinute);
-                          if (currentIndex < availableMinuteOptions.length - 1) {
-                            setEndMinute(availableMinuteOptions[currentIndex + 1].value);
+                          if (currentIndex > 0) {
+                            setEndMinute(availableMinuteOptions[currentIndex - 1].value);
                           }
                         }}
-                        disabled={availableMinuteOptions.findIndex(option => option.value === endMinute) >= availableMinuteOptions.length - 1}
+                        disabled={availableMinuteOptions.findIndex(option => option.value === endMinute) <= 0}
                       >
-                        <ChevronDown className="h-8 w-8" />
+                        <Minus className="h-8 w-8" />
                       </Button>
                     </div>
                   </div>
