@@ -1,17 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { saveBookingData } from "../../../lib/bookingFirestore";
 
 export default function ReservationPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  
+  // URLパラメータから日付と部屋の情報を取得
+  const dateParam = searchParams.get("date");
+  const roomParam = searchParams.get("room");
+  
+  // 部屋IDから表示名を取得
+  const getRoomName = (roomId: string | null): string => {
+    if (!roomId) return "";
+    
+    const roomMap: Record<string, string> = {
+      "private4": "4番個室",
+      "large6": "6番大部屋",
+      "workshop6": "6番工作室"
+    };
+    
+    return roomMap[roomId] || "";
+  };
   
   // フォームの状態
   const [formData, setFormData] = useState({
-    room: "",
-    startDate: "",
+    room: getRoomName(roomParam),
+    startDate: dateParam || "",
     startTime: "",
     endTime: "",
     count: 1,
@@ -20,6 +38,13 @@ export default function ReservationPage() {
     contactEmail: "",
     contactPhone: "",
   });
+  
+  // パラメータがない場合は部屋選択ページにリダイレクト
+  useEffect(() => {
+    if (!dateParam || !roomParam) {
+      router.push("/booking/welcome");
+    }
+  }, [dateParam, roomParam, router]);
 
   // 入力値の変更を処理
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -62,27 +87,22 @@ export default function ReservationPage() {
       <h1 className="mb-6 text-center text-3xl font-bold">施設予約</h1>
 
       <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-6">
-        {/* 部屋選択 */}
+        {/* 部屋表示 */}
         <div className="space-y-2">
           <label htmlFor="room" className="block font-medium">
             利用する部屋
           </label>
-          <select
+          <input
+            type="text"
             id="room"
             name="room"
             value={formData.room}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-input bg-background px-3 py-2"
-          >
-            <option value="">部屋を選択してください</option>
-            <option value="会議室A">会議室A</option>
-            <option value="会議室B">会議室B</option>
-            <option value="多目的ホール">多目的ホール</option>
-          </select>
+            readOnly
+            className="w-full rounded-md border border-input bg-background px-3 py-2 bg-gray-100"
+          />
         </div>
 
-        {/* 日付選択 */}
+        {/* 日付表示 */}
         <div className="space-y-2">
           <label htmlFor="startDate" className="block font-medium">
             利用日
@@ -92,9 +112,8 @@ export default function ReservationPage() {
             id="startDate"
             name="startDate"
             value={formData.startDate}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-input bg-background px-3 py-2"
+            readOnly
+            className="w-full rounded-md border border-input bg-background px-3 py-2 bg-gray-100"
           />
         </div>
 

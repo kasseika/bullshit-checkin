@@ -19,9 +19,12 @@ export default function ClientCalendar({ openDays }: ClientCalendarProps) {
     if (!date) return;
     
     setIsLoading(true);
-    // 選択した日付を含めて次のページへ遷移
-    const formattedDate = date.toISOString().split('T')[0]; // YYYY-MM-DD形式
-    router.push(`/booking/reservation?date=${formattedDate}`);
+    // 選択した日付を含めて次のページへ遷移（JSTで処理）
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`; // YYYY-MM-DD形式（JST）
+    router.push(`/booking/room-selection?date=${formattedDate}`);
   };
 
   // 開館日かどうかをチェックする関数
