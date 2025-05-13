@@ -20,7 +20,7 @@
     },
     {
       "target": "booking",
-      "public": "booking/out",
+      "public": "out",
       "ignore": [
         "firebase.json",
         "**/.*",
