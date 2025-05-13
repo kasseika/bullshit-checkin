@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import ICAL from 'ical.js';
 
+export const dynamic = "force-static";
+
 // ICSファイルのURL
 const CALENDAR_URL = 'https://calendar.google.com/calendar/ical/69a71353ba765dc455c6b111dc58a69251cef3cdc37fb7e81f48e4fd255d63c1%40group.calendar.google.com/public/basic.ics';
 
