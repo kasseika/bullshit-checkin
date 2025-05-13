@@ -7,9 +7,6 @@
       "hosting": {
         "checkin": [
           "bullshit-checkin"
-        ],
-        "booking": [
-          "bullshit-booking"
         ]
       }
     }
