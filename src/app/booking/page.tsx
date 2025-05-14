@@ -1,7 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Suspense } from "react";
 import ICAL from 'ical.js';
-import ClientCalendar from "./ClientCalendar";
+import ReservationForm from "./ReservationForm";
 
 // ICSファイルのURL
 const CALENDAR_URL = 'https://calendar.google.com/calendar/ical/69a71353ba765dc455c6b111dc58a69251cef3cdc37fb7e81f48e4fd255d63c1%40group.calendar.google.com/public/basic.ics';
@@ -12,8 +11,8 @@ const OPEN_EVENT_TITLE = '開館';
 // 開館日の情報を取得する関数
 async function getOpenDays(): Promise<Date[]> {
   try {
-    // ICSファイルを取得
-    const response = await fetch(CALENDAR_URL, { next: { revalidate: 86400 } }); // 1日ごとに再検証
+    // ICSファイルを取得（ビルド時のみ）
+    const response = await fetch(CALENDAR_URL);
     if (!response.ok) {
       throw new Error(`Failed to fetch calendar: ${response.status} ${response.statusText}`);
     }
@@ -49,30 +48,22 @@ async function getOpenDays(): Promise<Date[]> {
 }
 
 // サーバーコンポーネント
-async function WelcomeContent() {
+async function ReservationContent() {
   // 開館日を取得
   const openDays = await getOpenDays();
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-3xl font-bold mb-2">大船渡テレワークセンター</h1>
-      <h2 className="text-2xl font-bold mb-8">予約システム</h2>
-      
-      <Card className="w-full max-w-md mb-8">
-        <CardContent className="p-6">
-          <div className="flex flex-col items-center">
-            <ClientCalendar openDays={openDays} />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="mb-6 text-center text-3xl font-bold">大船渡テレワークセンター<br />施設予約</h1>
+      <ReservationForm openDays={openDays} />
     </div>
   );
 }
 
-export default function WelcomePage() {
+export default function BookingPage() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen">読み込み中...</div>}>
-      <WelcomeContent />
+      <ReservationContent />
     </Suspense>
   );
 }
