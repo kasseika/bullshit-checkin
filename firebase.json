@@ -9,14 +9,7 @@
         "**/node_modules/**"
       ],
       "cleanUrls": true,
-      "trailingSlash": false,
-      "redirects": [
-        {
-          "source": "/",
-          "destination": "/checkin/welcome",
-          "type": 301
-        }
-      ]
+      "trailingSlash": false
     }
   ],
   "firestore": {

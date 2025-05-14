@@ -60,18 +60,8 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // ビルド時のESLintエラーを無視
   },
-  // リダイレクト設定
-  // 注意: 静的エクスポート（output: 'export'）では、リダイレクトはクライアントサイドでのみ機能します
-  // サーバーサイドリダイレクトが必要な場合は、ホスティングサービス（Firebase等）の設定で行う必要があります
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/checkin/welcome',
-        permanent: true,
-      },
-    ];
-  },
+  // 静的エクスポート（output: 'export'）ではリダイレクトはクライアントサイドでのみ機能します
+  // ルートページは意図的に404にしています
 };
 
 export default withPWA(pwaConfig)(nextConfig);
