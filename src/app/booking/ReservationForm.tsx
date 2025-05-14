@@ -722,30 +722,38 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
 
       {/* 6番工作室が選択された場合の使用機材選択 */}
       {formData.roomId === 'workshop6' && (
-        <div className="space-y-2">
-          <label className="block font-medium">
-            使用機材（複数選択可）
-          </label>
-          <div className="space-y-3">
-            {equipments.map((equipment) => (
-              <div key={equipment.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`equipment-${equipment.id}`}
-                  checked={formData.equipments.includes(equipment.id)}
-                  onCheckedChange={(checked) =>
-                    handleEquipmentChange(equipment.id, checked === true)
-                  }
-                />
-                <Label
-                  htmlFor={`equipment-${equipment.id}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {equipment.name}
-                </Label>
-              </div>
-            ))}
+        <>
+          <div className="space-y-2 ml-4">
+            <label className="block font-medium">
+              使用機材（複数選択可）
+            </label>
+            <div className="space-y-3">
+              {equipments.map((equipment) => (
+                <div key={equipment.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`equipment-${equipment.id}`}
+                    checked={formData.equipments.includes(equipment.id)}
+                    onCheckedChange={(checked) =>
+                      handleEquipmentChange(equipment.id, checked === true)
+                    }
+                  />
+                  <Label
+                    htmlFor={`equipment-${equipment.id}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {equipment.name}
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+          <p className="text-sm text-gray-500 mt-3">
+              ※工作室のご利用は1時間1000円です。利用後にスタッフにお支払いをお願いいたします。(現金 or Paypay)
+          </p>
+          <p className="text-sm text-gray-500 mt-3">
+              ※工作室の利用は初回講習が必要です。(3000円, 30分程度)
+          </p>
+        </>
       )}
         
         {/* その他が選択された場合のみ詳細入力欄を表示 */}
