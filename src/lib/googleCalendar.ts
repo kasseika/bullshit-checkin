@@ -182,3 +182,51 @@ export async function updateReservationEndTime(reservationId: string, endTime: s
     return false;
   }
 }
+
+// 指定された期間の予約を取得する関数
+export async function getReservationsForPeriod(
+  startDate: string,
+  endDate: string,
+  roomId: string = 'all'
+): Promise<Reservation[]> {
+  try {
+    // Firebase Functionsを呼び出す
+    const getCalendarReservationsForPeriod = httpsCallable(functions, 'getCalendarReservationsForPeriod');
+    
+    const result = await getCalendarReservationsForPeriod({
+      room: roomId,
+      startDate,
+      endDate
+    });
+    
+    const data = result.data as { reservations: Reservation[], logs?: string[] };
+    
+    // Cloud Functionsのログ情報をコンソールに表示
+    if (data.logs && data.logs.length > 0) {
+      console.group('Cloud Functions Logs:');
+      data.logs.forEach(log => console.log(log));
+      console.groupEnd();
+    }
+    
+    return data.reservations || [];
+  } catch (error) {
+    console.error('Error fetching reservations for period:', error);
+    
+    // エラーオブジェクトからログ情報を取得して表示
+    if (error instanceof FirebaseError) {
+      const fbError = error as FirebaseFunctionError;
+      if (fbError.details) {
+        if (fbError.details.logs && fbError.details.logs.length > 0) {
+          console.group('Cloud Functions Error Logs:');
+          fbError.details.logs.forEach(log => console.log(log));
+          console.groupEnd();
+        }
+        if (fbError.details.error) {
+          console.error('Error details:', fbError.details.error);
+        }
+      }
+    }
+    
+    return [];
+  }
+}

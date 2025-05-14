@@ -2,6 +2,7 @@ import * as functions from 'firebase-functions';
 import * as express from 'express';
 import * as admin from 'firebase-admin';
 import { google, calendar_v3 } from 'googleapis';
+import axios from 'axios';
 
 // Firebase初期化
 admin.initializeApp();
@@ -562,8 +563,7 @@ export const sendCheckinNotification = functions.region('asia-northeast1')
       
       logs.push(`Sending message to Google Chat: ${JSON.stringify(message)}`);
       
-      // axiosを使用してGoogle ChatにPOSTリクエストを送信
-      const axios = require('axios');
+      await axios.post(webhookUrl, message);
       await axios.post(webhookUrl, message);
       
       logs.push('Notification sent successfully');
@@ -575,3 +575,122 @@ export const sendCheckinNotification = functions.region('asia-northeast1')
       return { success: false, error: errorMessage, logs };
     }
   });
+
+// Cloud Function: 指定された期間のカレンダー予約情報を取得
+export const getCalendarReservationsForPeriod = functions.region('asia-northeast1').https.onCall(async (data, context) => {
+  // ログ情報を格納する配列
+  const logs: string[] = [];
+  logs.push(`Function called with room: ${data.room}, startDate: ${data.startDate}, endDate: ${data.endDate}`);
+  logs.push(`Auth: ${context.auth ? 'Authenticated' : 'Not authenticated'}`);
+  if (context.auth) {
+    logs.push(`User ID: ${context.auth.uid}`);
+  }
+  
+  try {
+    const { room: roomId, startDate, endDate } = data;
+
+    if (!roomId || !startDate || !endDate) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Room ID, start date, and end date are required'
+      );
+    }
+
+    // 単一のカレンダーIDを使用
+    const config = functions.config();
+    if (!config.calendar || !config.calendar.id) {
+      throw new functions.https.HttpsError(
+        'internal',
+        'Calendar ID not configured. Please set calendar.id using firebase functions:config:set'
+      );
+    }
+    const calendarId = config.calendar.id;
+    logs.push(`Using calendar ID: ${calendarId}`);
+
+    const calendar = getCalendarClient();
+    logs.push('Calendar client initialized');
+    
+    // 指定された日付範囲を設定
+    const startDateTime = new Date(startDate);
+    startDateTime.setHours(0, 0, 0, 0);
+    
+    const endDateTime = new Date(endDate);
+    endDateTime.setHours(23, 59, 59, 999);
+    
+    logs.push(`Date range: ${startDateTime.toISOString()} to ${endDateTime.toISOString()}`);
+
+    // イベントを取得
+    logs.push('Fetching events from Google Calendar...');
+    const response = await calendar.events.list({
+      calendarId,
+      timeMin: startDateTime.toISOString(),
+      timeMax: endDateTime.toISOString(),
+      singleEvents: true,
+      orderBy: 'startTime',
+    });
+
+    const events = response.data.items || [];
+    logs.push(`Found ${events.length} events in calendar`);
+    
+    // 予約情報に変換
+    logs.push('Processing events...');
+    const reservations = events
+      .filter(event => event.summary) // タイトルがあるイベントのみ
+      .map(event => {
+        const title = event.summary || '';
+        const roomIdentifier = extractRoomIdentifier(title) || '';
+        
+        // 開始時間と終了時間を取得
+        const start = event.start?.dateTime ? new Date(event.start.dateTime) : new Date();
+        const end = event.end?.dateTime ? new Date(event.end.dateTime) : new Date();
+        
+        return {
+          id: event.id || '',
+          title,
+          roomIdentifier,
+          start: start.toISOString(),
+          end: end.toISOString(),
+          startTime: formatTimeString(start),
+          endTime: formatTimeString(end),
+          date: start.toISOString().split('T')[0], // YYYY-MM-DD形式の日付
+        };
+      })
+      // 指定された部屋の予約のみをフィルタリング
+      .filter(reservation => {
+        const identifier = reservation.roomIdentifier;
+        
+        // 部屋IDに基づいてフィルタリング
+        switch (roomId) {
+          case 'private4':
+            return identifier === '4番個室';
+          case 'large4':
+            return identifier === '4番大部屋';
+          case 'large6':
+          case 'studio6':
+            // 6番の場合は特殊処理（大部屋と工作室は同時に予約できない）
+            return identifier === '6番';
+          case 'room1':
+            return identifier === '1番';
+          case 'tour':
+            return identifier === '見学';
+          case 'all':
+            // すべての部屋の予約を返す
+            return true;
+          default:
+            return false;
+        }
+      });
+    
+    logs.push(`Filtered ${reservations.length} reservations for room ${roomId}`);
+    return { reservations, logs };
+  } catch (error) {
+    console.error('Error fetching reservations for period:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logs.push(`Error: ${errorMessage}`);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to fetch reservations for period',
+      { error: errorMessage, logs }
+    );
+  }
+});

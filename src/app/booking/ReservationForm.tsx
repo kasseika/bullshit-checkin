@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { saveBookingData } from "../../lib/bookingFirestore";
+import { getReservationsForPeriod, Reservation } from "../../lib/googleCalendar";
 import { format, isBefore, addMonths, startOfDay } from "date-fns";
 import { ja } from "date-fns/locale";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Clock } from "lucide-react";
 
 // 利用目的の選択肢
 const purposes = [
@@ -68,6 +69,7 @@ const generateTimeOptions = (startTime?: string, isEndTime: boolean = false) => 
 export default function ReservationForm({ openDays }: ReservationFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingReservations, setIsLoadingReservations] = useState(false);
   
   // 選択可能な部屋リスト
   const rooms = [
@@ -90,13 +92,43 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
     contactEmail: "",
     contactPhone: "",
   });
-// 日付選択の状態
-const [date, setDate] = useState<Date | undefined>(undefined);
-// Popoverの開閉状態
-const [calendarOpen, setCalendarOpen] = useState(false);
+  // 日付選択の状態
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  // Popoverの開閉状態
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  // 予約情報の状態
+  const [allReservations, setAllReservations] = useState<Reservation[]>([]);
+  const [dateReservations, setDateReservations] = useState<Reservation[]>([]);
+  const [reservationsLoaded, setReservationsLoaded] = useState(false);
 
+  // コンポーネントがマウントされたときに予約情報を取得
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        setIsLoadingReservations(true);
+        
+        // 現在の日付を取得
+        const today = new Date();
+        const startDate = format(today, 'yyyy-MM-dd');
+        
+        // 3ヶ月後の日付を取得
+        const endDate = format(addMonths(today, 3), 'yyyy-MM-dd');
+        
+        // すべての部屋の予約を取得
+        const reservations = await getReservationsForPeriod(startDate, endDate, 'all');
+        setAllReservations(reservations);
+        setReservationsLoaded(true);
+      } catch (error) {
+        console.error('予約情報の取得中にエラーが発生しました:', error);
+      } finally {
+        setIsLoadingReservations(false);
+      }
+    };
+    
+    fetchReservations();
+  }, []);
   
-  // 日付が選択されたときにフォームデータを更新
+  // 日付が選択されたときにフォームデータを更新し、その日の予約を表示
   useEffect(() => {
     if (date) {
       const year = date.getFullYear();
@@ -108,8 +140,33 @@ const [calendarOpen, setCalendarOpen] = useState(false);
         ...prev,
         startDate: formattedDate
       }));
+      
+      // 選択された日付の予約を表示
+      if (reservationsLoaded) {
+        const filteredReservations = allReservations.filter(reservation => {
+          // 予約の日付を取得（YYYY-MM-DD形式）
+          const reservationDate = reservation.start.split('T')[0];
+          // 開始時間と終了時間が同じ予約は除外（現在時刻が使われている可能性がある）
+          return reservationDate === formattedDate && reservation.startTime !== reservation.endTime;
+        }).map(reservation => {
+          // UTCからJSTに変換（+9時間）
+          const convertToJST = (timeStr: string) => {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            const jstHours = (hours + 9) % 24;
+            return `${jstHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+          };
+          
+          return {
+            ...reservation,
+            startTime: convertToJST(reservation.startTime),
+            endTime: convertToJST(reservation.endTime)
+          };
+        });
+        
+        setDateReservations(filteredReservations);
+      }
     }
-  }, [date]);
+  }, [date, allReservations, reservationsLoaded]);
 
   // 入力値の変更を処理
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -265,6 +322,62 @@ const [calendarOpen, setCalendarOpen] = useState(false);
           </PopoverContent>
         </Popover>
       </div>
+
+      {/* 選択された日付の予約情報 */}
+      {date && dateReservations.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <h3 className="font-medium text-lg">この日の予約状況</h3>
+          <div className="space-y-2">
+            {dateReservations.map((reservation) => {
+              // 部屋名を取得
+              const roomName = (() => {
+                switch (reservation.roomIdentifier) {
+                  case '4番個室':
+                    return '4番個室';
+                  case '4番小部屋':
+                    return '4番個室';
+                  case '6番':
+                    return '6番';
+                  default:
+                    return reservation.roomIdentifier;
+                }
+              })();
+              
+              return (
+                <div
+                  key={reservation.id}
+                  className="p-3 border rounded-md bg-gray-50"
+                >
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-2" />
+                    <span className="font-medium">
+                      {reservation.startTime} 〜 {reservation.endTime}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {roomName}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-sm text-gray-500 mt-2">
+            ※予約状況は変更される場合があります
+          </p>
+        </div>
+      )}
+
+      {date && reservationsLoaded && dateReservations.length === 0 && (
+        <div className="mt-4 p-3 border rounded-md bg-gray-50">
+          <p className="text-center">この日の予約はありません</p>
+        </div>
+      )}
+
+      {isLoadingReservations && (
+        <div className="mt-4 p-3 border rounded-md bg-gray-50">
+          <p className="text-center">予約情報を読み込み中...</p>
+        </div>
+      )}
 
       {/* 時間選択 */}
       <div className="grid grid-cols-2 gap-4">
