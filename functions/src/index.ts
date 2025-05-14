@@ -843,3 +843,61 @@ export const getCalendarReservationsForPeriod = functions.region('asia-northeast
     );
   }
 });
+
+// Google ChatにWebhookを送信するCloud Function（予約通知用）
+export const sendBookingNotification = functions.region('asia-northeast1')
+  .https.onCall(async (data) => {
+    // ログ情報を格納する配列
+    const logs: string[] = [];
+    logs.push(`Function called for booking notification`);
+    
+    try {
+      // 設定からWebhook URLを取得
+      const config = functions.config();
+      if (!config.chat || !config.chat.webhook_url) {
+        throw new Error('Webhook URL not configured. Please set chat.webhook_url using firebase functions:config:set');
+      }
+      const webhookUrl = config.chat.webhook_url;
+      logs.push(`Using webhook URL from config`);
+      
+      // 予約データを取得
+      const bookingData = data;
+      logs.push(`Got booking data: ${JSON.stringify(bookingData)}`);
+      
+      // 部屋名のマッピング
+      const roomNames: Record<string, string> = {
+        "private4": "4番個室",
+        "large6": "6番大部屋",
+        "workshop6": "6番工作室",
+      };
+      
+      
+      // 予約日時をフォーマット
+      const bookingDate = bookingData.startDate || '';
+      
+      // 通知メッセージを作成
+      const message = {
+        text: `📅 テレワークセンターに新しい予約がありました！\n\n` +
+          `📆 予約日: ${bookingDate}\n` +
+          `🏢 利用部屋: ${roomNames[bookingData.room] || bookingData.room}\n` +
+          `⏰ 利用時間: ${bookingData.startTime} 〜 ${bookingData.endTime}\n` +
+          `👥 利用人数: ${bookingData.count}人\n` +
+          `🎯 利用目的: ${bookingData.purpose}\n` +
+          `👤 予約者: ${bookingData.name}\n` +
+          `📧 連絡先: ${bookingData.contactEmail || 'なし'}\n` +
+          `📱 電話番号: ${bookingData.contactPhone || 'なし'}`
+      };
+      
+      logs.push(`Sending message to Google Chat: ${JSON.stringify(message)}`);
+      
+      await axios.post(webhookUrl, message);
+      
+      logs.push('Notification sent successfully');
+      return { success: true, logs };
+    } catch (error) {
+      console.error('Error sending booking notification:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logs.push(`Error: ${errorMessage}`);
+      return { success: false, error: errorMessage, logs };
+    }
+  });

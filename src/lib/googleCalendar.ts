@@ -261,6 +261,16 @@ export async function addBookingToCalendar(bookingData: BookingEventData): Promi
       console.groupEnd();
     }
     
+    if (data.success) {
+      try {
+        // 予約成功時にGoogle Chatに通知を送信
+        const sendBookingNotification = httpsCallable(functions, 'sendBookingNotification');
+        await sendBookingNotification(bookingData);
+      } catch (notificationError) {
+        console.error('通知の送信中にエラーが発生しました:', notificationError);
+        // 通知の失敗は予約の成功に影響しないようにする
+      }
+    }
     return data.success;
   } catch (error) {
     console.error('Error adding booking event to calendar:', error);
