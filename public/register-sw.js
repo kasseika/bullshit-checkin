@@ -96,7 +96,7 @@ window.addEventListener('appinstalled', () => {
 if ('serviceWorker' in navigator && 'caches' in window) {
   // アプリの重要なページをキャッシュ
   const pagesToCache = [
-    '/',
+    '/checkin/welcome',
     '/checkin/time',
     '/checkin/room',
     '/checkin/purpose',

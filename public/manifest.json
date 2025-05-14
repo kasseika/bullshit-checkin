@@ -2,7 +2,7 @@
   "name": "Bullshit Checkin",
   "short_name": "Checkin",
   "description": "チェックイン端末アプリケーション",
-  "start_url": "/",
+  "start_url": "/checkin/welcome",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
