@@ -53,12 +53,35 @@ const minutesToTime = (minutes: number): string => {
 const generateTimeOptions = (
   startTime?: string,
   isEndTime: boolean = false,
-  reservations: Reservation[] = []
+  reservations: Reservation[] = [],
+  selectedDate?: string
 ) => {
   const times = [];
+  
+  // 現在時刻を取得（当日の場合に使用）
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  // 現在時刻を分に変換
+  const currentTimeInMinutes = currentHour * 60 + currentMinute;
+  
+  // 選択された日付が当日かどうかをチェック
+  const isToday = selectedDate === format(now, 'yyyy-MM-dd');
+  
+  // 開始時間の最小値を設定
+  // 当日の場合は現在時刻の次の10分単位、それ以外は9:00
+  let minStart = 9 * 60; // デフォルトは9:00 = 540分
+  
+  if (isToday && !isEndTime) {
+    // 現在時刻の次の10分単位に切り上げ
+    minStart = Math.ceil(currentTimeInMinutes / 10) * 10;
+    // 9:00より前の場合は9:00に設定
+    minStart = Math.max(minStart, 9 * 60);
+  }
+  
   const start = startTime ?
     timeToMinutes(startTime) :
-    9 * 60; // 9:00 = 540分
+    minStart;
   const end = 18 * 60; // 18:00 = 1080分
   
   // 開始時間の場合は17:50まで、終了時間の場合は18:00まで
@@ -533,7 +556,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
             }`}
           >
             <option value="">選択してください</option>
-            {date && formData.roomId && generateTimeOptions(undefined, false, filteredReservations).map((time) => (
+            {date && formData.roomId && generateTimeOptions(undefined, false, filteredReservations, formData.startDate).map((time) => (
               <option key={time} value={time}>
                 {time}
               </option>
@@ -559,7 +582,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
               className="w-full rounded-md border border-input bg-background px-3 py-2"
             >
               <option value="">選択してください</option>
-              {generateTimeOptions(formData.startTime, true, filteredReservations).map((time) => (
+              {generateTimeOptions(formData.startTime, true, filteredReservations, formData.startDate).map((time) => (
                 <option key={time} value={time}>
                   {time}
                 </option>
