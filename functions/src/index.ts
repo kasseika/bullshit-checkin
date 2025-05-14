@@ -881,7 +881,7 @@ export const sendBookingNotification = functions.region('asia-northeast1')
           `🏢 利用部屋: ${roomNames[bookingData.room] || bookingData.room}\n` +
           `⏰ 利用時間: ${bookingData.startTime} 〜 ${bookingData.endTime}\n` +
           `👥 利用人数: ${bookingData.count}人\n` +
-          `🎯 利用目的: ${bookingData.purpose}\n` +
+          `🎯 利用目的: ${bookingData.purpose}${bookingData.purposeDetail ? `(${bookingData.purposeDetail})` : ''}\n` +
           `👤 予約者: ${bookingData.name}\n` +
           `📧 連絡先: ${bookingData.contactEmail || 'なし'}\n` +
           `📱 電話番号: ${bookingData.contactPhone || 'なし'}`
@@ -962,12 +962,16 @@ async function sendBookingConfirmationEmail(bookingData: BookingEventData): Prom
 利用部屋: ${roomNames[bookingData.room] || bookingData.room}
 利用時間: ${bookingData.startTime} 〜 ${bookingData.endTime}
 利用人数: ${bookingData.count}人
-利用目的: ${bookingData.purpose}
+利用目的: ${bookingData.purpose}${bookingData.purposeDetail ? `(${bookingData.purposeDetail})` : ''}
 
 【連絡先情報】
 お名前: ${bookingData.name}
 メールアドレス: ${bookingData.contactEmail || 'なし'}
 電話番号: ${bookingData.contactPhone || 'なし'}
+
+【予約の変更・キャンセル】
+予約の変更やキャンセルは、以下の連絡先までご連絡ください。
+電話: 090-8437-9972
 
 ご不明な点がございましたら、お気軽にお問い合わせください。
 当日のご来館をお待ちしております。
