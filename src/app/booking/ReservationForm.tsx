@@ -36,31 +36,88 @@ interface ReservationFormProps {
   openDays: Date[];
 }
 
+// 時間を分に変換する関数
+const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+// 分を時間に変換する関数
+const minutesToTime = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60).toString().padStart(2, '0');
+  const mins = (minutes % 60).toString().padStart(2, '0');
+  return `${hours}:${mins}`;
+};
+
 // 時間選択肢を生成する関数（10分単位、9:00〜18:00）
-const generateTimeOptions = (startTime?: string, isEndTime: boolean = false) => {
+const generateTimeOptions = (
+  startTime?: string,
+  isEndTime: boolean = false,
+  reservations: Reservation[] = []
+) => {
   const times = [];
   const start = startTime ?
-    (parseInt(startTime.split(':')[0]) * 60 + parseInt(startTime.split(':')[1])) :
+    timeToMinutes(startTime) :
     9 * 60; // 9:00 = 540分
   const end = 18 * 60; // 18:00 = 1080分
   
   // 開始時間の場合は17:50まで、終了時間の場合は18:00まで
   const maxTime = isEndTime ? end : end - 10;
 
-  // 終了時間の場合、ループは最大時間の手前まで実行し、18:00は別途追加
-  const loopEndTime = isEndTime ? maxTime - 10 : maxTime;
+  // 予約済み時間帯を取得
+  const reservedTimeSlots: { start: number; end: number }[] = reservations.map(reservation => ({
+    start: timeToMinutes(reservation.startTime),
+    end: timeToMinutes(reservation.endTime)
+  }));
+
+  // 時間帯が予約済みかどうかをチェックする関数
+  const isTimeSlotReserved = (time: number): boolean => {
+    return reservedTimeSlots.some(slot => {
+      // 開始時間の場合：その時間が予約の開始時間以上、終了時間未満なら予約済み
+      if (!isEndTime) {
+        return time >= slot.start && time < slot.end;
+      }
+      // 終了時間の場合：その時間が予約の開始時間より大きく、終了時間以下なら予約済み
+      return time > slot.start && time <= slot.end;
+    });
+  };
+
+  // 終了時間の場合、次の予約開始時間を取得
+  let nextReservationStart = end;
+  if (isEndTime && reservedTimeSlots.length > 0) {
+    // 開始時間より後の予約を探す
+    const futureReservations = reservedTimeSlots
+      .filter(slot => slot.start > start)
+      .sort((a, b) => a.start - b.start);
+    
+    if (futureReservations.length > 0) {
+      nextReservationStart = futureReservations[0].start;
+    }
+  }
+
+  // 終了時間の場合、ループは次の予約開始時間または最大時間の手前まで実行
+  const loopEndTime = isEndTime
+    ? Math.min(nextReservationStart - 10, maxTime - 10)
+    : maxTime;
 
   // 開始時間が選択されていない場合は9:00から最大時間まで
   // 開始時間が選択されている場合は、その時間から10分後から最大時間まで
   for (let i = startTime ? start + 10 : start; i <= loopEndTime; i += 10) {
-    const hours = Math.floor(i / 60).toString().padStart(2, '0');
-    const minutes = (i % 60).toString().padStart(2, '0');
-    times.push(`${hours}:${minutes}`);
+    // 予約済みの時間帯はスキップ
+    if (!isEndTime && isTimeSlotReserved(i)) {
+      continue;
+    }
+    
+    const timeStr = minutesToTime(i);
+    times.push(timeStr);
   }
   
-  // 終了時間の場合、18:00を追加
+  // 終了時間の場合、次の予約開始時間または18:00を追加
   if (isEndTime) {
-    times.push('18:00');
+    const finalTime = minutesToTime(Math.min(nextReservationStart, end));
+    if (!times.includes(finalTime)) {
+      times.push(finalTime);
+    }
   }
   
   return times;
@@ -137,9 +194,12 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
       const day = String(date.getDate()).padStart(2, '0');
       const formattedDate = `${year}-${month}-${day}`; // YYYY-MM-DD形式
       
+      // 日付が変更されたら開始時間と終了時間をリセット
       setFormData(prev => ({
         ...prev,
-        startDate: formattedDate
+        startDate: formattedDate,
+        startTime: "",
+        endTime: ""
       }));
       
       // 選択された日付の予約を表示
@@ -201,12 +261,14 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
     const { name, value } = e.target;
     
     if (name === "roomId") {
-      // 部屋IDが変更された場合、部屋名も更新
+      // 部屋IDが変更された場合、部屋名も更新し、開始時間と終了時間をリセット
       const selectedRoom = rooms.find(room => room.id === value);
       setFormData((prev) => ({
         ...prev,
         roomId: value,
-        room: selectedRoom ? selectedRoom.name : ""
+        room: selectedRoom ? selectedRoom.name : "",
+        startTime: "", // 開始時間をリセット
+        endTime: ""    // 終了時間をリセット
       }));
     } else if (name === "startTime") {
       // 開始時間が変更された場合、終了時間をリセット
@@ -465,15 +527,23 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
             value={formData.startTime}
             onChange={handleChange}
             required
-            className="w-full rounded-md border border-input bg-background px-3 py-2"
+            disabled={!date || !formData.roomId} // 日付と部屋が選択されていない場合は無効化
+            className={`w-full rounded-md border border-input px-3 py-2 ${
+              !date || !formData.roomId ? 'bg-gray-100 cursor-not-allowed' : 'bg-background'
+            }`}
           >
             <option value="">選択してください</option>
-            {generateTimeOptions(undefined, false).map((time) => (
+            {date && formData.roomId && generateTimeOptions(undefined, false, filteredReservations).map((time) => (
               <option key={time} value={time}>
                 {time}
               </option>
             ))}
           </select>
+          {(!date || !formData.roomId) && (
+            <p className="text-sm text-gray-500 mt-1">
+              ※利用日と部屋を選択すると選択可能になります
+            </p>
+          )}
         </div>
         {formData.startTime && (
           <div className="space-y-2">
@@ -489,7 +559,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
               className="w-full rounded-md border border-input bg-background px-3 py-2"
             >
               <option value="">選択してください</option>
-              {generateTimeOptions(formData.startTime, true).map((time) => (
+              {generateTimeOptions(formData.startTime, true, filteredReservations).map((time) => (
                 <option key={time} value={time}>
                   {time}
                 </option>
