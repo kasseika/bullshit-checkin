@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { saveBookingData } from "../../../lib/bookingFirestore";
-import { format } from "date-fns";
+import { format, isBefore, addMonths, startOfDay } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
 
@@ -253,7 +253,13 @@ const [calendarOpen, setCalendarOpen] = useState(false);
                 }
               }}
               locale={ja}
-              disabled={day => !isOpenDay(day)} // 開館日以外は選択不可
+              disabled={day => {
+                const today = startOfDay(new Date());
+                // 今日より前の日付または開館日以外は選択不可
+                return isBefore(day, today) || !isOpenDay(day);
+              }}
+              fromMonth={new Date()} // 今月から表示
+              toMonth={addMonths(new Date(), 3)} // 3ヶ月後まで表示
               initialFocus
             />
           </PopoverContent>
