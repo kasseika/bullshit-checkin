@@ -286,7 +286,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
         <label className="block font-medium">
           利用する部屋
         </label>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {rooms.map((room) => (
             <div
               key={room.id}
