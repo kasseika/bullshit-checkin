@@ -48,9 +48,11 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
     contactEmail: "",
     contactPhone: "",
   });
+// 日付選択の状態
+const [date, setDate] = useState<Date | undefined>(undefined);
+// Popoverの開閉状態
+const [calendarOpen, setCalendarOpen] = useState(false);
 
-  // 日付選択の状態
-  const [date, setDate] = useState<Date | undefined>(undefined);
   
   // 日付が選択されたときにフォームデータを更新
   useEffect(() => {
@@ -172,7 +174,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
         <label htmlFor="startDate" className="block font-medium">
           利用日
         </label>
-        <Popover>
+        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
             <Button
               variant={"outline"}
@@ -182,7 +184,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "yyyy年MM月dd日", { locale: ja }) : 
+              {date ? format(date, "yyyy年MM月dd日", { locale: ja }) :
                 "日付を選択してください"}
             </Button>
           </PopoverTrigger>
@@ -190,7 +192,13 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
             <Calendar
               mode="single"
               selected={date}
-              onSelect={setDate}
+              onSelect={(selectedDate) => {
+                // 日付が選択されたらPopoverを閉じる
+                if (selectedDate) {
+                  setDate(selectedDate);
+                  setCalendarOpen(false);
+                }
+              }}
               locale={ja}
               disabled={day => !isOpenDay(day)} // 開館日以外は選択不可
               initialFocus
