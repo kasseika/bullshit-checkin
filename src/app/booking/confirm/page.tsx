@@ -14,6 +14,7 @@ interface BookingInfo {
   name: string;
   email: string;
   phone: string;
+  equipments?: string; // 使用機材（カンマ区切りの文字列）
 }
 
 // SearchParamsを使用するコンポーネント
@@ -36,6 +37,7 @@ function BookingDetails() {
     const name = searchParams.get("name");
     const email = searchParams.get("email");
     const phone = searchParams.get("phone");
+    const equipments = searchParams.get("equipments");
     
     // 必須パラメータが存在するか確認
     if (!room || !date || !startTime || !endTime || !name) {
@@ -54,7 +56,8 @@ function BookingDetails() {
       purpose: purpose || "",
       name,
       email: email || "",
-      phone: phone || ""
+      phone: phone || "",
+      equipments: equipments || ""
     });
     
     setIsLoading(false);
@@ -140,6 +143,13 @@ function BookingDetails() {
               
               <div className="font-medium">目的:</div>
               <div>{booking.purpose}</div>
+              
+              {booking.equipments && (
+                <>
+                  <div className="font-medium">使用機材:</div>
+                  <div>{booking.equipments}</div>
+                </>
+              )}
             </div>
 
             <h2 className="mt-6 text-xl font-semibold">連絡先情報</h2>

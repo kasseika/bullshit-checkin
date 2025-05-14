@@ -8,6 +8,13 @@ import { format, isBefore, addMonths, startOfDay } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
 
+// 使用機材の選択肢
+const equipments = [
+  { id: "laser", name: "レーザー加工機" },
+  { id: "garment", name: "ガーメントプリンター" },
+  { id: "embroidery", name: "刺繍ミシン" },
+];
+
 // 利用目的の選択肢
 const purposes = [
   { id: "meeting", name: "会議・打合せ" },
@@ -31,6 +38,8 @@ import {
   Card,
   CardHeader,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface ReservationFormProps {
   openDays: Date[];
@@ -171,6 +180,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
     contactName: "",
     contactEmail: "",
     contactPhone: "",
+    equipments: [] as string[], // 選択された使用機材
   });
   // 日付選択の状態
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -291,7 +301,8 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
         roomId: value,
         room: selectedRoom ? selectedRoom.name : "",
         startTime: "", // 開始時間をリセット
-        endTime: ""    // 終了時間をリセット
+        endTime: "",   // 終了時間をリセット
+        equipments: [] // 工作室以外を選択した場合は機材選択をリセット
       }));
     } else if (name === "startTime") {
       // 開始時間が変更された場合、終了時間をリセット
@@ -308,6 +319,25 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
     }
   };
 
+  // チェックボックスの変更を処理
+  const handleEquipmentChange = (equipmentId: string, checked: boolean) => {
+    setFormData((prev) => {
+      if (checked) {
+        // チェックされた場合は配列に追加
+        return {
+          ...prev,
+          equipments: [...prev.equipments, equipmentId]
+        };
+      } else {
+        // チェックが外された場合は配列から削除
+        return {
+          ...prev,
+          equipments: prev.equipments.filter(id => id !== equipmentId)
+        };
+      }
+    });
+  };
+
   // フォーム送信処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -318,6 +348,16 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
       const purposeName = formData.purpose === "other"
         ? `その他(${formData.purposeDetail})`
         : purposes.find(p => p.id === formData.purpose)?.name || formData.purpose;
+
+      // 選択された機材の名前を取得
+      const selectedEquipments = formData.equipments
+        .map(id => equipments.find(eq => eq.id === id)?.name)
+        .filter(Boolean);
+      
+      // 使用機材の文字列を作成（選択されている場合のみ）
+      const equipmentDetail = selectedEquipments.length > 0
+        ? `使用機材:${selectedEquipments.join(', ')}`
+        : '';
 
       // カレンダーに予約イベントを追加
       const success = await addBookingToCalendar({
@@ -330,7 +370,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
         contactEmail: formData.contactEmail,
         count: formData.count,
         purpose: purposeName,
-        purposeDetail: formData.purposeDetail
+        purposeDetail: formData.purposeDetail + (equipmentDetail ? `\n${equipmentDetail}` : '')
       });
 
       if (success) {
@@ -340,6 +380,11 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
           duration: 5000,
         });
         
+        // 選択された機材の名前を取得
+        const selectedEquipments = formData.equipments
+          .map(id => equipments.find(eq => eq.id === id)?.name)
+          .filter(Boolean) as string[];
+
         // 予約情報をURLパラメータとして渡す
         const params = new URLSearchParams({
           room: formData.room,
@@ -352,6 +397,11 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
           email: formData.contactEmail,
           phone: formData.contactPhone
         });
+
+        // 選択された機材がある場合はパラメータに追加
+        if (selectedEquipments.length > 0) {
+          params.append('equipments', selectedEquipments.join(', '));
+        }
         
         router.push(`/booking/confirm?${params.toString()}`);
       } else {
@@ -662,6 +712,34 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
             </option>
           ))}
         </select>
+
+      {/* 6番工作室が選択された場合の使用機材選択 */}
+      {formData.roomId === 'workshop6' && (
+        <div className="space-y-2">
+          <label className="block font-medium">
+            使用機材（複数選択可）
+          </label>
+          <div className="space-y-3">
+            {equipments.map((equipment) => (
+              <div key={equipment.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`equipment-${equipment.id}`}
+                  checked={formData.equipments.includes(equipment.id)}
+                  onCheckedChange={(checked) =>
+                    handleEquipmentChange(equipment.id, checked === true)
+                  }
+                />
+                <Label
+                  htmlFor={`equipment-${equipment.id}`}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {equipment.name}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
         
         {/* その他が選択された場合のみ詳細入力欄を表示 */}
         {formData.purpose === "other" && (
@@ -744,6 +822,9 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
         >
           {isLoading ? "送信中..." : "予約を確定する"}
         </Button>
+        <p className="text-sm text-gray-500 mt-3 text-center">
+          うまく予約できない場合はお手数ですが090-8437-9972からご予約ください。
+        </p>
       </div>
     </form>
   );
