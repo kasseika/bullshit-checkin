@@ -15,6 +15,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Card,
+  CardHeader,
+} from "@/components/ui/card";
 
 interface ReservationFormProps {
   openDays: Date[];
@@ -123,24 +127,44 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
     <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-6">
       {/* 部屋選択 */}
       <div className="space-y-2">
-        <label htmlFor="roomId" className="block font-medium">
+        <label className="block font-medium">
           利用する部屋
         </label>
-        <select
-          id="roomId"
+        <div className="grid grid-cols-1 gap-4">
+          {rooms.map((room) => (
+            <div
+              key={room.id}
+              onClick={() => {
+                // 部屋選択時に手動でhandleChangeを呼び出す
+                const event = {
+                  target: {
+                    name: "roomId",
+                    value: room.id
+                  }
+                } as React.ChangeEvent<HTMLSelectElement>;
+                handleChange(event);
+              }}
+              className="cursor-pointer transition-all duration-200"
+            >
+              <Card className={cn(
+                formData.roomId === room.id
+                  ? "bg-black text-white"
+                  : "hover:bg-accent/50"
+              )}>
+                <CardHeader className="flex justify-center items-center">
+                  <p className="text-md font-medium text-center">{room.name}</p>
+                </CardHeader>
+              </Card>
+            </div>
+          ))}
+        </div>
+        {/* 選択必須のバリデーションのために非表示のinputを追加 */}
+        <input
+          type="hidden"
           name="roomId"
           value={formData.roomId}
-          onChange={handleChange}
           required
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
-        >
-          <option value="">部屋を選択してください</option>
-          {rooms.map((room) => (
-            <option key={room.id} value={room.id}>
-              {room.name}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       {/* 日付選択 (Date Picker) */}
