@@ -158,8 +158,6 @@ function BookingDetails() {
             <div className="mt-8 text-center">
               <p className="mb-4 text-muted-foreground">
                 予約内容は登録されたメールアドレスに送信されました。
-                <br />
-                当日は予約IDをご提示ください。
               </p>
               
               <button
