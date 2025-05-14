@@ -41,7 +41,7 @@ function BookingDetails() {
   }, [bookingId]);
 
   const handleBackToHome = () => {
-    router.push("/booking/welcome");
+    router.push("/booking");
   };
 
   if (isLoading) {

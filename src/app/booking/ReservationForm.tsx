@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { saveBookingData } from "../../../lib/bookingFirestore";
+import { saveBookingData } from "../../lib/bookingFirestore";
 import { format, isBefore, addMonths, startOfDay } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";

@@ -60,7 +60,7 @@ async function ReservationContent() {
   );
 }
 
-export default function ReservationPage() {
+export default function BookingPage() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen">読み込み中...</div>}>
       <ReservationContent />
