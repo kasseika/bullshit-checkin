@@ -713,7 +713,6 @@ export const sendCheckinNotification = functions.region('asia-northeast1')
       logs.push(`Sending message to Google Chat: ${JSON.stringify(message)}`);
       
       await axios.post(webhookUrl, message);
-      await axios.post(webhookUrl, message);
       
       logs.push('Notification sent successfully');
       return { success: true, logs };
