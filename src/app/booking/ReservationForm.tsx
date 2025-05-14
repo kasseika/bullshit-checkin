@@ -237,48 +237,6 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-lg space-y-6">
-      {/* 部屋選択 */}
-      <div className="space-y-2">
-        <label className="block font-medium">
-          利用する部屋
-        </label>
-        <div className="grid grid-cols-1 gap-4">
-          {rooms.map((room) => (
-            <div
-              key={room.id}
-              onClick={() => {
-                // 部屋選択時に手動でhandleChangeを呼び出す
-                const event = {
-                  target: {
-                    name: "roomId",
-                    value: room.id
-                  }
-                } as React.ChangeEvent<HTMLSelectElement>;
-                handleChange(event);
-              }}
-              className="cursor-pointer transition-all duration-200"
-            >
-              <Card className={cn(
-                formData.roomId === room.id
-                  ? "bg-black text-white"
-                  : "hover:bg-accent/50"
-              )}>
-                <CardHeader className="flex justify-center items-center">
-                  <p className="text-md font-medium text-center">{room.name}</p>
-                </CardHeader>
-              </Card>
-            </div>
-          ))}
-        </div>
-        {/* 選択必須のバリデーションのために非表示のinputを追加 */}
-        <input
-          type="hidden"
-          name="roomId"
-          value={formData.roomId}
-          required
-        />
-      </div>
-
       {/* 日付選択 (Date Picker) */}
       <div className="space-y-2">
         <label htmlFor="startDate" className="block font-medium">
@@ -321,6 +279,48 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
             />
           </PopoverContent>
         </Popover>
+      </div>  
+
+      {/* 部屋選択 */}
+      <div className="space-y-2">
+        <label className="block font-medium">
+          利用する部屋
+        </label>
+        <div className="grid grid-cols-1 gap-4">
+          {rooms.map((room) => (
+            <div
+              key={room.id}
+              onClick={() => {
+                // 部屋選択時に手動でhandleChangeを呼び出す
+                const event = {
+                  target: {
+                    name: "roomId",
+                    value: room.id
+                  }
+                } as React.ChangeEvent<HTMLSelectElement>;
+                handleChange(event);
+              }}
+              className="cursor-pointer transition-all duration-200"
+            >
+              <Card className={cn(
+                formData.roomId === room.id
+                  ? "bg-black text-white"
+                  : "hover:bg-accent/50"
+              )}>
+                <CardHeader className="flex justify-center items-center">
+                  <p className="text-md font-medium text-center">{room.name}</p>
+                </CardHeader>
+              </Card>
+            </div>
+          ))}
+        </div>
+        {/* 選択必須のバリデーションのために非表示のinputを追加 */}
+        <input
+          type="hidden"
+          name="roomId"
+          value={formData.roomId}
+          required
+        />
       </div>
 
       {/* 選択された日付の予約情報 */}
