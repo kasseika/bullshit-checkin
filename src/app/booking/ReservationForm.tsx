@@ -296,13 +296,16 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
     if (name === "roomId") {
       // 部屋IDが変更された場合、部屋名も更新し、開始時間と終了時間をリセット
       const selectedRoom = rooms.find(room => room.id === value);
+      
       setFormData((prev) => ({
         ...prev,
         roomId: value,
         room: selectedRoom ? selectedRoom.name : "",
         startTime: "", // 開始時間をリセット
         endTime: "",   // 終了時間をリセット
-        equipments: [] // 工作室以外を選択した場合は機材選択をリセット
+        equipments: [], // 工作室以外を選択した場合は機材選択をリセット
+        // 6番工作室が選択された場合は、利用目的を「制作」に固定
+        purpose: value === "workshop6" ? "creation" : prev.purpose
       }));
     } else if (name === "startTime") {
       // 開始時間が変更された場合、終了時間をリセット
@@ -530,8 +533,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
                 if (reservation.roomIdentifier.startsWith('4番個室') || reservation.roomIdentifier.startsWith('4番小部屋')) {
                   return '4番個室';
                 } else if (reservation.roomIdentifier.startsWith('6番')) {
-                  // 6番の場合、工作室かどうかを表示に含める
-                  return reservation.roomIdentifier.includes('工作室') ? '6番工作室' : '6番大部屋';
+                  return '6番';
                 } else {
                   return reservation.roomIdentifier;
                 }
@@ -572,8 +574,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
                 if (reservation.roomIdentifier.startsWith('4番個室') || reservation.roomIdentifier.startsWith('4番小部屋')) {
                   return '4番個室';
                 } else if (reservation.roomIdentifier.startsWith('6番')) {
-                  // 6番の場合、工作室かどうかを表示に含める
-                  return reservation.roomIdentifier.includes('工作室') ? '6番工作室' : '6番大部屋';
+                  return '6番';
                 } else {
                   return reservation.roomIdentifier;
                 }
@@ -696,6 +697,9 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
       <div className="space-y-2">
         <label htmlFor="purpose" className="block font-medium">
           利用目的
+          {formData.roomId === "workshop6" && (
+            <span className="ml-2 text-sm text-blue-600">※6番工作室は「制作」に固定されます</span>
+          )}
         </label>
         <select
           id="purpose"
@@ -703,7 +707,10 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
           value={formData.purpose}
           onChange={handleChange}
           required
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
+          disabled={formData.roomId === "workshop6"}
+          className={`w-full rounded-md border border-input bg-background px-3 py-2 ${
+            formData.roomId === "workshop6" ? "bg-gray-100" : ""
+          }`}
         >
           <option value="">選択してください</option>
           {purposes.map((purpose) => (
