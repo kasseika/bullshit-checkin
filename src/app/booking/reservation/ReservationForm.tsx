@@ -7,6 +7,17 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Calendar as CalendarIcon } from "lucide-react";
 
+// 利用目的の選択肢
+const purposes = [
+  { id: "meeting", name: "会議・打合せ" },
+  { id: "remote", name: "仕事・テレワーク" },
+  { id: "study", name: "学習" },
+  { id: "event", name: "イベント・講座" },
+  { id: "creation", name: "制作" },
+  { id: "tour", name: "視察・見学・取材" },
+  { id: "other", name: "その他" },
+];
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -44,6 +55,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
     endTime: "",
     count: 1,
     purpose: "",
+    purposeDetail: "", // その他の場合の詳細
     contactName: "",
     contactEmail: "",
     contactPhone: "",
@@ -98,6 +110,10 @@ const [calendarOpen, setCalendarOpen] = useState(false);
       // 予約データを保存
       const bookingId = await saveBookingData({
         ...formData,
+        // purposeがotherの場合は詳細を含める、それ以外は選択された目的の名前を使用
+        purpose: formData.purpose === "other"
+          ? `その他: ${formData.purposeDetail}`
+          : purposes.find(p => p.id === formData.purpose)?.name || formData.purpose,
         endDate: formData.startDate, // 同日の予約を想定
       });
 
@@ -261,15 +277,39 @@ const [calendarOpen, setCalendarOpen] = useState(false);
         <label htmlFor="purpose" className="block font-medium">
           利用目的
         </label>
-        <textarea
+        <select
           id="purpose"
           name="purpose"
           value={formData.purpose}
           onChange={handleChange}
           required
           className="w-full rounded-md border border-input bg-background px-3 py-2"
-          rows={3}
-        />
+        >
+          <option value="">選択してください</option>
+          {purposes.map((purpose) => (
+            <option key={purpose.id} value={purpose.id}>
+              {purpose.name}
+            </option>
+          ))}
+        </select>
+        
+        {/* その他が選択された場合のみ詳細入力欄を表示 */}
+        {formData.purpose === "other" && (
+          <div className="mt-2">
+            <label htmlFor="purposeDetail" className="block font-medium">
+              詳細な利用目的
+            </label>
+            <textarea
+              id="purposeDetail"
+              name="purposeDetail"
+              value={formData.purposeDetail}
+              onChange={handleChange}
+              required
+              className="w-full rounded-md border border-input bg-background px-3 py-2"
+              rows={3}
+            />
+          </div>
+        )}
       </div>
 
       {/* 連絡先情報 */}
