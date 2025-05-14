@@ -409,6 +409,7 @@ export const addBookingEvent = functions.region('asia-northeast1').https.onCall(
 
     // 部屋IDに基づいてイベントタイトルを設定
     let roomName = '';
+    let roomDetail = '';
     logs.push(`Setting event title for room: ${room}`);
     
     // 部屋IDから表示名を取得
@@ -417,10 +418,12 @@ export const addBookingEvent = functions.region('asia-northeast1').https.onCall(
         roomName = '4番個室';
         break;
       case 'large6':
-        roomName = '6番大部屋';
+        roomName = '6番';
+        roomDetail = '大部屋';
         break;
       case 'workshop6':
-        roomName = '6番工作室';
+        roomName = '6番';
+        roomDetail = '工作室';
         break;
       default:
         const errorMsg = `無効な部屋ID: ${room}`;
@@ -431,8 +434,15 @@ export const addBookingEvent = functions.region('asia-northeast1').https.onCall(
         );
     }
 
-    // イベントタイトルを設定: {部屋名}_{名前}様
-    const eventTitle = `${roomName}_${name}様`;
+    // イベントタイトルを設定
+    let eventTitle = '';
+    if (room === 'large6' || room === 'workshop6') {
+      // 6番の部屋の場合: 6番_山田太郎様(大部屋) または 6番_山田太郎様(工作室)
+      eventTitle = `${roomName}_${name}様(${roomDetail})`;
+    } else {
+      // その他の部屋の場合: 4番個室_山田太郎様
+      eventTitle = `${roomName}_${name}様`;
+    }
     logs.push(`Event title set to: ${eventTitle}`);
 
     // 詳細欄の内容を作成
