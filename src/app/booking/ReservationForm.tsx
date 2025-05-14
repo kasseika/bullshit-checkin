@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { saveBookingData } from "../../lib/bookingFirestore";
-import { getReservationsForPeriod, Reservation } from "../../lib/googleCalendar";
+import { toast } from "sonner";
+import { getReservationsForPeriod, Reservation, addBookingToCalendar } from "../../lib/googleCalendar";
 import { format, isBefore, addMonths, startOfDay } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
@@ -314,28 +314,61 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
     setIsLoading(true);
 
     try {
-      // 予約データを保存
-      const bookingId = await saveBookingData({
-        ...formData,
-        // purposeがotherの場合は詳細を含める、それ以外は選択された目的の名前を使用
-        purpose: formData.purpose === "other"
-          ? `その他: ${formData.purposeDetail}`
-          : purposes.find(p => p.id === formData.purpose)?.name || formData.purpose,
-        endDate: formData.startDate, // 同日の予約を想定
+      // 利用目的の表示名を取得
+      const purposeName = formData.purpose === "other"
+        ? `その他(${formData.purposeDetail})`
+        : purposes.find(p => p.id === formData.purpose)?.name || formData.purpose;
+
+      // カレンダーに予約イベントを追加
+      const success = await addBookingToCalendar({
+        room: formData.roomId,
+        name: formData.contactName,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        startDate: formData.startDate,
+        contactPhone: formData.contactPhone,
+        contactEmail: formData.contactEmail,
+        count: formData.count,
+        purpose: purposeName,
+        purposeDetail: formData.purposeDetail
       });
 
-      if (bookingId) {
+      if (success) {
         // 予約成功時、確認ページへ遷移
-        router.push(`/booking/confirm?id=${bookingId}`);
+        toast.success('予約が完了しました', {
+          description: `${formData.room}を${formData.startTime}〜${formData.endTime}で予約しました`,
+          duration: 5000,
+        });
+        
+        // 予約情報をURLパラメータとして渡す
+        const params = new URLSearchParams({
+          room: formData.room,
+          date: formData.startDate,
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          count: formData.count.toString(),
+          purpose: purposeName,
+          name: formData.contactName,
+          email: formData.contactEmail,
+          phone: formData.contactPhone
+        });
+        
+        router.push(`/booking/confirm?${params.toString()}`);
       } else {
         // エラー処理
         setIsLoading(false);
-        alert("予約の保存に失敗しました。もう一度お試しください。");
+        toast.error('予約の登録に失敗しました', {
+          description: 'もう一度お試しください',
+          duration: 5000,
+        });
       }
     } catch (error) {
       console.error("予約処理中にエラーが発生しました:", error);
       setIsLoading(false);
-      alert("予約処理中にエラーが発生しました。もう一度お試しください。");
+      toast.error('予約処理中にエラーが発生しました', {
+        description: 'もう一度お試しください',
+        duration: 5000,
+      });
     }
   };
 

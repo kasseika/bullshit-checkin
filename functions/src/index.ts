@@ -391,6 +391,144 @@ export const addCalendarEvent = functions.region('asia-northeast1').https.onCall
   }
 });
 
+// Cloud Function: 予約イベントをカレンダーに追加
+export const addBookingEvent = functions.region('asia-northeast1').https.onCall(async (data) => {
+  // ログ情報を格納する配列
+  const logs: string[] = [];
+  logs.push(`Function called with room: ${data.room}, name: ${data.name}, startTime: ${data.startTime}, endTime: ${data.endTime}`);
+  
+  try {
+    const { room, name, startTime, endTime, startDate, contactPhone, contactEmail, count, purpose } = data;
+
+    if (!room || !name || !startTime || !endTime || !startDate) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        '部屋、名前、開始時間、終了時間、日付は必須です'
+      );
+    }
+
+    // 部屋IDに基づいてイベントタイトルを設定
+    let roomName = '';
+    logs.push(`Setting event title for room: ${room}`);
+    
+    // 部屋IDから表示名を取得
+    switch (room) {
+      case 'private4':
+        roomName = '4番個室';
+        break;
+      case 'large6':
+        roomName = '6番大部屋';
+        break;
+      case 'workshop6':
+        roomName = '6番工作室';
+        break;
+      default:
+        const errorMsg = `無効な部屋ID: ${room}`;
+        logs.push(`Error: ${errorMsg}`);
+        throw new functions.https.HttpsError(
+          'invalid-argument',
+          errorMsg
+        );
+    }
+
+    // イベントタイトルを設定: {部屋名}_{名前}様
+    const eventTitle = `${roomName}_${name}様`;
+    logs.push(`Event title set to: ${eventTitle}`);
+
+    // 詳細欄の内容を作成
+    let description = '';
+    if (contactPhone) description += `tel:${contactPhone}\n`;
+    if (contactEmail) description += `email:${contactEmail}\n`;
+    if (count) description += `利用人数:${count}\n`;
+    if (purpose) description += `利用目的:${purpose}\n`;
+    // purposeDetailは利用目的に含まれているので追加しない
+
+    // カレンダーIDを取得
+    const config = functions.config();
+    if (!config.calendar || !config.calendar.id) {
+      throw new functions.https.HttpsError(
+        'internal',
+        'Calendar ID not configured. Please set calendar.id using firebase functions:config:set'
+      );
+    }
+    const calendarId = config.calendar.id;
+    logs.push(`Using calendar ID: ${calendarId}`);
+
+    // Google Calendar APIクライアントを初期化
+    const calendar = getCalendarClient();
+    logs.push('Calendar client initialized');
+    
+    // 日付を解析
+    const [year, month, day] = startDate.split('-').map(Number);
+    
+    // 開始時刻と終了時刻を解析
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+    
+    logs.push(`Input times - Date: ${year}-${month}-${day}, Start: ${startHour}:${startMinute}, End: ${endHour}:${endMinute}`);
+    
+    // タイムゾーンを考慮した日時文字列を作成（JSTとして扱う）
+    const startDateTimeStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}:00+09:00`;
+    const endDateTimeStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}:00+09:00`;
+    
+    logs.push(`Event time (JST): ${startDateTimeStr} to ${endDateTimeStr}`);
+    
+    // イベントを作成
+    const event = {
+      summary: eventTitle,
+      start: {
+        dateTime: startDateTimeStr,
+        timeZone: 'Asia/Tokyo',
+      },
+      end: {
+        dateTime: endDateTimeStr,
+        timeZone: 'Asia/Tokyo',
+      },
+      description: description,
+    };
+    
+    // カレンダーにイベントを追加
+    logs.push('Adding event to Google Calendar...');
+    logs.push(`Event details: ${JSON.stringify(event)}`);
+    
+    let eventId = '';
+    try {
+      const response = await calendar.events.insert({
+        calendarId,
+        requestBody: event,
+      });
+      
+      eventId = response.data.id || '';
+      logs.push(`Event created with ID: ${eventId}`);
+    } catch (insertError) {
+      const errorMessage = insertError instanceof Error ? insertError.message : 'Unknown error';
+      logs.push(`Error inserting event: ${errorMessage}`);
+      if (insertError instanceof Error && 'response' in insertError) {
+        // @ts-expect-error Google API error response structure
+        const responseData = insertError.response?.data;
+        if (responseData) {
+          logs.push(`API Error details: ${JSON.stringify(responseData)}`);
+        }
+      }
+      throw insertError;
+    }
+    return {
+      success: true,
+      eventId: eventId,
+      logs
+    };
+  } catch (error) {
+    console.error('Error adding booking event to calendar:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logs.push(`Error: ${errorMessage}`);
+    throw new functions.https.HttpsError(
+      'internal',
+      'Failed to add booking event to calendar',
+      { error: errorMessage, logs }
+    );
+  }
+});
+
 // Cloud Function: カレンダーの予約の終了時間を更新
 export const updateCalendarEvent = functions.region('asia-northeast1').https.onCall(async (data) => {
   // ログ情報を格納する配列

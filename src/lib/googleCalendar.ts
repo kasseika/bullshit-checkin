@@ -230,3 +230,56 @@ export async function getReservationsForPeriod(
     return [];
   }
 }
+
+// 予約情報の型定義
+export interface BookingEventData {
+  room: string;        // 部屋ID (例: 'private4')
+  name: string;        // 予約者名
+  startTime: string;   // 開始時間 (HH:MM形式)
+  endTime: string;     // 終了時間 (HH:MM形式)
+  startDate: string;   // 予約日 (YYYY-MM-DD形式)
+  contactPhone?: string; // 電話番号
+  contactEmail?: string; // メールアドレス
+  count?: number;      // 利用人数
+  purpose?: string;    // 利用目的
+  purposeDetail?: string; // 詳細な利用目的
+}
+
+// カレンダーに予約イベントを追加する関数
+export async function addBookingToCalendar(bookingData: BookingEventData): Promise<boolean> {
+  try {
+    // Firebase Functionsを呼び出す
+    const addBookingEvent = httpsCallable(functions, 'addBookingEvent');
+    
+    const result = await addBookingEvent(bookingData);
+    const data = result.data as { success: boolean, eventId: string, logs?: string[] };
+    
+    // Cloud Functionsのログ情報をコンソールに表示
+    if (data.logs && data.logs.length > 0) {
+      console.group('Cloud Functions Logs:');
+      data.logs.forEach(log => console.log(log));
+      console.groupEnd();
+    }
+    
+    return data.success;
+  } catch (error) {
+    console.error('Error adding booking event to calendar:', error);
+    
+    // エラーオブジェクトからログ情報を取得して表示
+    if (error instanceof FirebaseError) {
+      const fbError = error as FirebaseFunctionError;
+      if (fbError.details) {
+        if (fbError.details.logs && fbError.details.logs.length > 0) {
+          console.group('Cloud Functions Error Logs:');
+          fbError.details.logs.forEach(log => console.log(log));
+          console.groupEnd();
+        }
+        if (fbError.details.error) {
+          console.error('Error details:', fbError.details.error);
+        }
+      }
+    }
+    
+    return false;
+  }
+}

@@ -2,43 +2,63 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getBookingById, BookingData } from "../../../lib/bookingFirestore";
+
+// 予約情報の型定義
+interface BookingInfo {
+  room: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  count: number;
+  purpose: string;
+  name: string;
+  email: string;
+  phone: string;
+}
 
 // SearchParamsを使用するコンポーネント
 function BookingDetails() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const bookingId = searchParams.get("id");
   
-  const [booking, setBooking] = useState<BookingData | null>(null);
+  const [booking, setBooking] = useState<BookingInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchBooking() {
-      if (!bookingId) {
-        setError("予約IDが見つかりません。");
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const bookingData = await getBookingById(bookingId);
-        if (bookingData) {
-          setBooking(bookingData);
-        } else {
-          setError("予約情報が見つかりませんでした。");
-        }
-      } catch (err) {
-        console.error("予約情報の取得中にエラーが発生しました:", err);
-        setError("予約情報の取得中にエラーが発生しました。");
-      } finally {
-        setIsLoading(false);
-      }
+    // URLパラメータから予約情報を取得
+    const room = searchParams.get("room");
+    const date = searchParams.get("date");
+    const startTime = searchParams.get("startTime");
+    const endTime = searchParams.get("endTime");
+    const countStr = searchParams.get("count");
+    const purpose = searchParams.get("purpose");
+    const name = searchParams.get("name");
+    const email = searchParams.get("email");
+    const phone = searchParams.get("phone");
+    
+    // 必須パラメータが存在するか確認
+    if (!room || !date || !startTime || !endTime || !name) {
+      setError("予約情報が不足しています。");
+      setIsLoading(false);
+      return;
     }
-
-    fetchBooking();
-  }, [bookingId]);
+    
+    // 予約情報をセット
+    setBooking({
+      room,
+      date,
+      startTime,
+      endTime,
+      count: countStr ? parseInt(countStr, 10) : 1,
+      purpose: purpose || "",
+      name,
+      email: email || "",
+      phone: phone || ""
+    });
+    
+    setIsLoading(false);
+  }, [searchParams]);
 
   const handleBackToHome = () => {
     router.push("/booking");
@@ -100,9 +120,6 @@ function BookingDetails() {
         <div className="rounded-lg bg-card p-6 shadow-lg">
           <div className="text-center">
             <h1 className="mb-6 text-2xl font-bold">予約が完了しました</h1>
-            <p className="mb-4 text-lg">
-              予約ID: <span className="font-mono font-bold">{booking.id}</span>
-            </p>
           </div>
 
           <div className="mt-8 space-y-4">
@@ -113,7 +130,7 @@ function BookingDetails() {
               <div>{booking.room}</div>
               
               <div className="font-medium">日付:</div>
-              <div>{booking.startDate}</div>
+              <div>{booking.date}</div>
               
               <div className="font-medium">時間:</div>
               <div>{booking.startTime} 〜 {booking.endTime}</div>
@@ -129,13 +146,13 @@ function BookingDetails() {
             
             <div className="grid grid-cols-2 gap-2">
               <div className="font-medium">お名前:</div>
-              <div>{booking.contactName}</div>
+              <div>{booking.name}</div>
               
               <div className="font-medium">メールアドレス:</div>
-              <div>{booking.contactEmail}</div>
+              <div>{booking.email}</div>
               
               <div className="font-medium">電話番号:</div>
-              <div>{booking.contactPhone}</div>
+              <div>{booking.phone}</div>
             </div>
 
             <div className="mt-8 text-center">
