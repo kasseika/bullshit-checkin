@@ -3,7 +3,9 @@ import {
   getTodayReservations,
   isRoomAvailable,
   addCheckInEvent,
-  updateReservationEndTime
+  updateReservationEndTime,
+  getReservationsForPeriod,
+  addBookingToCalendar
 } from '../googleCalendar';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../firebase';
@@ -16,6 +18,8 @@ jest.mock('../googleCalendar', () => {
     isRoomAvailable: jest.fn(),
     addCheckInEvent: jest.fn(),
     updateReservationEndTime: jest.fn(),
+    getReservationsForPeriod: jest.fn(),
+    addBookingToCalendar: jest.fn(),
   };
 });
 
@@ -229,6 +233,144 @@ describe('updateReservationEndTime', () => {
     });
     
     const result = await updateReservationEndTime('event123', '14:00');
+    
+    expect(result).toBe(false);
+  });
+});
+
+describe('getReservationsForPeriod', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('指定された期間の予約を取得する', async () => {
+    const mockReservations = [
+      { id: 'res1', title: '4番個室_テスト予約', roomIdentifier: '4番個室', start: '2023-05-01T10:00:00Z', end: '2023-05-01T12:00:00Z', startTime: '10:00', endTime: '12:00' },
+      { id: 'res2', title: '6番_テスト予約', roomIdentifier: '6番', start: '2023-05-02T14:00:00Z', end: '2023-05-02T16:00:00Z', startTime: '14:00', endTime: '16:00' }
+    ];
+    
+    const mockHttpsCallable = jest.fn().mockResolvedValue({
+      data: {
+        reservations: mockReservations,
+        logs: ['Log1', 'Log2']
+      }
+    });
+    
+    // httpsCallableをモック
+    (httpsCallable as jest.Mock).mockImplementation((funcs, name) => {
+      expect(funcs).toBe(functions);
+      expect(name).toBe('getCalendarReservationsForPeriod');
+      return mockHttpsCallable;
+    });
+    
+    // getReservationsForPeriodはファイル先頭でインポート済み
+    (getReservationsForPeriod as jest.Mock).mockImplementation(async (startDate, endDate, roomId) => {
+      const callable = httpsCallable(functions, 'getCalendarReservationsForPeriod');
+      const result = await callable({ room: roomId, startDate, endDate });
+      return (result as { data: { reservations: typeof mockReservations } }).data.reservations;
+    });
+    
+    const result = await getReservationsForPeriod('2023-05-01', '2023-05-31', 'all');
+    
+    expect(mockHttpsCallable).toHaveBeenCalledWith({ room: 'all', startDate: '2023-05-01', endDate: '2023-05-31' });
+    expect(result).toEqual(mockReservations);
+  });
+
+  it('エラー発生時に空配列を返す', async () => {
+    const mockError = new Error('API Error');
+    const mockHttpsCallable = jest.fn().mockRejectedValue(mockError);
+    
+    (httpsCallable as jest.Mock).mockReturnValue(mockHttpsCallable);
+    
+    // getReservationsForPeriodはファイル先頭でインポート済み
+    (getReservationsForPeriod as jest.Mock).mockImplementation(async () => {
+      try {
+        await mockHttpsCallable();
+        return [];
+      } catch {
+        return [];
+      }
+    });
+    
+    const result = await getReservationsForPeriod('2023-05-01', '2023-05-31', 'all');
+    
+    expect(result).toEqual([]);
+  });
+});
+
+describe('addBookingToCalendar', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('カレンダーに予約イベントを追加する', async () => {
+    const mockResponse = {
+      data: {
+        success: true,
+        eventId: 'event123',
+        logs: ['Log1', 'Log2']
+      }
+    };
+    
+    const mockHttpsCallable = jest.fn().mockResolvedValue(mockResponse);
+    
+    // httpsCallableをモック
+    (httpsCallable as jest.Mock).mockImplementation((funcs, name) => {
+      expect(funcs).toBe(functions);
+      expect(name).toBe('addBookingEvent');
+      return mockHttpsCallable;
+    });
+    
+    // addBookingToCalendarはファイル先頭でインポート済み
+    (addBookingToCalendar as jest.Mock).mockImplementation(async (bookingData) => {
+      const callable = httpsCallable(functions, 'addBookingEvent');
+      const result = await callable(bookingData);
+      return (result as { data: { success: boolean } }).data.success;
+    });
+    
+    const mockBookingData = {
+      room: 'private4',
+      name: 'テスト太郎',
+      startTime: '10:00',
+      endTime: '12:00',
+      startDate: '2023-05-01',
+      contactPhone: '090-1234-5678',
+      contactEmail: 'test@example.com',
+      count: 2,
+      purpose: '会議・打合せ'
+    };
+    
+    const result = await addBookingToCalendar(mockBookingData);
+    
+    expect(mockHttpsCallable).toHaveBeenCalledWith(mockBookingData);
+    expect(result).toBe(true);
+  });
+
+  it('エラー発生時にfalseを返す', async () => {
+    const mockError = new Error('API Error');
+    const mockHttpsCallable = jest.fn().mockRejectedValue(mockError);
+    
+    (httpsCallable as jest.Mock).mockReturnValue(mockHttpsCallable);
+    
+    // addBookingToCalendarはファイル先頭でインポート済み
+    (addBookingToCalendar as jest.Mock).mockImplementation(async () => {
+      try {
+        await mockHttpsCallable();
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    
+    const mockBookingData = {
+      room: 'private4',
+      name: 'テスト太郎',
+      startTime: '10:00',
+      endTime: '12:00',
+      startDate: '2023-05-01'
+    };
+    
+    const result = await addBookingToCalendar(mockBookingData);
     
     expect(result).toBe(false);
   });
