@@ -713,7 +713,6 @@ export const sendCheckinNotification = functions.region('asia-northeast1')
       logs.push(`Sending message to Google Chat: ${JSON.stringify(message)}`);
       
       await axios.post(webhookUrl, message);
-      await axios.post(webhookUrl, message);
       
       logs.push('Notification sent successfully');
       return { success: true, logs };
@@ -843,3 +842,154 @@ export const getCalendarReservationsForPeriod = functions.region('asia-northeast
     );
   }
 });
+
+// Google ChatにWebhookを送信するCloud Function（予約通知用）
+export const sendBookingNotification = functions.region('asia-northeast1')
+  .https.onCall(async (data) => {
+    // ログ情報を格納する配列
+    const logs: string[] = [];
+    logs.push(`Function called for booking notification`);
+    
+    try {
+      // 設定からWebhook URLを取得
+      const config = functions.config();
+      if (!config.chat || !config.chat.webhook_url) {
+        throw new Error('Webhook URL not configured. Please set chat.webhook_url using firebase functions:config:set');
+      }
+      const webhookUrl = config.chat.webhook_url;
+      logs.push(`Using webhook URL from config`);
+      
+      // 予約データを取得
+      const bookingData = data;
+      logs.push(`Got booking data: ${JSON.stringify(bookingData)}`);
+      
+      // 部屋名のマッピング
+      const roomNames: Record<string, string> = {
+        "private4": "4番個室",
+        "large6": "6番大部屋",
+        "workshop6": "6番工作室",
+      };
+      
+      
+      // 予約日時をフォーマット
+      const bookingDate = bookingData.startDate || '';
+      
+      // 通知メッセージを作成
+      const message = {
+        text: `📅 テレワークセンターに新しい予約がありました！\n\n` +
+          `📆 予約日: ${bookingDate}\n` +
+          `🏢 利用部屋: ${roomNames[bookingData.room] || bookingData.room}\n` +
+          `⏰ 利用時間: ${bookingData.startTime} 〜 ${bookingData.endTime}\n` +
+          `👥 利用人数: ${bookingData.count}人\n` +
+          `🎯 利用目的: ${bookingData.purpose}${bookingData.purposeDetail ? `(${bookingData.purposeDetail})` : ''}\n` +
+          `👤 予約者: ${bookingData.name}\n` +
+          `📧 連絡先: ${bookingData.contactEmail || 'なし'}\n` +
+          `📱 電話番号: ${bookingData.contactPhone || 'なし'}`
+      };
+      
+      logs.push(`Sending message to Google Chat: ${JSON.stringify(message)}`);
+      
+      await axios.post(webhookUrl, message);
+      
+      logs.push('Notification sent successfully');
+      
+      // メールアドレスが指定されている場合、予約確認メールを送信
+      if (bookingData.contactEmail) {
+        try {
+          await sendBookingConfirmationEmail(bookingData);
+          logs.push('Confirmation email sent successfully');
+        } catch (emailError) {
+          console.error('Error sending confirmation email:', emailError);
+          logs.push(`Error sending confirmation email: ${emailError instanceof Error ? emailError.message : 'Unknown error'}`);
+          // メール送信の失敗は全体の成功に影響しないようにする
+        }
+      }
+      
+      return { success: true, logs };
+    } catch (error) {
+      console.error('Error sending booking notification:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logs.push(`Error: ${errorMessage}`);
+      return { success: false, error: errorMessage, logs };
+    }
+  });
+
+// 予約情報の型定義
+interface BookingEventData {
+  room: string;        // 部屋ID (例: 'private4')
+  name: string;        // 予約者名
+  startTime: string;   // 開始時間 (HH:MM形式)
+  endTime: string;     // 終了時間 (HH:MM形式)
+  startDate: string;   // 予約日 (YYYY-MM-DD形式)
+  contactPhone?: string; // 電話番号
+  contactEmail?: string; // メールアドレス
+  count?: number;      // 利用人数
+  purpose?: string;    // 利用目的
+  purposeDetail?: string; // 詳細な利用目的
+}
+
+// 予約確認メールを送信する関数
+async function sendBookingConfirmationEmail(bookingData: BookingEventData): Promise<void> {
+  // 設定からGASのWebアプリURLとトークンを取得
+  const config = functions.config();
+  if (!config.gas || !config.gas.webapp_url || !config.gas.token) {
+    throw new Error('GAS configuration is missing. Please set gas.webapp_url and gas.token using firebase functions:config:set');
+  }
+  const gasWebAppUrl = config.gas.webapp_url;
+  const gasToken = config.gas.token;
+  
+  // 部屋名のマッピング
+  const roomNames: Record<string, string> = {
+    "private4": "4番個室",
+    "large6": "6番大部屋",
+    "workshop6": "6番工作室",
+  };
+  
+  // 予約日時をフォーマット
+  const bookingDate = bookingData.startDate || '';
+  
+  // メール件名
+  const subject = `【大船渡テレワークセンター】予約確認: ${bookingDate} ${bookingData.startTime}〜${bookingData.endTime}`;
+  
+  // メール本文
+  const body = `${bookingData.name} 様
+
+大船渡テレワークセンターのご予約ありがとうございます。
+以下の内容で予約が完了しましたのでお知らせします。
+
+【予約内容】
+予約日: ${bookingDate}
+利用部屋: ${roomNames[bookingData.room] || bookingData.room}
+利用時間: ${bookingData.startTime} 〜 ${bookingData.endTime}
+利用人数: ${bookingData.count}人
+利用目的: ${bookingData.purpose}${bookingData.purposeDetail ? `(${bookingData.purposeDetail})` : ''}
+
+【連絡先情報】
+お名前: ${bookingData.name}
+メールアドレス: ${bookingData.contactEmail || 'なし'}
+電話番号: ${bookingData.contactPhone || 'なし'}
+
+【予約の変更・キャンセル】
+予約の変更やキャンセルは、以下の連絡先までご連絡ください。
+電話: 090-8437-9972
+
+ご不明な点がございましたら、お気軽にお問い合わせください。
+当日のご来館をお待ちしております。
+
+--
+大船渡テレワークセンター
+〒022-0003 岩手県大船渡市盛町馬場２３−７ 盛中央団地1号棟1階
+090-8437-9972
+`;
+
+  // GASのWebアプリにPOSTリクエストを送信
+  const payload = {
+    token: gasToken, // 設定から取得したトークン
+    to: bookingData.contactEmail,
+    subject: subject,
+    body: body
+  };
+  
+  // POSTリクエストを送信
+  await axios.post(gasWebAppUrl, payload);
+}
