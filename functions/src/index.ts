@@ -398,7 +398,7 @@ export const addBookingEvent = functions.region('asia-northeast1').https.onCall(
   logs.push(`Function called with room: ${data.room}, name: ${data.name}, startTime: ${data.startTime}, endTime: ${data.endTime}`);
   
   try {
-    const { room, name, startTime, endTime, startDate, contactPhone, contactEmail, count, purpose } = data;
+    const { room, name, startTime, endTime, startDate, contactPhone, contactEmail, count, purpose, purposeDetail } = data;
 
     if (!room || !name || !startTime || !endTime || !startDate) {
       throw new functions.https.HttpsError(
@@ -451,7 +451,8 @@ export const addBookingEvent = functions.region('asia-northeast1').https.onCall(
     if (contactEmail) description += `email:${contactEmail}\n`;
     if (count) description += `利用人数:${count}\n`;
     if (purpose) description += `利用目的:${purpose}\n`;
-    // purposeDetailは利用目的に含まれているので追加しない
+    // purposeDetailには使用機材情報などの追加情報が含まれている場合がある
+    if (purposeDetail) description += purposeDetail;
 
     // カレンダーIDを取得
     const config = functions.config();
