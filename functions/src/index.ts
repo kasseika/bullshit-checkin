@@ -7,6 +7,24 @@ import axios from 'axios';
 // Firebase初期化
 admin.initializeApp();
 
+function convertToJST(timeStr: string): string {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  
+  let jstHours = hours + 9;
+  
+  if (jstHours >= 24) {
+    jstHours -= 24;
+  }
+  
+  return `${jstHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+function formatDateToJST(date: Date): string {
+  const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+  
+  return `${jstDate.getFullYear()}年${jstDate.getMonth() + 1}月${jstDate.getDate()}日 ${jstDate.getHours().toString().padStart(2, '0')}:${jstDate.getMinutes().toString().padStart(2, '0')}`;
+}
+
 // 部屋の識別子を抽出する関数
 function extractRoomIdentifier(title: string): string | null {
   const match = title.match(/^([^_]+)_/);
@@ -694,16 +712,19 @@ export const sendCheckinNotification = functions.region('asia-northeast1')
         "other": "その他",
       };
       
-      // チェックイン時刻をフォーマット
+      // チェックイン時刻をJSTでフォーマット
       const checkInTime = data.clientCheckInTime ? new Date(data.clientCheckInTime) : new Date();
-      const formattedTime = `${checkInTime.getFullYear()}年${checkInTime.getMonth() + 1}月${checkInTime.getDate()}日 ${checkInTime.getHours().toString().padStart(2, '0')}:${checkInTime.getMinutes().toString().padStart(2, '0')}`;
+      const formattedTime = formatDateToJST(checkInTime);
+      
+      const jstStartTime = convertToJST(data.startTime);
+      const jstEndTime = convertToJST(data.endTime);
       
       // 通知メッセージを作成
       const message = {
         text: `📣 テレワークセンターに新しいチェックインがありました！\n\n` +
           `📅 チェックイン時刻: ${formattedTime}\n` +
           `🏢 利用部屋: ${roomNames[data.room] || data.room}\n` +
-          `⏰ 利用時間: ${data.startTime} 〜 ${data.endTime}\n` +
+          `⏰ 利用時間: ${jstStartTime} 〜 ${jstEndTime}\n` +
           `👥 利用人数: ${data.count}人\n` +
           `🎯 利用目的: ${purposeNames[data.purpose] || data.purpose}\n` +
           `👴 年代: ${data.ageGroup}\n` +
@@ -874,12 +895,15 @@ export const sendBookingNotification = functions.region('asia-northeast1')
       // 予約日時をフォーマット
       const bookingDate = bookingData.startDate || '';
       
+      const jstStartTime = convertToJST(bookingData.startTime);
+      const jstEndTime = convertToJST(bookingData.endTime);
+      
       // 通知メッセージを作成
       const message = {
         text: `📅 テレワークセンターに新しい予約がありました！\n\n` +
           `📆 予約日: ${bookingDate}\n` +
           `🏢 利用部屋: ${roomNames[bookingData.room] || bookingData.room}\n` +
-          `⏰ 利用時間: ${bookingData.startTime} 〜 ${bookingData.endTime}\n` +
+          `⏰ 利用時間: ${jstStartTime} 〜 ${jstEndTime}\n` +
           `👥 利用人数: ${bookingData.count}人\n` +
           `🎯 利用目的: ${bookingData.purpose}${bookingData.purposeDetail ? `(${bookingData.purposeDetail})` : ''}\n` +
           `👤 予約者: ${bookingData.name}\n` +
@@ -948,8 +972,11 @@ async function sendBookingConfirmationEmail(bookingData: BookingEventData): Prom
   // 予約日時をフォーマット
   const bookingDate = bookingData.startDate || '';
   
+  const jstStartTime = convertToJST(bookingData.startTime);
+  const jstEndTime = convertToJST(bookingData.endTime);
+  
   // メール件名
-  const subject = `【大船渡テレワークセンター】予約確認: ${bookingDate} ${bookingData.startTime}〜${bookingData.endTime}`;
+  const subject = `【大船渡テレワークセンター】予約確認: ${bookingDate} ${jstStartTime}〜${jstEndTime}`;
   
   // メール本文
   const body = `${bookingData.name} 様
@@ -960,7 +987,7 @@ async function sendBookingConfirmationEmail(bookingData: BookingEventData): Prom
 【予約内容】
 予約日: ${bookingDate}
 利用部屋: ${roomNames[bookingData.room] || bookingData.room}
-利用時間: ${bookingData.startTime} 〜 ${bookingData.endTime}
+利用時間: ${jstStartTime} 〜 ${jstEndTime}
 利用人数: ${bookingData.count}人
 利用目的: ${bookingData.purpose}${bookingData.purposeDetail ? `(${bookingData.purposeDetail})` : ''}
 
