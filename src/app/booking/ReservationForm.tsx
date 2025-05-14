@@ -99,6 +99,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
   // 予約情報の状態
   const [allReservations, setAllReservations] = useState<Reservation[]>([]);
   const [dateReservations, setDateReservations] = useState<Reservation[]>([]);
+  const [filteredReservations, setFilteredReservations] = useState<Reservation[]>([]);
   const [reservationsLoaded, setReservationsLoaded] = useState(false);
 
   // コンポーネントがマウントされたときに予約情報を取得
@@ -167,6 +168,33 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
       }
     }
   }, [date, allReservations, reservationsLoaded]);
+
+  // 日付と部屋が選択されたときに予約情報をフィルタリング
+  useEffect(() => {
+    if (date && formData.roomId && dateReservations.length > 0) {
+      // 選択された部屋に基づいてフィルタリング
+      const roomFiltered = dateReservations.filter(reservation => {
+        const roomIdentifier = reservation.roomIdentifier;
+        
+        // 4番個室の場合（4番個室_または4番小部屋_）
+        if (formData.roomId === 'private4') {
+          return roomIdentifier.startsWith('4番個室') || roomIdentifier.startsWith('4番小部屋');
+        }
+        
+        // 6番大部屋または6番工作室の場合（どちらも同時使用できないため、6番のイベントをすべて表示）
+        if (formData.roomId === 'large6' || formData.roomId === 'workshop6') {
+          return roomIdentifier.startsWith('6番');
+        }
+        
+        return false;
+      });
+      
+      setFilteredReservations(roomFiltered);
+    } else {
+      // 部屋が選択されていない場合は空の配列をセット
+      setFilteredReservations([]);
+    }
+  }, [date, formData.roomId, dateReservations]);
 
   // 入力値の変更を処理
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -323,23 +351,21 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
         />
       </div>
 
-      {/* 選択された日付の予約情報 */}
-      {date && dateReservations.length > 0 && (
+      {/* 選択された日付と部屋の予約情報 */}
+      {date && formData.roomId && filteredReservations.length > 0 && (
         <div className="mt-4 space-y-2">
-          <h3 className="font-medium text-lg">この日の予約状況</h3>
+          <h3 className="font-medium text-lg">この部屋の予約状況</h3>
           <div className="space-y-2">
-            {dateReservations.map((reservation) => {
+            {filteredReservations.map((reservation) => {
               // 部屋名を取得
               const roomName = (() => {
-                switch (reservation.roomIdentifier) {
-                  case '4番個室':
-                    return '4番個室';
-                  case '4番小部屋':
-                    return '4番個室';
-                  case '6番':
-                    return '6番';
-                  default:
-                    return reservation.roomIdentifier;
+                if (reservation.roomIdentifier.startsWith('4番個室') || reservation.roomIdentifier.startsWith('4番小部屋')) {
+                  return '4番個室';
+                } else if (reservation.roomIdentifier.startsWith('6番')) {
+                  // 6番の場合、工作室かどうかを表示に含める
+                  return reservation.roomIdentifier.includes('工作室') ? '6番工作室' : '6番大部屋';
+                } else {
+                  return reservation.roomIdentifier;
                 }
               })();
               
@@ -367,7 +393,55 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
         </div>
       )}
 
-      {date && reservationsLoaded && dateReservations.length === 0 && (
+      {/* 選択された日付の予約情報（部屋が選択されていない場合） */}
+      {date && !formData.roomId && dateReservations.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <h3 className="font-medium text-lg">この日の予約状況</h3>
+          <div className="space-y-2">
+            {dateReservations.map((reservation) => {
+              // 部屋名を取得
+              const roomName = (() => {
+                if (reservation.roomIdentifier.startsWith('4番個室') || reservation.roomIdentifier.startsWith('4番小部屋')) {
+                  return '4番個室';
+                } else if (reservation.roomIdentifier.startsWith('6番')) {
+                  // 6番の場合、工作室かどうかを表示に含める
+                  return reservation.roomIdentifier.includes('工作室') ? '6番工作室' : '6番大部屋';
+                } else {
+                  return reservation.roomIdentifier;
+                }
+              })();
+              
+              return (
+                <div
+                  key={reservation.id}
+                  className="p-3 border rounded-md bg-gray-50"
+                >
+                  <div className="flex items-center">
+                    <Clock className="h-4 w-4 mr-2" />
+                    <span className="font-medium">
+                      {reservation.startTime} 〜 {reservation.endTime}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {roomName}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-sm text-gray-500 mt-2">
+            ※予約状況は変更される場合があります
+          </p>
+        </div>
+      )}
+
+      {date && formData.roomId && reservationsLoaded && filteredReservations.length === 0 && (
+        <div className="mt-4 p-3 border rounded-md bg-gray-50">
+          <p className="text-center">この部屋の予約はありません</p>
+        </div>
+      )}
+
+      {date && !formData.roomId && reservationsLoaded && dateReservations.length === 0 && (
         <div className="mt-4 p-3 border rounded-md bg-gray-50">
           <p className="text-center">この日の予約はありません</p>
         </div>
