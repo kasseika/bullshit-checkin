@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 
 interface ReservationFormProps {
   openDays: Date[];
@@ -297,6 +298,9 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
       // 部屋IDが変更された場合、部屋名も更新し、開始時間と終了時間をリセット
       const selectedRoom = rooms.find(room => room.id === value);
       
+      // 4番個室の場合は最大人数を4人に制限、それ以外は20人
+      const maxCount = value === "private4" ? 4 : 20;
+      
       setFormData((prev) => ({
         ...prev,
         roomId: value,
@@ -305,7 +309,9 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
         endTime: "",   // 終了時間をリセット
         equipments: [], // 工作室以外を選択した場合は機材選択をリセット
         // 6番工作室が選択された場合は、利用目的を「制作」に固定
-        purpose: value === "workshop6" ? "creation" : prev.purpose
+        purpose: value === "workshop6" ? "creation" : prev.purpose,
+        // 現在の人数が新しい最大人数を超えている場合は、最大人数に調整
+        count: prev.count > maxCount ? maxCount : prev.count
       }));
     } else if (name === "startTime") {
       // 開始時間が変更された場合、終了時間をリセット
@@ -677,20 +683,31 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
       </div>
 
       {/* 人数 */}
-      <div className="space-y-2">
-        <label htmlFor="count" className="block font-medium">
-          利用人数
-        </label>
-        <input
-          type="number"
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <label htmlFor="count" className="block font-medium">
+            利用人数
+          </label>
+          <span className="text-lg font-medium">{formData.count}人</span>
+        </div>
+        <Slider
           id="count"
-          name="count"
-          min="1"
-          value={formData.count}
-          onChange={handleChange}
-          required
-          className="w-full rounded-md border border-input bg-background px-3 py-2"
+          min={1}
+          max={formData.roomId === "private4" ? 4 : 20}
+          step={1}
+          value={[formData.count]}
+          onValueChange={(value) => {
+            setFormData((prev) => ({
+              ...prev,
+              count: value[0],
+            }));
+          }}
+          className="py-4"
         />
+        <div className="flex justify-between text-sm text-gray-500">
+          <span>1人</span>
+          <span>{formData.roomId === "private4" ? "4人" : "20人"}</span>
+        </div>
       </div>
 
       {/* 利用目的 */}
