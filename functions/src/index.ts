@@ -905,7 +905,7 @@ export const sendBookingNotification = functions.region('asia-northeast1')
           `🏢 利用部屋: ${roomNames[bookingData.room] || bookingData.room}\n` +
           `⏰ 利用時間: ${jstStartTime} 〜 ${jstEndTime}\n` +
           `👥 利用人数: ${bookingData.count}人\n` +
-          `🎯 利用目的: ${bookingData.purpose}${bookingData.purposeDetail ? `(${bookingData.purposeDetail})` : ''}\n` +
+          `🎯 利用目的: ${bookingData.purpose}\n` +
           `👤 予約者: ${bookingData.name}\n` +
           `📧 連絡先: ${bookingData.contactEmail || 'なし'}\n` +
           `📱 電話番号: ${bookingData.contactPhone || 'なし'}`
