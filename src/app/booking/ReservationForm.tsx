@@ -485,7 +485,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
         <label className="block font-medium">
           利用する部屋
         </label>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {rooms.map((room) => (
             <div
               key={room.id}
@@ -503,8 +503,8 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
             >
               <Card className={cn(
                 formData.roomId === room.id
-                  ? "bg-black text-white"
-                  : "hover:bg-accent/50"
+                  ? "bg-black text-white p-2"
+                  : "hover:bg-accent/50 p-2"
               )}>
                 <CardHeader className="flex justify-center items-center">
                   <p className="text-md font-medium text-center">{room.name}</p>
@@ -635,11 +635,11 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
             onChange={handleChange}
             required
             disabled={!date || !formData.roomId} // 日付と部屋が選択されていない場合は無効化
-            className={`w-full rounded-md border border-input px-3 py-2 ${
+            className={`text-sm w-full rounded-md border border-input px-3 py-2 ${
               !date || !formData.roomId ? 'bg-gray-100 cursor-not-allowed' : 'bg-background'
             }`}
           >
-            <option value="">選択してください</option>
+            <option value="">時間を選択</option>
             {date && formData.roomId && generateTimeOptions(undefined, false, filteredReservations, formData.startDate).map((time) => (
               <option key={time} value={time}>
                 {time}
@@ -663,9 +663,9 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
               value={formData.endTime}
               onChange={handleChange}
               required
-              className="w-full rounded-md border border-input bg-background px-3 py-2"
+              className="text-sm w-full rounded-md border border-input bg-background px-3 py-2"
             >
-              <option value="">選択してください</option>
+              <option value="">時間を選択</option>
               {generateTimeOptions(formData.startTime, true, filteredReservations, formData.startDate).map((time) => (
                 <option key={time} value={time}>
                   {time}
