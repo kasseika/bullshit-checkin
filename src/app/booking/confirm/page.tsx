@@ -128,41 +128,41 @@ function BookingDetails() {
           <div className="mt-8 space-y-4">
             <h2 className="text-xl font-semibold">予約内容</h2>
             
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div className="font-medium">部屋:</div>
-              <div>{booking.room}</div>
+              <div className="break-words">{booking.room}</div>
               
               <div className="font-medium">日付:</div>
-              <div>{booking.date}</div>
+              <div className="break-words">{booking.date}</div>
               
               <div className="font-medium">時間:</div>
-              <div>{booking.startTime} 〜 {booking.endTime}</div>
+              <div className="break-words">{booking.startTime} 〜 {booking.endTime}</div>
               
               <div className="font-medium">人数:</div>
-              <div>{booking.count}名</div>
+              <div className="break-words">{booking.count}名</div>
               
               <div className="font-medium">目的:</div>
-              <div>{booking.purpose}</div>
+              <div className="break-words">{booking.purpose}</div>
               
               {booking.equipments && (
                 <>
                   <div className="font-medium">使用機材:</div>
-                  <div>{booking.equipments}</div>
+                  <div className="break-words">{booking.equipments}</div>
                 </>
               )}
             </div>
 
             <h2 className="mt-6 text-xl font-semibold">連絡先情報</h2>
             
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div className="font-medium">お名前:</div>
-              <div>{booking.name}</div>
+              <div className="break-words">{booking.name}</div>
               
               <div className="font-medium">メールアドレス:</div>
-              <div>{booking.email}</div>
+              <div className="break-words">{booking.email}</div>
               
               <div className="font-medium">電話番号:</div>
-              <div>{booking.phone}</div>
+              <div className="break-words">{booking.phone}</div>
             </div>
 
             <div className="mt-8 text-center">

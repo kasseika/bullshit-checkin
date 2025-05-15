@@ -117,7 +117,7 @@ function Confirm() {
           // 0になったらトップページに遷移
           if (prev <= 1) {
             clearInterval(timer);
-            router.push("/");
+            router.push("/checkin/welcome");
             return 0;
           }
           return prev - 1;
@@ -136,7 +136,7 @@ function Confirm() {
     console.error("必要な情報が不足しています。", { room, startTime, endTime, count, purpose, ageGroup });
     // クライアントサイドでのリダイレクトを避けるため、useEffectを使用
     if (typeof window !== "undefined") {
-      router.push("/");
+      router.push("/checkin/welcome");
     }
     return null;
   }
@@ -175,7 +175,7 @@ function Confirm() {
             duration: 8000,
             action: {
               label: 'トップに戻る',
-              onClick: () => router.push('/'),
+              onClick: () => router.push('/checkin/welcome'),
             },
           });
           
@@ -284,12 +284,12 @@ function Confirm() {
   // ★ 新しいハンドラを追加
   const handleReset = () => {
     setIsNavigating('reset');
-    router.push("/");
+    router.push("/checkin/welcome");
   };
 
   // トップページに戻る処理
   const handleGoToTop = () => {
-    router.push("/");
+    router.push("/checkin/welcome");
   };
 
   return (
