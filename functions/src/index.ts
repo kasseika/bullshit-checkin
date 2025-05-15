@@ -7,17 +7,7 @@ import axios from 'axios';
 // Firebase初期化
 admin.initializeApp();
 
-function convertToJST(timeStr: string): string {
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  
-  let jstHours = hours + 9;
-  
-  if (jstHours >= 24) {
-    jstHours -= 24;
-  }
-  
-  return `${jstHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-}
+// 注: この関数は削除しました。時間はすでにJSTで保存されているため、変換は不要です。
 
 function formatDateToJST(date: Date): string {
   const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
@@ -716,8 +706,9 @@ export const sendCheckinNotification = functions.region('asia-northeast1')
       const checkInTime = data.clientCheckInTime ? new Date(data.clientCheckInTime) : new Date();
       const formattedTime = formatDateToJST(checkInTime);
       
-      const jstStartTime = convertToJST(data.startTime);
-      const jstEndTime = convertToJST(data.endTime);
+      // 時間はすでにJSTなので変換は不要
+      const jstStartTime = data.startTime;
+      const jstEndTime = data.endTime;
       
       // 通知メッセージを作成
       const message = {
@@ -895,8 +886,9 @@ export const sendBookingNotification = functions.region('asia-northeast1')
       // 予約日時をフォーマット
       const bookingDate = bookingData.startDate || '';
       
-      const jstStartTime = convertToJST(bookingData.startTime);
-      const jstEndTime = convertToJST(bookingData.endTime);
+      // 時間はすでにJSTなので変換は不要
+      const jstStartTime = bookingData.startTime;
+      const jstEndTime = bookingData.endTime;
       
       // 通知メッセージを作成
       const message = {
@@ -972,8 +964,9 @@ async function sendBookingConfirmationEmail(bookingData: BookingEventData): Prom
   // 予約日時をフォーマット
   const bookingDate = bookingData.startDate || '';
   
-  const jstStartTime = convertToJST(bookingData.startTime);
-  const jstEndTime = convertToJST(bookingData.endTime);
+  // 時間はすでにJSTなので変換は不要
+  const jstStartTime = bookingData.startTime;
+  const jstEndTime = bookingData.endTime;
   
   // メール件名
   const subject = `【大船渡テレワークセンター】予約確認: ${bookingDate} ${jstStartTime}〜${jstEndTime}`;

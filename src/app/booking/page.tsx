@@ -60,7 +60,7 @@ async function ReservationContent() {
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-6 text-center text-3xl font-bold">大船渡テレワークセンター<br />施設予約</h1>
+      <h1 className="mb-6 text-center text-xl font-bold">大船渡テレワークセンター<br />施設予約</h1>
       <ReservationForm openDays={openDays} />
     </div>
   );

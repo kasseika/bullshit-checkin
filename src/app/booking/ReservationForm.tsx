@@ -458,7 +458,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {date ? format(date, "yyyy年MM月dd日", { locale: ja }) :
-                "日付を選択してください"}
+                "日付を選択"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
