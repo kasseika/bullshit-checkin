@@ -982,7 +982,7 @@ async function sendBookingConfirmationEmail(bookingData: BookingEventData): Prom
 利用部屋: ${roomNames[bookingData.room] || bookingData.room}
 利用時間: ${jstStartTime} 〜 ${jstEndTime}
 利用人数: ${bookingData.count}人
-利用目的: ${bookingData.purpose}${bookingData.purposeDetail ? `(${bookingData.purposeDetail})` : ''}
+利用目的: ${bookingData.purpose}
 
 【連絡先情報】
 お名前: ${bookingData.name}
