@@ -1,6 +1,12 @@
 import { Suspense } from "react";
 import ICAL from 'ical.js';
 import ReservationForm from "./ReservationForm";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "大船渡テレワークセンター施設予約",
+  description: "大船渡テレワークセンターの施設予約システム",
+};
 
 // ICSファイルのURL
 const CALENDAR_URL = 'https://calendar.google.com/calendar/ical/69a71353ba765dc455c6b111dc58a69251cef3cdc37fb7e81f48e4fd255d63c1%40group.calendar.google.com/public/basic.ics';
