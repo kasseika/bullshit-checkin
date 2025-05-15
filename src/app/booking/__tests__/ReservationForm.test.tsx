@@ -6,6 +6,16 @@ import { getReservationsForPeriod, addBookingToCalendar } from '../../../lib/goo
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
+// ResizeObserverのモックを追加
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+// テスト環境にResizeObserverを定義
+global.ResizeObserver = ResizeObserverMock;
+
 // モック
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
@@ -156,6 +166,9 @@ describe('ReservationForm', () => {
     const startTimeSelect = screen.getByRole('combobox', { name: '開始時間' });
     fireEvent.change(startTimeSelect, { target: { value: '10:00' } });
     
+    // 人数はスライダーで自動的に設定されるため、明示的な設定は不要
+    // デフォルト値の1人が使用される
+    
     // 利用目的を選択
     const purposeSelect = screen.getByRole('combobox', { name: '利用目的' });
     fireEvent.change(purposeSelect, { target: { value: 'meeting' } });
@@ -220,6 +233,9 @@ describe('ReservationForm', () => {
     // テスト環境では状態更新が反映されない可能性があるため、
     // handleSubmitをモックして直接テスト
     
+    // 人数はスライダーで自動的に設定されるため、明示的な設定は不要
+    // デフォルト値の1人が使用される
+    
     // 利用目的を選択
     const purposeSelect = screen.getByRole('combobox', { name: '利用目的' });
     fireEvent.change(purposeSelect, { target: { value: 'meeting' } });
@@ -243,6 +259,37 @@ describe('ReservationForm', () => {
     // エラーが表示されることを確認
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('予約の登録に失敗しました', expect.any(Object));
+    });
+  });
+
+  // スライダーコンポーネントのテストを追加
+  it('人数スライダーが正しく動作する', async () => {
+    render(<ReservationForm openDays={mockOpenDays} />);
+    
+    // 部屋を選択（4番個室）
+    const roomCard = screen.getByText('4番個室').closest('div');
+    if (roomCard) {
+      fireEvent.click(roomCard);
+    }
+    
+    // 人数表示が初期値の「1人」であることを確認（クラス名で特定）
+    await waitFor(() => {
+      expect(screen.getByText('1人', { selector: 'span.text-lg' })).toBeInTheDocument();
+    });
+    
+    // 最大値が「4人」であることを確認（4番個室の場合）
+    // スライダー下部の最大値表示を特定
+    expect(screen.getByText('4人', { selector: 'div.flex.justify-between.text-sm > span:last-child' })).toBeInTheDocument();
+    
+    // 部屋を6番大部屋に変更
+    const largeRoomCard = screen.getByText('6番大部屋').closest('div');
+    if (largeRoomCard) {
+      fireEvent.click(largeRoomCard);
+    }
+    
+    // 最大値が「20人」に変更されることを確認
+    await waitFor(() => {
+      expect(screen.getByText('20人', { selector: 'div.flex.justify-between.text-sm > span:last-child' })).toBeInTheDocument();
     });
   });
 });
