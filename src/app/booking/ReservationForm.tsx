@@ -840,7 +840,7 @@ export default function ReservationForm({ openDays }: ReservationFormProps) {
             onChange={handleChange}
             required
             className="w-full rounded-md border border-input bg-background px-3 py-2"
-            placeholder="090-1234-5678"
+            placeholder="09012345678"
           />
         </div>
       </div>

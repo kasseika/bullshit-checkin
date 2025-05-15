@@ -181,7 +181,7 @@ describe('ReservationForm', () => {
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     
     const phoneInput = screen.getByRole('textbox', { name: '電話番号' });
-    fireEvent.change(phoneInput, { target: { value: '090-1234-5678' } });
+    fireEvent.change(phoneInput, { target: { value: '09012345678' } });
     
     // handleSubmitは直接モックしない
     
