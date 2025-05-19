@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:booking": "cd booking && next dev -p 3001",
-    "build": "next build && cd functions && npm install && npm run build",
+    "build": "next build && cd functions && npm install --legacy-peer-deps && npm run build",
     "build:booking": "cd booking && next build",
     "build:all": "npm run build && npm run build:booking",
     "start": "next start",

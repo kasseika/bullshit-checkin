@@ -134,7 +134,7 @@ export const getCalendarReservations = functions.region('asia-northeast1').https
         // 部屋IDに基づいてフィルタリング
         switch (roomId) {
           case 'private4':
-            return identifier === '4番個室';
+            return identifier === '4番個室' || identifier === '4番小部屋';
           case 'large4':
             return identifier === '4番大部屋';
           case 'large6':
@@ -240,7 +240,7 @@ export const getCalendarReservationsApi = functions.region('asia-northeast1').ht
         
         switch (roomId) {
           case 'private4':
-            return identifier === '4番個室';
+            return identifier === '4番個室' || identifier === '4番小部屋';
           case 'large4':
             return identifier === '4番大部屋';
           case 'large6':
@@ -822,7 +822,7 @@ export const getCalendarReservationsForPeriod = functions.region('asia-northeast
         // 部屋IDに基づいてフィルタリング
         switch (roomId) {
           case 'private4':
-            return identifier === '4番個室';
+            return identifier === '4番個室' || identifier === '4番小部屋';
           case 'large4':
             return identifier === '4番大部屋';
           case 'large6':
