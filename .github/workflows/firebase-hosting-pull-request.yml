@@ -20,13 +20,15 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+      - name: Install booking dependencies
+        run: cd booking && npm ci --legacy-peer-deps
       - name: Install functions dependencies
         run: cd functions && npm ci --legacy-peer-deps
-      - name: Build
-        run: npm run build
+      - name: Build all
+        run: npm run build:all
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BULLSHIT_CHECKIN }}
           projectId: bullshit-checkin
-          targets: checkin
+          targets: checkin,booking
