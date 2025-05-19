@@ -92,17 +92,17 @@ function Survey() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-4xl font-bold mb-12">利用者アンケート</h1>
-      <h2 className="text-2xl mb-8">年代を選択してください(グループの場合は代表者)</h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-2xl">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12">利用者アンケート</h1>
+      <h2 className="text-xl sm:text-2xl mb-6 sm:mb-8">年代を選択してください(グループの場合は代表者)</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 w-full max-w-2xl">
         {ageGroups.map((ageGroup) => (
           <Button
             key={ageGroup.id}
             variant="outline"
             size="lg"
             onClick={() => handleSelect(ageGroup.id)}
-            className="w-full h-24 text-xl"
+            className="w-full h-16 sm:h-24 text-base sm:text-xl"
             isLoading={isLoading === 'select' && selectedAgeGroupId === ageGroup.id}
           >
             {ageGroup.name}
@@ -115,7 +115,7 @@ function Survey() {
         variant="outline"
         size="lg"
         onClick={handleBack}
-        className="mt-12 w-full max-w-xs text-xl h-12"
+        className="mt-8 sm:mt-12 w-full max-w-xs text-base sm:text-xl h-10 sm:h-12"
         isLoading={isLoading === 'back'}
       >
         戻る

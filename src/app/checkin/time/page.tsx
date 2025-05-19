@@ -271,8 +271,8 @@ function TimeSelection() {
   // const timeToNumber = (time: string): number => parseInt(time.split(":")[0], 10); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-4xl font-bold mb-12">何時までご利用されますか？</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12">何時までご利用されますか？</h1>
       <div className="w-full max-w-3xl">
         <div className="flex flex-col md:flex-row gap-6 mb-8">
           <Card className="flex-1">
@@ -422,7 +422,7 @@ function TimeSelection() {
         size="lg"
         onClick={handleNext}
         disabled={!startTime || !endTime} // 開始時間と終了時間が選択されるまで無効
-        className="mt-12 w-full max-w-xs text-2xl h-20 rounded-xl"
+        className="mt-8 sm:mt-12 w-full max-w-xs text-xl sm:text-2xl h-16 sm:h-20 rounded-lg sm:rounded-xl"
         isLoading={isLoading === 'next'}
       >
         次へ
@@ -433,7 +433,7 @@ function TimeSelection() {
         variant="outline"
         size="lg"
         onClick={handleBack}
-        className="mt-4 w-full max-w-xs text-xl h-14 rounded-xl"
+        className="mt-2 sm:mt-4 w-full max-w-xs text-base sm:text-xl h-10 sm:h-14 rounded-lg sm:rounded-xl"
         isLoading={isLoading === 'back'}
       >
         戻る

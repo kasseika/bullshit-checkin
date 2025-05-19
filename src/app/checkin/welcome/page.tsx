@@ -17,21 +17,21 @@ function WelcomeContent() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-3xl font-bold mb-2">大船渡テレワークセンター</h1>
-      <h2 className="text-2xl font-bold mb-8">セルフチェックインシステム</h2>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">大船渡テレワークセンター</h1>
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">セルフチェックインシステム</h2>
       
-      <Card className="w-full max-w-md mb-8">
-        <CardContent className="p-6">
+      <Card className="w-full max-w-md mb-6 sm:mb-8">
+        <CardContent className="p-4 sm:p-6">
           {/* チェックイン注意書き */}
-          <p className="text-lg font-medium text-center mb-6">
+          <p className="text-base sm:text-lg font-medium text-center mb-4 sm:mb-6">
             ご利用の前にかならずこちらでチェックインをお願いいたします。
           </p>
           
           {/* 次へボタン */}
           <Button
             size="lg"
-            className="w-full h-14 text-xl"
+            className="w-full h-12 sm:h-14 text-base sm:text-xl"
             onClick={handleNext}
             isLoading={isLoading}
           >

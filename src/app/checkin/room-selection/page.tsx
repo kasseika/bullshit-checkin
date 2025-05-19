@@ -60,16 +60,16 @@ function RoomSelectionContent() {
   };
   
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-4xl font-bold mb-12">使用する部屋を選択してください</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12">使用する部屋を選択してください</h1>
       
-      <div className="grid grid-cols-2 md:grid-cols-2 gap-6 w-full max-w-2xl mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full max-w-2xl mb-6 sm:mb-8">
         {rooms.map((room) => (
           <Button
             key={room.id}
             variant="outline"
             size="lg"
-            className="w-full h-24 text-xl"
+            className="w-full h-16 sm:h-24 text-base sm:text-xl"
             onClick={() => handleRoomSelect(room.id)}
             isLoading={isLoading && selectedRoomId === room.id}
           >
@@ -83,7 +83,7 @@ function RoomSelectionContent() {
         variant="outline"
         size="lg"
         onClick={handleBack}
-        className="mt-4 w-full max-w-xs text-xl h-12"
+        className="mt-2 sm:mt-4 w-full max-w-xs text-base sm:text-xl h-10 sm:h-12"
         isLoading={isLoading && selectedRoomId === null}
       >
         戻る

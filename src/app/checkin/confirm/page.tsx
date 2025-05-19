@@ -293,8 +293,8 @@ function Confirm() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-4xl font-bold mb-12">入力内容の確認</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12">入力内容の確認</h1>
       
       <Card className="w-full max-w-2xl mb-8">
         <CardHeader>
@@ -325,7 +325,7 @@ function Confirm() {
       <Button
         size="lg"
         onClick={handleConfirm}
-        className="w-full max-w-xs text-xl h-16 mb-4"
+        className="w-full max-w-xs text-base sm:text-xl h-12 sm:h-16 mb-2 sm:mb-4"
         isLoading={isSubmitting}
         disabled={saveStatus === 'offline' || !navigator.onLine}
       >
@@ -337,7 +337,7 @@ function Confirm() {
         variant="outline"
         size="lg"
         onClick={handleBack}
-        className="w-full max-w-xs text-xl h-12"
+        className="w-full max-w-xs text-base sm:text-xl h-10 sm:h-12"
         isLoading={isNavigating === 'back'}
       >
         戻る
@@ -348,7 +348,7 @@ function Confirm() {
         variant="destructive" // 目立つようにdestructive variantを使うのだ
         size="lg"
         onClick={handleReset}
-        className="w-full max-w-xs text-xl h-12 mt-4" // 少しマージンを追加
+        className="w-full max-w-xs text-base sm:text-xl h-10 sm:h-12 mt-2 sm:mt-4" // 少しマージンを追加
         isLoading={isNavigating === 'reset'}
       >
         最初からやり直す

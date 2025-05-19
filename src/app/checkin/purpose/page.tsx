@@ -71,16 +71,16 @@ function PurposeSelection() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8">
-      <h1 className="text-4xl font-bold mb-12">利用用途を選択してください</h1>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-3xl">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-8">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-8 sm:mb-12">利用用途を選択してください</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 w-full max-w-3xl">
         {purposes.map((purpose) => (
           <Button
             key={purpose.id}
             variant="outline"
             size="lg"
             onClick={() => handleSelect(purpose.id)}
-            className="w-full h-24 text-xl" // ボタンの高さを調整
+            className="w-full h-16 sm:h-24 text-base sm:text-xl" // ボタンの高さと文字サイズを調整
             isLoading={isLoading === 'select' && selectedPurposeId === purpose.id}
           >
             {purpose.name}
@@ -93,7 +93,7 @@ function PurposeSelection() {
         variant="outline"
         size="lg"
         onClick={handleBack}
-        className="mt-12 w-full max-w-xs text-xl h-12"
+        className="mt-8 sm:mt-12 w-full max-w-xs text-base sm:text-xl h-10 sm:h-12"
         isLoading={isLoading === 'back'}
       >
         戻る
