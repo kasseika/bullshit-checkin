@@ -77,10 +77,10 @@ export function InstallPWA() {
 
   return (
     <div className="fixed bottom-4 left-0 right-0 flex justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg flex items-center gap-4 max-w-md">
+      <div className="bg-white dark:bg-gray-800 p-2 sm:p-4 rounded-lg shadow-lg flex items-center gap-2 sm:gap-4 max-w-[95%] sm:max-w-md">
         <div className="flex-1">
-          <h3 className="font-bold text-lg">アプリをインストール</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
+          <h3 className="font-bold text-sm sm:text-lg">アプリをインストール</h3>
+          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
             ホーム画面に追加してオフラインでも使用できます
           </p>
         </div>

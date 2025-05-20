@@ -282,8 +282,8 @@ function TimeSelection() {
                 {/* 次の予約がある場合は表示 */}
                 {nextReservationLimit && (
                   <div className="mb-4 p-3 bg-yellow-100 rounded-md text-center">
-                    <p className="font-medium">次の予約: {nextReservationLimit.timeString}〜</p>
-                    <p className="text-sm text-gray-600">※終了時間は次の予約開始時間を超えて設定できません</p>
+                    <p className="font-medium text-sm sm:text-base">次の予約: {nextReservationLimit.timeString}〜</p>
+                    <p className="text-xs sm:text-sm text-gray-600">※終了時間は次の予約開始時間を超えて設定できません</p>
                   </div>
                 )}
                 {/* 部屋タイプに応じた注意書きを表示 */}
@@ -389,20 +389,20 @@ function TimeSelection() {
                 <div className="flex items-center space-x-4">
                   {/* 開始時刻 */}
                   <div className="flex flex-col items-center">
-                    <div className="text-3xl font-bold py-4 px-8 bg-primary text-primary-foreground rounded-md">
+                    <div className="text-xl sm:text-3xl font-bold py-2 sm:py-4 px-4 sm:px-8 bg-primary text-primary-foreground rounded-md">
                       {startTime || "読み込み中..."}
                     </div>
-                    <span className="mt-2 text-sm">開始時刻</span>
+                    <span className="mt-2 text-xs sm:text-sm">開始時刻</span>
                   </div>
 
-                  <ChevronsRight className="h-8 w-8" />
+                  <ChevronsRight className="h-6 w-6 sm:h-8 sm:w-8" />
 
                   {/* 終了時刻 */}
                   <div className="flex flex-col items-center">
-                    <div className="text-3xl font-bold py-4 px-8 bg-primary text-primary-foreground rounded-md">
+                    <div className="text-xl sm:text-3xl font-bold py-2 sm:py-4 px-4 sm:px-8 bg-primary text-primary-foreground rounded-md">
                       {endHour}:{endMinute}
                     </div>
-                    <span className="mt-2 text-sm">終了時刻</span>
+                    <span className="mt-2 text-xs sm:text-sm">終了時刻</span>
                   </div>
                 </div>
 

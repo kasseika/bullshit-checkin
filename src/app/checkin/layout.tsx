@@ -132,12 +132,12 @@ export default function CheckinLayout({
           <Button
             variant="secondary"
             size="lg"
-            className="rounded-full shadow-lg text-lg px-6 py-3"
+            className="rounded-full shadow-lg text-base sm:text-lg px-3 sm:px-6 py-2 sm:py-3"
             onClick={handleBackToHome}
             aria-label="最初に戻る"
           >
-            <Home className="mr-2 h-6 w-6" />
-            最初に戻る
+            <Home className="h-5 w-5 sm:h-6 sm:w-6 sm:mr-2" />
+            <span className="hidden sm:inline">最初に戻る</span>
           </Button>
         </div>
       )}
