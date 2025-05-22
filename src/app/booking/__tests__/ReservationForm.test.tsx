@@ -115,7 +115,7 @@ describe('ReservationForm', () => {
     render(<ReservationForm openDays={mockOpenDays} />);
     
     // 日付選択ボタンをクリック
-    const dateButton = screen.getByText('日付を選択してください');
+    const dateButton = screen.getByText('日付を選択');
     fireEvent.click(dateButton);
     
     // カレンダーが表示されることを確認
@@ -146,7 +146,7 @@ describe('ReservationForm', () => {
     render(<ReservationForm openDays={mockOpenDays} />);
     
     // 日付を選択
-    const dateButton = screen.getByText('日付を選択してください');
+    const dateButton = screen.getByText('日付を選択');
     fireEvent.click(dateButton);
     
     // カレンダーから日付を選択
@@ -207,7 +207,7 @@ describe('ReservationForm', () => {
     render(<ReservationForm openDays={mockOpenDays} />);
     
     // 日付を選択
-    const dateButton = screen.getByText('日付を選択してください');
+    const dateButton = screen.getByText('日付を選択');
     fireEvent.click(dateButton);
     
     // カレンダーから日付を選択

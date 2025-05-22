@@ -11,9 +11,9 @@
     "start": "next start",
     "start:booking": "cd booking && next start -p 3001",
     "lint": "next lint",
-    "test": "jest --silent",
-    "test:watch": "jest --watch --silent",
-    "test:coverage": "jest --coverage --silent",
+    "test": "NODE_OPTIONS='--no-deprecation' jest --silent --no-watchman --testLocationInResults=false",
+    "test:watch": "NODE_OPTIONS='--no-deprecation' jest --watch --silent --no-watchman",
+    "test:coverage": "NODE_OPTIONS='--no-deprecation' jest --coverage --silent --no-watchman",
     "deploy:checkin": "firebase deploy --only hosting:checkin",
     "deploy:booking": "firebase deploy --only hosting:booking",
     "deploy:all": "npm run build:all && firebase deploy"
