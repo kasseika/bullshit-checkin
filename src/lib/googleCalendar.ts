@@ -24,10 +24,17 @@ export interface Reservation {
   endTime: string;   // HH:MM形式
 }
 
+function convertFullWidthNumbersToHalfWidth(text: string): string {
+  return text.replace(/[０-９]/g, (match) => {
+    return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
+  });
+}
+
 // 部屋の識別子を抽出する関数
 export function extractRoomIdentifier(title: string): string | null {
+  const normalizedTitle = convertFullWidthNumbersToHalfWidth(title);
   // タイトルからアンダースコア前の部分を抽出
-  const match = title.match(/^([^_]+)_/);
+  const match = normalizedTitle.match(/^([^_]+)_/);
   return match ? match[1] : null;
 }
 

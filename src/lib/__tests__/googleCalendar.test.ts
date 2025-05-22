@@ -37,6 +37,11 @@ describe('extractRoomIdentifier', () => {
     expect(extractRoomIdentifier('6番_ミーティング')).toBe('6番');
     expect(extractRoomIdentifier('タイトルのみ')).toBeNull();
   });
+
+  it('全角数字を含むタイトルから部屋識別子を正しく抽出する', () => {
+    expect(extractRoomIdentifier('４番個室_予約タイトル')).toBe('4番個室');
+    expect(extractRoomIdentifier('６番_ミーティング')).toBe('6番');
+  });
 });
 
 describe('getTodayReservations', () => {
