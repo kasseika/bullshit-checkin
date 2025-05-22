@@ -15,9 +15,16 @@ function formatDateToJST(date: Date): string {
   return `${jstDate.getFullYear()}年${jstDate.getMonth() + 1}月${jstDate.getDate()}日 ${jstDate.getHours().toString().padStart(2, '0')}:${jstDate.getMinutes().toString().padStart(2, '0')}`;
 }
 
+function convertFullWidthNumbersToHalfWidth(text: string): string {
+  return text.replace(/[０-９]/g, (match) => {
+    return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
+  });
+}
+
 // 部屋の識別子を抽出する関数
 function extractRoomIdentifier(title: string): string | null {
-  const match = title.match(/^([^_]+)_/);
+  const normalizedTitle = convertFullWidthNumbersToHalfWidth(title);
+  const match = normalizedTitle.match(/^([^_]+)_/);
   return match ? match[1] : null;
 }
 
