@@ -26,11 +26,24 @@ const config: Config = {
   ],
   // ログ出力を最小限にする設定
   verbose: false,
-  // テスト結果のみを表示するシンプルなレポーター
-  reporters: ['default'],
+  // カスタムレポーターを使用してテスト出力をシンプルにする
+  reporters: [
+    '<rootDir>/jest-custom-reporter.js'
+  ],
   // コンソール出力の制御
   silent: true,
   logHeapUsage: false,
+  // テスト失敗時のエラー出力を簡略化
+  errorOnDeprecated: true,
+  // テスト実行中の進行状況表示を最小限に
+  notify: false,
+  bail: 0,
+  // エラー表示の簡略化
+  testFailureExitCode: 1,
+  // DOMのスナップショット出力を制限
+  snapshotSerializers: [],
+  // テスト実行中の進行状況表示を最小限に
+  noStackTrace: false,
 };
 
 export default createJestConfig(config);
