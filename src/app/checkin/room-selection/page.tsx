@@ -91,7 +91,7 @@ const noReservationRooms: Room[] = [
             >
               <span className="text-xl font-semibold" data-testid={room.id === "large4" ? "room-large4-name" : undefined}>{room.name}</span>
               {"description" in room && (
-                <span className="text-xs mt-1 text-gray-500" data-testid={room.id === "large4" ? "room-large4-description" : undefined}>{room.description}</span>
+                <span className="text-xs mt-1 text-gray-500 w-full text-center break-words whitespace-normal" data-testid={room.id === "large4" ? "room-large4-description" : undefined}>{room.description}</span>
               )}
             </Button>
           ))}
