@@ -20,11 +20,11 @@ function RoomSelectionContent() {
   
   // 予約なしの場合の部屋リスト
   const noReservationRooms = [
-    { id: "room1", name: "1番" },
-    { id: "private4", name: "4番個室" },
-    { id: "large4", name: "4番大部屋" },
-    { id: "large6", name: "6番大部屋" },
-    { id: "tour", name: "見学" },
+    { id: "large4", name: "4番大部屋", description: "テレワーク・勉強に使えるオープン席です", priority: true },
+    { id: "private4", name: "4番個室", description: "Web会議等。予約がないときに使えます" },
+    { id: "large6", name: "6番大部屋", description: "複数名の会議・イベント等。予約がないときに使えます" },
+    { id: "room1", name: "1番", description: "飲食や他の部屋が使えないときなどにお使いください" },
+    { id: "tour", name: "見学", description: "施設内を見学する際に選択してください" },
   ];
   
   // 表示する部屋リスト
@@ -63,20 +63,40 @@ function RoomSelectionContent() {
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <h1 className="text-4xl font-bold mb-12">使用する部屋を選択してください</h1>
       
-      <div className="grid grid-cols-2 md:grid-cols-2 gap-6 w-full max-w-2xl mb-8">
-        {rooms.map((room) => (
-          <Button
-            key={room.id}
-            variant="outline"
-            size="lg"
-            className="w-full h-24 text-xl"
-            onClick={() => handleRoomSelect(room.id)}
-            isLoading={isLoading && selectedRoomId === room.id}
-          >
-            {room.name}
-          </Button>
-        ))}
-      </div>
+      {!hasReservation ? (
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-6 w-full max-w-2xl mb-8">
+          {rooms.map((room) => (
+            <Button
+              key={room.id}
+              variant="outline"
+              size="lg"
+              className={`w-full ${room.id === "large4" && "col-span-2"} flex flex-col items-center justify-center p-4 ${room.id === "large4" ? "h-32" : "h-24"}`}
+              onClick={() => handleRoomSelect(room.id)}
+              isLoading={isLoading && selectedRoomId === room.id}
+            >
+              <span className="text-xl font-semibold">{room.name}</span>
+              {"description" in room && (
+                <span className="text-xs mt-1 text-gray-500">{room.description}</span>
+              )}
+            </Button>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-6 w-full max-w-2xl mb-8">
+          {rooms.map((room) => (
+            <Button
+              key={room.id}
+              variant="outline"
+              size="lg"
+              className="w-full h-24 text-xl"
+              onClick={() => handleRoomSelect(room.id)}
+              isLoading={isLoading && selectedRoomId === room.id}
+            >
+              {room.name}
+            </Button>
+          ))}
+        </div>
+      )}
       
       {/* 戻るボタン */}
       <Button
