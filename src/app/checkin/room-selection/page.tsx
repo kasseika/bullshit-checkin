@@ -4,14 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
-// 部屋情報の型定義
-interface RoomInfo {
-  id: string;
-  name: string;
-  description?: string;
-  priority?: boolean;
-}
-
 // 部屋選択画面のコンポーネント
 function RoomSelectionContent() {
   const router = useRouter();
