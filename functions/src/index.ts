@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as admin from 'firebase-admin';
 import { google, calendar_v3 } from 'googleapis';
 import axios from 'axios';
+import { convertFullWidthNumbersToHalfWidth } from "../../src/utils/textUtils";
 
 // Firebase初期化
 admin.initializeApp();
@@ -13,12 +14,6 @@ function formatDateToJST(date: Date): string {
   const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
   
   return `${jstDate.getFullYear()}年${jstDate.getMonth() + 1}月${jstDate.getDate()}日 ${jstDate.getHours().toString().padStart(2, '0')}:${jstDate.getMinutes().toString().padStart(2, '0')}`;
-}
-
-function convertFullWidthNumbersToHalfWidth(text: string): string {
-  return text.replace(/[０-９]/g, (match) => {
-    return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
-  });
 }
 
 // 部屋の識別子を抽出する関数

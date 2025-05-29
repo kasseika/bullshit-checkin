@@ -1,6 +1,7 @@
 import { httpsCallable } from 'firebase/functions';
 import { FirebaseError } from 'firebase/app';
 import { functions } from './firebase';
+import { convertFullWidthNumbersToHalfWidth } from '../utils/textUtils';
 
 // Cloud Functionsのエラー詳細の型定義
 interface CloudFunctionErrorDetails {
@@ -22,12 +23,6 @@ export interface Reservation {
   end: string;
   startTime: string; // HH:MM形式
   endTime: string;   // HH:MM形式
-}
-
-function convertFullWidthNumbersToHalfWidth(text: string): string {
-  return text.replace(/[０-９]/g, (match) => {
-    return String.fromCharCode(match.charCodeAt(0) - 0xFEE0);
-  });
 }
 
 // 部屋の識別子を抽出する関数

@@ -4,6 +4,14 @@ import { Button } from "@/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 
+// 部屋情報の型定義
+interface RoomInfo {
+  id: string;
+  name: string;
+  description?: string;
+  priority?: boolean;
+}
+
 // 部屋選択画面のコンポーネント
 function RoomSelectionContent() {
   const router = useRouter();
@@ -11,21 +19,27 @@ function RoomSelectionContent() {
   const hasReservation = searchParams.get("hasReservation") === "true";
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-  
-  // 予約ありの場合の部屋リスト
-  const reservationRooms = [
-    { id: "private4", name: "4番個室" },
-    { id: "large6", name: "6番 大部屋・工作室" },
-  ];
-  
-  // 予約なしの場合の部屋リスト
-  const noReservationRooms = [
-    { id: "large4", name: "4番大部屋", description: "テレワーク・勉強に使えるオープン席です", priority: true },
-    { id: "private4", name: "4番個室", description: "Web会議等。予約がないときに使えます" },
-    { id: "large6", name: "6番大部屋", description: "複数名の会議・イベント等。予約がないときに使えます" },
-    { id: "room1", name: "1番", description: "飲食や他の部屋が使えないときなどにお使いください" },
-    { id: "tour", name: "見学", description: "施設内を見学する際に選択してください" },
-  ];
+interface Room {
+  id: string;
+  name: string;
+  description?: string;
+  priority?: boolean;
+}
+
+// 予約ありの場合の部屋リスト
+const reservationRooms: Room[] = [
+  { id: "private4", name: "4番個室" },
+  { id: "large6", name: "6番 大部屋・工作室" },
+];
+
+// 予約なしの場合の部屋リスト
+const noReservationRooms: Room[] = [
+  { id: "large4", name: "4番大部屋", description: "テレワーク・勉強に使えるオープン席です", priority: true },
+  { id: "private4", name: "4番個室", description: "Web会議等。予約がないときに使えます" },
+  { id: "large6", name: "6番大部屋", description: "複数名の会議・イベント等。予約がないときに使えます" },
+  { id: "room1", name: "1番", description: "飲食や他の部屋が使えないときなどにお使いください" },
+  { id: "tour", name: "見学", description: "施設内を見学する際に選択してください" },
+];
   
   // 表示する部屋リスト
   const rooms = hasReservation ? reservationRooms : noReservationRooms;
@@ -73,10 +87,19 @@ function RoomSelectionContent() {
               className={`w-full ${room.id === "large4" && "col-span-2"} flex flex-col items-center justify-center p-4 ${room.id === "large4" ? "h-32" : "h-24"}`}
               onClick={() => handleRoomSelect(room.id)}
               isLoading={isLoading && selectedRoomId === room.id}
+              data-testid={room.id === "large4" ? "room-large4-button" : `room-${room.id}-button`}
+              role="button"
+              aria-label={room.name}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  handleRoomSelect(room.id);
+                }
+              }}
             >
-              <span className="text-xl font-semibold">{room.name}</span>
+              <span className="text-xl font-semibold" data-testid={room.id === "large4" ? "room-large4-name" : undefined}>{room.name}</span>
               {"description" in room && (
-                <span className="text-xs mt-1 text-gray-500">{room.description}</span>
+                <span className="text-xs mt-1 text-gray-500" data-testid={room.id === "large4" ? "room-large4-description" : undefined}>{room.description}</span>
               )}
             </Button>
           ))}
