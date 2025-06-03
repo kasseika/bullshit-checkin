@@ -27,7 +27,6 @@ describe("MonthlyDashboardPage", () => {
       totalCheckIns: 150,
       totalBookings: 120,
       totalUsers: 350,
-      averageUtilizationRate: 65,
       peakDay: "2025-01-15",
       peakDayCheckIns: 25,
       ageGroupStats: {
@@ -75,7 +74,6 @@ describe("MonthlyDashboardPage", () => {
     expect(screen.getByText("月別集計")).toBeInTheDocument();
     expect(screen.getByText("150")).toBeInTheDocument();
     expect(screen.getByText("350人")).toBeInTheDocument(); // 月全体の利用者数
-    expect(screen.getByText("65%")).toBeInTheDocument();
     
     // 詳細統計の表示確認
     expect(screen.getByText("年代別")).toBeInTheDocument();
@@ -91,7 +89,6 @@ describe("MonthlyDashboardPage", () => {
       totalCheckIns: 200,
       totalBookings: 180,
       totalUsers: 450,
-      averageUtilizationRate: 75,
       peakDay: null,
       peakDayCheckIns: 0,
       ageGroupStats: { under20: 0, twenties: 0, thirties: 0, forties: 0, fifties: 0, over60: 0, unknown: 0 },
@@ -116,7 +113,6 @@ describe("MonthlyDashboardPage", () => {
 
     expect(screen.getByText("200")).toBeInTheDocument();
     expect(screen.getByText("450人")).toBeInTheDocument();
-    expect(screen.getByText("75%")).toBeInTheDocument();
   });
 
   it("データ取得中はローディング表示を行う", async () => {
@@ -140,7 +136,6 @@ describe("MonthlyDashboardPage", () => {
       totalCheckIns: 100,
       totalBookings: 80,
       totalUsers: 250,
-      averageUtilizationRate: 50,
       peakDay: null,
       peakDayCheckIns: 0,
       ageGroupStats: { under20: 0, twenties: 0, thirties: 0, forties: 0, fifties: 0, over60: 0, unknown: 0 },
@@ -179,7 +174,6 @@ describe("MonthlyDashboardPage", () => {
       totalCheckIns: 0,
       totalBookings: 0,
       totalUsers: 0,
-      averageUtilizationRate: 0,
       peakDay: null,
       peakDayCheckIns: 0,
       ageGroupStats: { under20: 0, twenties: 0, thirties: 0, forties: 0, fifties: 0, over60: 0, unknown: 0 },
@@ -202,7 +196,6 @@ describe("MonthlyDashboardPage", () => {
       totalCheckIns: 100,
       totalBookings: 50,
       totalUsers: 250,
-      averageUtilizationRate: 60,
       peakDay: "2025-01-15",
       peakDayCheckIns: 15,
       ageGroupStats: {

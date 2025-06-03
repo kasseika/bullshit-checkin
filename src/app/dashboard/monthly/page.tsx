@@ -139,7 +139,7 @@ export default function MonthlyDashboardPage() {
         </div>
       ) : stats ? (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card className="p-6">
               <p className="text-sm text-gray-600 mb-2">総チェックイン数</p>
               <p className="text-3xl font-bold">{stats.totalCheckIns}</p>
@@ -148,11 +148,6 @@ export default function MonthlyDashboardPage() {
             <Card className="p-6">
               <p className="text-sm text-gray-600 mb-2">月全体の利用者数</p>
               <p className="text-3xl font-bold">{stats.totalUsers}人</p>
-            </Card>
-
-            <Card className="p-6">
-              <p className="text-sm text-gray-600 mb-2">平均利用率</p>
-              <p className="text-3xl font-bold">{stats.averageUtilizationRate}%</p>
             </Card>
 
             <Card className="p-6">

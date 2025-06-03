@@ -36,7 +36,6 @@ describe("DashboardPage", () => {
       todayCheckIns: 0,
       currentlyInUse: 0,
       todayBookings: 0,
-      utilizationRate: 0,
     });
     mockGetRecentCheckIns.mockResolvedValue([]);
 
@@ -49,7 +48,6 @@ describe("DashboardPage", () => {
       todayCheckIns: 5,
       currentlyInUse: 3,
       todayBookings: 8,
-      utilizationRate: 30,
     });
     mockGetRecentCheckIns.mockResolvedValue([]);
 
@@ -59,7 +57,6 @@ describe("DashboardPage", () => {
       expect(screen.getByText("5")).toBeInTheDocument();
       expect(screen.getByText("3")).toBeInTheDocument();
       expect(screen.getByText("8")).toBeInTheDocument();
-      expect(screen.getByText("30%")).toBeInTheDocument();
       expect(screen.getByText(/最終更新: .* \(JST\)/)).toBeInTheDocument();
     });
   });
@@ -69,7 +66,6 @@ describe("DashboardPage", () => {
       todayCheckIns: 0,
       currentlyInUse: 0,
       todayBookings: 0,
-      utilizationRate: 0,
     });
     mockGetRecentCheckIns.mockResolvedValue([
       {
@@ -111,7 +107,6 @@ describe("DashboardPage", () => {
       todayCheckIns: 0,
       currentlyInUse: 0,
       todayBookings: 0,
-      utilizationRate: 0,
     });
     mockGetRecentCheckIns.mockResolvedValue([]);
 

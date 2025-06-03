@@ -21,7 +21,6 @@ export default function DashboardPage() {
     todayCheckIns: 0,
     currentlyInUse: 0,
     todayBookings: 0,
-    utilizationRate: 0,
   });
   const [recentCheckIns, setRecentCheckIns] = useState<DashboardCheckInData[]>([]);
   const [lastUpdate, setLastUpdate] = useState<string>("");
@@ -51,8 +50,8 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
           <Card key={i}>
             <CardHeader>
               <Skeleton className="h-4 w-[150px]" />
@@ -80,7 +79,7 @@ export default function DashboardPage() {
           月別集計を見る →
         </a>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>今日のチェックイン</CardTitle>
@@ -108,16 +107,6 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{stats.todayBookings}</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>利用率</CardTitle>
-            <CardDescription>本日の部屋利用率</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{stats.utilizationRate}%</p>
           </CardContent>
         </Card>
       </div>

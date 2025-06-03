@@ -176,7 +176,6 @@ describe("dashboardFirestore", () => {
         todayCheckIns: 3,
         currentlyInUse: 4,
         todayBookings: 2,
-        utilizationRate: 40, // 4/10 * 100
       });
     });
 
@@ -188,7 +187,6 @@ describe("dashboardFirestore", () => {
         todayCheckIns: 0,
         currentlyInUse: 0,
         todayBookings: 0,
-        utilizationRate: 0,
       });
     });
   });
@@ -374,7 +372,6 @@ describe("dashboardFirestore", () => {
       expect(result.totalCheckIns).toBe(0);
       expect(result.totalBookings).toBe(0);
       expect(result.totalUsers).toBe(0);
-      expect(result.averageUtilizationRate).toBe(0);
       expect(result.peakDay).toBeNull();
       expect(result.peakDayCheckIns).toBe(0);
       

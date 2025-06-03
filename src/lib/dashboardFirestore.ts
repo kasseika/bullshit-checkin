@@ -55,7 +55,6 @@ export interface DashboardStats {
   todayCheckIns: number;
   currentlyInUse: number;
   todayBookings: number;
-  utilizationRate: number;
 }
 
 /**
@@ -155,15 +154,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       getCurrentlyInUseCount(),
     ]);
 
-    // 利用率の計算（仮に10部屋あるとして）
-    const totalRooms = 10;
-    const utilizationRate = totalRooms > 0 ? (currentlyInUse / totalRooms) * 100 : 0;
-
     return {
       todayCheckIns: todayCheckIns.length,
       currentlyInUse,
       todayBookings: todayBookings.length,
-      utilizationRate: Math.round(utilizationRate),
     };
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
@@ -171,7 +165,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       todayCheckIns: 0,
       currentlyInUse: 0,
       todayBookings: 0,
-      utilizationRate: 0,
     };
   }
 }
@@ -182,7 +175,6 @@ export interface MonthlyStats {
   month: number;
   totalCheckIns: number;
   totalBookings: number;
-  averageUtilizationRate: number;
   peakDay: string | null;
   peakDayCheckIns: number;
   totalUsers: number; // 月全体の利用者数
@@ -415,12 +407,6 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       }
     });
     
-    // 平均利用率の計算（簡易版：チェックイン数 / (営業日数 * 部屋数)）
-    const totalRooms = 10;
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const averageUtilizationRate = daysInMonth > 0 && totalRooms > 0 
-      ? Math.round((checkIns.length / (daysInMonth * totalRooms)) * 100)
-      : 0;
     
     // 月全体の利用者数を計算（各チェックインのcountを合計）
     const totalUsers = checkIns.reduce((sum, checkIn) => sum + (checkIn.count || 0), 0);
@@ -495,7 +481,6 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       month,
       totalCheckIns: checkIns.length,
       totalBookings: bookings.length,
-      averageUtilizationRate,
       peakDay,
       peakDayCheckIns,
       totalUsers,
@@ -511,7 +496,6 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       month,
       totalCheckIns: 0,
       totalBookings: 0,
-      averageUtilizationRate: 0,
       peakDay: null,
       peakDayCheckIns: 0,
       totalUsers: 0,
