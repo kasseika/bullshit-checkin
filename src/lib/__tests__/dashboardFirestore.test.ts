@@ -33,7 +33,7 @@ jest.mock("@/utils/dateUtils", () => ({
   formatDateToJST: jest.fn(() => "2024-03-15"),
   formatTimeToJST: jest.fn(() => "14:30"),
   getJSTTodayStart: jest.fn(() => new Date("2024-03-15T00:00:00+09:00")),
-  getJSTNow: jest.fn(() => new Date("2024-03-15T14:30:00+09:00")),
+  getCurrentTime: jest.fn(() => new Date("2024-03-15T14:30:00+09:00")),
 }));
 
 const mockGetDocs = getDocs as jest.MockedFunction<typeof getDocs>;
@@ -135,9 +135,15 @@ describe("dashboardFirestore", () => {
 
   describe("getCurrentlyInUseCount", () => {
     it("現在利用中の部屋数を取得できる", async () => {
+      const mockDocs = [
+        { data: () => ({ endTime: "23:59" }) }, // Will pass filter
+        { data: () => ({ endTime: "23:59" }) }, // Will pass filter
+        { data: () => ({ endTime: "23:59" }) }, // Will pass filter
+      ];
+      
       mockGetDocs.mockResolvedValue({
-        docs: [],
-        size: 3,
+        docs: mockDocs,
+        size: mockDocs.length,
       } as unknown as QuerySnapshot<DocumentData>);
 
       const result = await getCurrentlyInUseCount();
@@ -157,6 +163,13 @@ describe("dashboardFirestore", () => {
         { id: "2", data: () => ({ room: "研修室" }) },
       ];
 
+      const mockInUseDocs = [
+        { data: () => ({ endTime: "23:59" }) },
+        { data: () => ({ endTime: "23:59" }) },
+        { data: () => ({ endTime: "23:59" }) },
+        { data: () => ({ endTime: "23:59" }) },
+      ];
+
       mockGetDocs
         .mockResolvedValueOnce({
           docs: mockCheckIns,
@@ -167,8 +180,8 @@ describe("dashboardFirestore", () => {
           size: mockBookings.length,
         } as unknown as QuerySnapshot<DocumentData>)
         .mockResolvedValueOnce({
-          docs: [],
-          size: 4, // 4部屋利用中
+          docs: mockInUseDocs,
+          size: mockInUseDocs.length,
         } as unknown as QuerySnapshot<DocumentData>);
 
       const result = await getDashboardStats();

@@ -14,7 +14,7 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
-import { formatDateToJST, formatTimeToJST, getJSTTodayStart, getJSTNow } from "@/utils/dateUtils";
+import { formatDateToJST, formatTimeToJST, getJSTTodayStart, getCurrentTime } from "@/utils/dateUtils";
 
 // ダッシュボード用のチェックインデータ型
 export interface DashboardCheckInData {
@@ -127,7 +127,7 @@ export async function getTodayBookings(): Promise<DashboardBookingData[]> {
  * 現在利用中の部屋数を取得
  */
 export async function getCurrentlyInUseCount(): Promise<number> {
-  const now = getJSTNow();
+  const now = getCurrentTime();
   const currentTime = formatTimeToJST(now); // HH:MM形式
   const todayStr = formatDateToJST(now);
 
@@ -135,12 +135,18 @@ export async function getCurrentlyInUseCount(): Promise<number> {
   const q = query(
     checkInsRef,
     where("startDate", "==", todayStr),
-    where("startTime", "<=", currentTime),
-    where("endTime", ">=", currentTime)
+    where("startTime", "<=", currentTime)
   );
 
   const querySnapshot = await getDocs(q);
-  return querySnapshot.size;
+  
+  // Client-side filtering for endTime
+  const activeCheckIns = querySnapshot.docs.filter(doc => {
+    const data = doc.data();
+    return data.endTime >= currentTime;
+  });
+  
+  return activeCheckIns.length;
 }
 
 /**
@@ -298,7 +304,7 @@ function categorizeTimeSlot(timeStr: string): keyof TimeSlotStats {
   if (!timeStr) return "unknown";
   
   const [hourStr] = timeStr.split(":");
-  const hour = parseInt(hourStr, 10);
+  const hour = Number.parseInt(hourStr, 10);
   
   if (hour >= 9 && hour < 13) {
     return "morning";    // 9:00-13:00
@@ -398,7 +404,7 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
     });
     
     // ピーク日を特定
-    let peakDay: string | null = null;
+    let peakDay = null;
     let peakDayCheckIns = 0;
     Object.entries(dailyCheckIns).forEach(([date, count]) => {
       if (count > peakDayCheckIns) {

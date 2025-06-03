@@ -117,10 +117,14 @@ describe("MonthlyDashboardPage", () => {
   });
 
   it("データ取得中はローディング表示を行う", async () => {
-    let resolvePromise: (value: MonthlyStats) => void;
-    const promise = new Promise<MonthlyStats>((resolve) => {
-      resolvePromise = resolve;
-    });
+    // Promise executor内でresolve関数を即座に外部変数に割り当てる
+    const { promise, resolve } = (() => {
+      let resolveFunc: (value: MonthlyStats) => void = () => {};
+      const promiseInstance = new Promise<MonthlyStats>((resolve) => {
+        resolveFunc = resolve;
+      });
+      return { promise: promiseInstance, resolve: resolveFunc };
+    })();
 
     mockGetMonthlyStats.mockReturnValue(promise);
 
@@ -131,7 +135,7 @@ describe("MonthlyDashboardPage", () => {
     expect(loadingElements.length).toBeGreaterThan(0);
 
     // データ取得完了
-    resolvePromise!({
+    resolve({
       year: 2025,
       month: 1,
       totalCheckIns: 100,
