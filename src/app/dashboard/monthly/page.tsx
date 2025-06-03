@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { getMonthlyStats, MonthlyStats, AgeGroupStats, PurposeStats, DayOfWeekStats, TimeSlotStats } from "@/lib/dashboardFirestore";
+import { getMonthlyStats, MonthlyStats } from "@/lib/dashboardFirestore";
 import { formatDateToJSTWithSlash } from "@/utils/dateUtils";
 
 // 統計表示用のコンポーネント

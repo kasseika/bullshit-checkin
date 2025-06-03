@@ -4,6 +4,7 @@
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import MonthlyDashboardPage from "../page";
 import { getMonthlyStats } from "@/lib/dashboardFirestore";
+import type { MonthlyStats } from "@/lib/dashboardFirestore";
 
 // モック設定
 jest.mock("@/lib/dashboardFirestore", () => ({
@@ -116,12 +117,12 @@ describe("MonthlyDashboardPage", () => {
   });
 
   it("データ取得中はローディング表示を行う", async () => {
-    let resolvePromise: (value: any) => void;
-    const promise = new Promise((resolve) => {
+    let resolvePromise: (value: MonthlyStats) => void;
+    const promise = new Promise<MonthlyStats>((resolve) => {
       resolvePromise = resolve;
     });
 
-    mockGetMonthlyStats.mockReturnValue(promise as any);
+    mockGetMonthlyStats.mockReturnValue(promise);
 
     render(<MonthlyDashboardPage />);
 
