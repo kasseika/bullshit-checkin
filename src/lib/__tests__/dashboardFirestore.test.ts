@@ -279,6 +279,9 @@ describe("dashboardFirestore", () => {
             startDate: "2025-01-15",
             startTime: "10:00",
             endTime: "11:00",
+            count: 3,
+            ageGroup: "20s",
+            purpose: "meeting",
           }),
         },
         {
@@ -288,6 +291,9 @@ describe("dashboardFirestore", () => {
             startDate: "2025-01-15",
             startTime: "14:00",
             endTime: "15:00",
+            count: 2,
+            ageGroup: "30s",
+            purpose: "remote",
           }),
         },
         {
@@ -297,6 +303,9 @@ describe("dashboardFirestore", () => {
             startDate: "2025-01-20",
             startTime: "09:00",
             endTime: "10:00",
+            count: 1,
+            ageGroup: "under10s",
+            purpose: "study",
           }),
         },
       ];
@@ -328,30 +337,52 @@ describe("dashboardFirestore", () => {
         } as unknown as QuerySnapshot<DocumentData>);
 
       const result = await getMonthlyStats(2025, 1);
-      expect(result).toEqual({
-        year: 2025,
-        month: 1,
-        totalCheckIns: 3,
-        totalBookings: 2,
-        averageUtilizationRate: 1, // 3 / (31 * 10) * 100 = 0.967... ≈ 1
-        peakDay: "2025-01-15",
-        peakDayCheckIns: 2,
-      });
+      expect(result.year).toBe(2025);
+      expect(result.month).toBe(1);
+      expect(result.totalCheckIns).toBe(3);
+      expect(result.totalBookings).toBe(2);
+      expect(result.totalUsers).toBe(6); // 3 + 2 + 1
+      expect(result.peakDay).toBe("2025-01-15");
+      expect(result.peakDayCheckIns).toBe(2);
+      
+      // 年代別統計
+      expect(result.ageGroupStats.under20).toBe(1);
+      expect(result.ageGroupStats.twenties).toBe(3);
+      expect(result.ageGroupStats.thirties).toBe(2);
+      expect(result.ageGroupStats.forties).toBe(0);
+      
+      // 目的別統計
+      expect(result.purposeStats.meeting).toBe(3);
+      expect(result.purposeStats.telework).toBe(2);
+      expect(result.purposeStats.study).toBe(1);
+      
+      // 曜日別統計（2025-01-15は水曜日、2025-01-20は月曜日）
+      expect(result.dayOfWeekStats.wednesday).toBe(5); // 3 + 2
+      expect(result.dayOfWeekStats.monday).toBe(1);
+      
+      // 時間帯別統計
+      expect(result.timeSlotStats.morning).toBe(4); // 10:00 and 09:00
+      expect(result.timeSlotStats.afternoon).toBe(2); // 14:00
     });
 
     it("エラー時はゼロを返す", async () => {
       mockGetDocs.mockRejectedValue(new Error("Firestore error"));
 
       const result = await getMonthlyStats(2025, 1);
-      expect(result).toEqual({
-        year: 2025,
-        month: 1,
-        totalCheckIns: 0,
-        totalBookings: 0,
-        averageUtilizationRate: 0,
-        peakDay: null,
-        peakDayCheckIns: 0,
-      });
+      expect(result.year).toBe(2025);
+      expect(result.month).toBe(1);
+      expect(result.totalCheckIns).toBe(0);
+      expect(result.totalBookings).toBe(0);
+      expect(result.totalUsers).toBe(0);
+      expect(result.averageUtilizationRate).toBe(0);
+      expect(result.peakDay).toBeNull();
+      expect(result.peakDayCheckIns).toBe(0);
+      
+      // 全ての統計がゼロ初期化されていることを確認
+      expect(result.ageGroupStats.under20).toBe(0);
+      expect(result.purposeStats.meeting).toBe(0);
+      expect(result.dayOfWeekStats.monday).toBe(0);
+      expect(result.timeSlotStats.morning).toBe(0);
     });
   });
 });

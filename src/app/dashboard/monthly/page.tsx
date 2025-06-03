@@ -6,8 +6,67 @@
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { getMonthlyStats, MonthlyStats } from "@/lib/dashboardFirestore";
+import { getMonthlyStats, MonthlyStats, AgeGroupStats, PurposeStats, DayOfWeekStats, TimeSlotStats } from "@/lib/dashboardFirestore";
 import { formatDateToJSTWithSlash } from "@/utils/dateUtils";
+
+// 統計表示用のコンポーネント
+function StatsCard({ title, data }: { title: string; data: Record<string, number> }) {
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">{title}</h3>
+      <div className="space-y-2">
+        {Object.entries(data).map(([key, value]) => (
+          <div key={key} className="flex justify-between">
+            <span className="text-sm text-gray-600">{getDisplayLabel(key, title)}</span>
+            <span className="font-medium">{value}人</span>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+// 表示用ラベルを取得する関数
+function getDisplayLabel(key: string, category: string): string {
+  const labels: Record<string, Record<string, string>> = {
+    "年代別": {
+      under20: "10代以下",
+      twenties: "20代",
+      thirties: "30代",
+      forties: "40代",
+      fifties: "50代",
+      over60: "60代以上",
+      unknown: "不明"
+    },
+    "目的別": {
+      meeting: "会議・打合せ利用",
+      telework: "テレワーク利用",
+      study: "学習利用",
+      event: "イベント・講座",
+      digital: "デジタル制作(VR等含む)",
+      inspection: "視察・見学・取材",
+      other: "その他(IT相談、機器貸出等)",
+      unknown: "不明"
+    },
+    "曜日別": {
+      monday: "月",
+      tuesday: "火",
+      wednesday: "水",
+      thursday: "木",
+      friday: "金",
+      saturday: "土",
+      sunday: "日"
+    },
+    "時間帯別": {
+      morning: "午前(9:00-13:00)",
+      afternoon: "午後(13:00-18:00)",
+      evening: "夜(イベント時のみ利用)",
+      unknown: "不明"
+    }
+  };
+  
+  return labels[category]?.[key] || key;
+}
 
 export default function MonthlyDashboardPage() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -87,8 +146,8 @@ export default function MonthlyDashboardPage() {
             </Card>
 
             <Card className="p-6">
-              <p className="text-sm text-gray-600 mb-2">総予約数</p>
-              <p className="text-3xl font-bold">{stats.totalBookings}</p>
+              <p className="text-sm text-gray-600 mb-2">月全体の利用者数</p>
+              <p className="text-3xl font-bold">{stats.totalUsers}人</p>
             </Card>
 
             <Card className="p-6">
@@ -107,6 +166,14 @@ export default function MonthlyDashboardPage() {
                 </p>
               )}
             </Card>
+          </div>
+
+          {/* 詳細統計 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <StatsCard title="年代別" data={stats.ageGroupStats} />
+            <StatsCard title="目的別" data={stats.purposeStats} />
+            <StatsCard title="曜日別" data={stats.dayOfWeekStats} />
+            <StatsCard title="時間帯別" data={stats.timeSlotStats} />
           </div>
 
           {/* 期間表示 */}

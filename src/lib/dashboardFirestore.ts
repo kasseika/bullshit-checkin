@@ -185,6 +185,138 @@ export interface MonthlyStats {
   averageUtilizationRate: number;
   peakDay: string | null;
   peakDayCheckIns: number;
+  totalUsers: number; // 月全体の利用者数
+  ageGroupStats: AgeGroupStats;
+  purposeStats: PurposeStats;
+  dayOfWeekStats: DayOfWeekStats;
+  timeSlotStats: TimeSlotStats;
+}
+
+// 年代別統計
+export interface AgeGroupStats {
+  under20: number;    // 10代以下
+  twenties: number;   // 20代
+  thirties: number;   // 30代
+  forties: number;    // 40代
+  fifties: number;    // 50代
+  over60: number;     // 60代以上
+  unknown: number;    // 不明
+}
+
+// 目的別統計
+export interface PurposeStats {
+  meeting: number;         // 会議・打合せ利用
+  telework: number;        // テレワーク利用
+  study: number;           // 学習利用
+  event: number;           // イベント・講座
+  digital: number;         // デジタル制作(VR等含む)
+  inspection: number;      // 視察・見学・取材
+  other: number;           // その他(IT相談、機器貸出等)
+  unknown: number;         // 不明
+}
+
+// 曜日別統計
+export interface DayOfWeekStats {
+  monday: number;
+  tuesday: number;
+  wednesday: number;
+  thursday: number;
+  friday: number;
+  saturday: number;
+  sunday: number;
+}
+
+// 時間帯別統計
+export interface TimeSlotStats {
+  morning: number;    // 午前(9:00-13:00)
+  afternoon: number;  // 午後(13:00-18:00)
+  evening: number;    // 夜(イベント時のみ利用)
+  unknown: number;    // 不明
+}
+
+/**
+ * 年代グループを判定する
+ */
+function categorizeAgeGroup(ageGroup: string): keyof AgeGroupStats {
+  switch (ageGroup) {
+    case "under10s":
+      return "under20";
+    case "20s":
+      return "twenties";
+    case "30s":
+      return "thirties";
+    case "40s":
+      return "forties";
+    case "50s":
+      return "fifties";
+    case "over60s":
+      return "over60";
+    default:
+      return "unknown";
+  }
+}
+
+/**
+ * 目的を分類する
+ */
+function categorizePurpose(purpose: string): keyof PurposeStats {
+  switch (purpose) {
+    case "meeting":
+      return "meeting";
+    case "remote":
+      return "telework";
+    case "study":
+      return "study";
+    case "event":
+      return "event";
+    case "creation":
+      return "digital";
+    case "tour":
+      return "inspection";
+    case "other":
+      return "other";
+    default:
+      return "unknown";
+  }
+}
+
+/**
+ * 日付から曜日を取得する
+ */
+function getDayOfWeek(dateStr: string): keyof DayOfWeekStats {
+  const date = new Date(dateStr);
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  
+  switch (dayOfWeek) {
+    case 1: return "monday";
+    case 2: return "tuesday";
+    case 3: return "wednesday";
+    case 4: return "thursday";
+    case 5: return "friday";
+    case 6: return "saturday";
+    case 0: return "sunday";
+    default: return "monday"; // fallback
+  }
+}
+
+/**
+ * 時間帯を分類する
+ */
+function categorizeTimeSlot(timeStr: string): keyof TimeSlotStats {
+  if (!timeStr) return "unknown";
+  
+  const [hourStr] = timeStr.split(":");
+  const hour = parseInt(hourStr, 10);
+  
+  if (hour >= 9 && hour < 13) {
+    return "morning";    // 9:00-13:00
+  } else if (hour >= 13 && hour < 18) {
+    return "afternoon";  // 13:00-18:00
+  } else if (hour >= 18) {
+    return "evening";    // 18:00以降（イベント時のみ）
+  } else {
+    return "unknown";
+  }
 }
 
 /**
@@ -290,6 +422,74 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       ? Math.round((checkIns.length / (daysInMonth * totalRooms)) * 100)
       : 0;
     
+    // 月全体の利用者数を計算（各チェックインのcountを合計）
+    const totalUsers = checkIns.reduce((sum, checkIn) => sum + (checkIn.count || 0), 0);
+    
+    // 年代別統計を初期化
+    const ageGroupStats: AgeGroupStats = {
+      under20: 0,
+      twenties: 0,
+      thirties: 0,
+      forties: 0,
+      fifties: 0,
+      over60: 0,
+      unknown: 0,
+    };
+    
+    // 目的別統計を初期化
+    const purposeStats: PurposeStats = {
+      meeting: 0,
+      telework: 0,
+      study: 0,
+      event: 0,
+      digital: 0,
+      inspection: 0,
+      other: 0,
+      unknown: 0,
+    };
+    
+    // 曜日別統計を初期化
+    const dayOfWeekStats: DayOfWeekStats = {
+      monday: 0,
+      tuesday: 0,
+      wednesday: 0,
+      thursday: 0,
+      friday: 0,
+      saturday: 0,
+      sunday: 0,
+    };
+    
+    // 時間帯別統計を初期化
+    const timeSlotStats: TimeSlotStats = {
+      morning: 0,
+      afternoon: 0,
+      evening: 0,
+      unknown: 0,
+    };
+    
+    // 各チェックインデータを集計
+    checkIns.forEach(checkIn => {
+      const userCount = checkIn.count || 0;
+      
+      // 年代別統計
+      const ageCategory = categorizeAgeGroup(checkIn.ageGroup || "");
+      ageGroupStats[ageCategory] += userCount;
+      
+      // 目的別統計
+      const purposeCategory = categorizePurpose(checkIn.purpose || "");
+      purposeStats[purposeCategory] += userCount;
+      
+      // 曜日別統計
+      if (checkIn.startDate) {
+        const dayCategory = getDayOfWeek(checkIn.startDate);
+        dayOfWeekStats[dayCategory] += userCount;
+      }
+      
+      // 時間帯別統計
+      const timeCategory = categorizeTimeSlot(checkIn.startTime || "");
+      timeSlotStats[timeCategory] += userCount;
+    });
+    
     return {
       year,
       month,
@@ -298,6 +498,11 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       averageUtilizationRate,
       peakDay,
       peakDayCheckIns,
+      totalUsers,
+      ageGroupStats,
+      purposeStats,
+      dayOfWeekStats,
+      timeSlotStats,
     };
   } catch (error) {
     console.error("Error fetching monthly stats:", error);
@@ -309,6 +514,41 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       averageUtilizationRate: 0,
       peakDay: null,
       peakDayCheckIns: 0,
+      totalUsers: 0,
+      ageGroupStats: {
+        under20: 0,
+        twenties: 0,
+        thirties: 0,
+        forties: 0,
+        fifties: 0,
+        over60: 0,
+        unknown: 0,
+      },
+      purposeStats: {
+        meeting: 0,
+        telework: 0,
+        study: 0,
+        event: 0,
+        digital: 0,
+        inspection: 0,
+        other: 0,
+        unknown: 0,
+      },
+      dayOfWeekStats: {
+        monday: 0,
+        tuesday: 0,
+        wednesday: 0,
+        thursday: 0,
+        friday: 0,
+        saturday: 0,
+        sunday: 0,
+      },
+      timeSlotStats: {
+        morning: 0,
+        afternoon: 0,
+        evening: 0,
+        unknown: 0,
+      },
     };
   }
 }
