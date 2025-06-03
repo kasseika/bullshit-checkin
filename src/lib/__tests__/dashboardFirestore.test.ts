@@ -8,6 +8,9 @@ import {
   getTodayBookings,
   getCurrentlyInUseCount,
   getDashboardStats,
+  getMonthlyCheckIns,
+  getMonthlyBookings,
+  getMonthlyStats,
 } from "../dashboardFirestore";
 
 jest.mock("../firebase", () => ({
@@ -186,6 +189,168 @@ describe("dashboardFirestore", () => {
         currentlyInUse: 0,
         todayBookings: 0,
         utilizationRate: 0,
+      });
+    });
+  });
+
+  describe("getMonthlyCheckIns", () => {
+    it("指定した年月のチェックイン情報を取得できる", async () => {
+      const mockData = [
+        {
+          id: "1",
+          data: () => ({
+            room: "会議室A",
+            startTime: "10:00",
+            endTime: "11:00",
+            startDate: "2025-01-15",
+            count: 5,
+            purpose: "会議",
+            ageGroup: "20-40代",
+            checkInTime: "09:55",
+          }),
+        },
+        {
+          id: "2",
+          data: () => ({
+            room: "会議室B",
+            startTime: "14:00",
+            endTime: "15:00",
+            startDate: "2025-01-20",
+            count: 3,
+            purpose: "打ち合わせ",
+            ageGroup: "30-50代",
+            checkInTime: "13:55",
+          }),
+        },
+      ];
+
+      mockGetDocs.mockResolvedValue({
+        docs: mockData,
+        size: mockData.length,
+      } as unknown as QuerySnapshot<DocumentData>);
+
+      const result = await getMonthlyCheckIns(2025, 1);
+      expect(result).toHaveLength(2);
+      expect(result[0].startDate).toBe("2025-01-15");
+      expect(result[1].startDate).toBe("2025-01-20");
+    });
+  });
+
+  describe("getMonthlyBookings", () => {
+    it("指定した年月の予約情報を取得できる", async () => {
+      const mockData = [
+        {
+          id: "1",
+          data: () => ({
+            room: "セミナー室",
+            startTime: "16:00",
+            endTime: "18:00",
+            startDate: "2025-01-10",
+            endDate: "2025-01-10",
+            count: 20,
+            purpose: "セミナー",
+            contactName: "田中太郎",
+            contactEmail: "tanaka@example.com",
+            contactPhone: "090-1234-5678",
+            status: "confirmed",
+            checkedIn: false,
+          }),
+        },
+      ];
+
+      mockGetDocs.mockResolvedValue({
+        docs: mockData,
+        size: mockData.length,
+      } as unknown as QuerySnapshot<DocumentData>);
+
+      const result = await getMonthlyBookings(2025, 1);
+      expect(result).toHaveLength(1);
+      expect(result[0].startDate).toBe("2025-01-10");
+    });
+  });
+
+  describe("getMonthlyStats", () => {
+    it("月別の統計情報を取得できる", async () => {
+      const mockCheckIns = [
+        {
+          id: "1",
+          data: () => ({
+            room: "会議室A",
+            startDate: "2025-01-15",
+            startTime: "10:00",
+            endTime: "11:00",
+          }),
+        },
+        {
+          id: "2",
+          data: () => ({
+            room: "会議室B",
+            startDate: "2025-01-15",
+            startTime: "14:00",
+            endTime: "15:00",
+          }),
+        },
+        {
+          id: "3",
+          data: () => ({
+            room: "会議室C",
+            startDate: "2025-01-20",
+            startTime: "09:00",
+            endTime: "10:00",
+          }),
+        },
+      ];
+      const mockBookings = [
+        {
+          id: "1",
+          data: () => ({
+            room: "セミナー室",
+            startDate: "2025-01-10",
+          }),
+        },
+        {
+          id: "2",
+          data: () => ({
+            room: "研修室",
+            startDate: "2025-01-25",
+          }),
+        },
+      ];
+
+      mockGetDocs
+        .mockResolvedValueOnce({
+          docs: mockCheckIns,
+          size: mockCheckIns.length,
+        } as unknown as QuerySnapshot<DocumentData>)
+        .mockResolvedValueOnce({
+          docs: mockBookings,
+          size: mockBookings.length,
+        } as unknown as QuerySnapshot<DocumentData>);
+
+      const result = await getMonthlyStats(2025, 1);
+      expect(result).toEqual({
+        year: 2025,
+        month: 1,
+        totalCheckIns: 3,
+        totalBookings: 2,
+        averageUtilizationRate: 1, // 3 / (31 * 10) * 100 = 0.967... ≈ 1
+        peakDay: "2025-01-15",
+        peakDayCheckIns: 2,
+      });
+    });
+
+    it("エラー時はゼロを返す", async () => {
+      mockGetDocs.mockRejectedValue(new Error("Firestore error"));
+
+      const result = await getMonthlyStats(2025, 1);
+      expect(result).toEqual({
+        year: 2025,
+        month: 1,
+        totalCheckIns: 0,
+        totalBookings: 0,
+        averageUtilizationRate: 0,
+        peakDay: null,
+        peakDayCheckIns: 0,
       });
     });
   });

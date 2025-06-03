@@ -69,11 +69,17 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {lastUpdate && (
-        <div className="text-right text-sm text-muted-foreground">
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
           最終更新: {lastUpdate} (JST)
         </div>
-      )}
+        <a 
+          href="/dashboard/monthly" 
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          月別集計を見る →
+        </a>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
