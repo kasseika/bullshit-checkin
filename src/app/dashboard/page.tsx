@@ -13,6 +13,7 @@ import {
   DashboardStats,
   DashboardCheckInData 
 } from "@/lib/dashboardFirestore";
+import { formatDateTimeToJST } from "@/utils/dateUtils";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ export default function DashboardPage() {
     utilizationRate: 0,
   });
   const [recentCheckIns, setRecentCheckIns] = useState<DashboardCheckInData[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,6 +35,7 @@ export default function DashboardPage() {
         ]);
         setStats(statsData);
         setRecentCheckIns(checkInsData);
+        setLastUpdate(formatDateTimeToJST(new Date()));
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -66,6 +69,11 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {lastUpdate && (
+        <div className="text-right text-sm text-muted-foreground">
+          最終更新: {lastUpdate} (JST)
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader>
@@ -126,7 +134,9 @@ export default function DashboardPage() {
                       {checkIn.startTime} - {checkIn.endTime} / {checkIn.count}名 / {checkIn.purpose}
                     </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">{checkIn.checkInTime}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {checkIn.checkInTime ? formatDateTimeToJST(new Date(checkIn.checkInTime)) : ''}
+                  </p>
                 </div>
               ))}
             </div>

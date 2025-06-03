@@ -10,6 +10,19 @@ jest.mock("@/lib/dashboardFirestore", () => ({
   getRecentCheckIns: jest.fn(),
 }));
 
+jest.mock("@/utils/dateUtils", () => ({
+  formatDateTimeToJST: jest.fn((date: Date) => {
+    // テスト用に日時を返す
+    const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000); // UTC to JST
+    const year = jstDate.getUTCFullYear();
+    const month = String(jstDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(jstDate.getUTCDate()).padStart(2, '0');
+    const hours = String(jstDate.getUTCHours()).padStart(2, '0');
+    const minutes = String(jstDate.getUTCMinutes()).padStart(2, '0');
+    return `${year}/${month}/${day} ${hours}:${minutes}`;
+  }),
+}));
+
 const mockGetDashboardStats = getDashboardStats as jest.MockedFunction<typeof getDashboardStats>;
 const mockGetRecentCheckIns = getRecentCheckIns as jest.MockedFunction<typeof getRecentCheckIns>;
 
@@ -47,6 +60,7 @@ describe("DashboardPage", () => {
       expect(screen.getByText("3")).toBeInTheDocument();
       expect(screen.getByText("8")).toBeInTheDocument();
       expect(screen.getByText("30%")).toBeInTheDocument();
+      expect(screen.getByText(/最終更新: .* \(JST\)/)).toBeInTheDocument();
     });
   });
 
@@ -66,7 +80,7 @@ describe("DashboardPage", () => {
         count: 5,
         purpose: "会議",
         ageGroup: "20-40代",
-        checkInTime: "09:55",
+        checkInTime: "2024-03-15T00:55:00.000Z",
       },
       {
         id: "2",
@@ -76,7 +90,7 @@ describe("DashboardPage", () => {
         count: 20,
         purpose: "研修",
         ageGroup: "30-50代",
-        checkInTime: "13:50",
+        checkInTime: "2024-03-15T04:50:00.000Z",
       },
     ]);
 
@@ -85,8 +99,10 @@ describe("DashboardPage", () => {
     await waitFor(() => {
       expect(screen.getByText("会議室A")).toBeInTheDocument();
       expect(screen.getByText(/10:00 - 11:00 \/ 5名 \/ 会議/)).toBeInTheDocument();
+      expect(screen.getByText("2024/03/15 09:55")).toBeInTheDocument();
       expect(screen.getByText("セミナー室")).toBeInTheDocument();
       expect(screen.getByText(/14:00 - 16:00 \/ 20名 \/ 研修/)).toBeInTheDocument();
+      expect(screen.getByText("2024/03/15 13:50")).toBeInTheDocument();
     });
   });
 

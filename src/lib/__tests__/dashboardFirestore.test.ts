@@ -1,7 +1,7 @@
 /**
  * ダッシュボード用Firestore関数のテスト
  */
-import { getDocs, query } from "firebase/firestore";
+import { getDocs, QuerySnapshot, DocumentData } from "firebase/firestore";
 import {
   getTodayCheckIns,
   getRecentCheckIns,
@@ -26,8 +26,14 @@ jest.mock("firebase/firestore", () => ({
   },
 }));
 
+jest.mock("@/utils/dateUtils", () => ({
+  formatDateToJST: jest.fn(() => "2024-03-15"),
+  formatTimeToJST: jest.fn(() => "14:30"),
+  getJSTTodayStart: jest.fn(() => new Date("2024-03-15T00:00:00+09:00")),
+  getJSTNow: jest.fn(() => new Date("2024-03-15T14:30:00+09:00")),
+}));
+
 const mockGetDocs = getDocs as jest.MockedFunction<typeof getDocs>;
-const mockQuery = query as jest.MockedFunction<typeof query>;
 
 describe("dashboardFirestore", () => {
   beforeEach(() => {
@@ -54,7 +60,7 @@ describe("dashboardFirestore", () => {
       mockGetDocs.mockResolvedValue({
         docs: mockData,
         size: mockData.length,
-      } as any);
+      } as unknown as QuerySnapshot<DocumentData>);
 
       const result = await getTodayCheckIns();
       expect(result).toHaveLength(1);
@@ -82,7 +88,7 @@ describe("dashboardFirestore", () => {
       mockGetDocs.mockResolvedValue({
         docs: mockData,
         size: mockData.length,
-      } as any);
+      } as unknown as QuerySnapshot<DocumentData>);
 
       const result = await getRecentCheckIns(5);
       expect(result).toHaveLength(1);
@@ -99,8 +105,8 @@ describe("dashboardFirestore", () => {
             room: "セミナー室",
             startTime: "16:00",
             endTime: "18:00",
-            startDate: new Date().toISOString().split("T")[0],
-            endDate: new Date().toISOString().split("T")[0],
+            startDate: "2024-03-15",
+            endDate: "2024-03-15",
             count: 20,
             purpose: "セミナー",
             contactName: "田中太郎",
@@ -115,7 +121,7 @@ describe("dashboardFirestore", () => {
       mockGetDocs.mockResolvedValue({
         docs: mockData,
         size: mockData.length,
-      } as any);
+      } as unknown as QuerySnapshot<DocumentData>);
 
       const result = await getTodayBookings();
       expect(result).toHaveLength(1);
@@ -129,7 +135,7 @@ describe("dashboardFirestore", () => {
       mockGetDocs.mockResolvedValue({
         docs: [],
         size: 3,
-      } as any);
+      } as unknown as QuerySnapshot<DocumentData>);
 
       const result = await getCurrentlyInUseCount();
       expect(result).toBe(3);
@@ -152,15 +158,15 @@ describe("dashboardFirestore", () => {
         .mockResolvedValueOnce({
           docs: mockCheckIns,
           size: mockCheckIns.length,
-        } as any)
+        } as unknown as QuerySnapshot<DocumentData>)
         .mockResolvedValueOnce({
           docs: mockBookings,
           size: mockBookings.length,
-        } as any)
+        } as unknown as QuerySnapshot<DocumentData>)
         .mockResolvedValueOnce({
           docs: [],
           size: 4, // 4部屋利用中
-        } as any);
+        } as unknown as QuerySnapshot<DocumentData>);
 
       const result = await getDashboardStats();
       expect(result).toEqual({

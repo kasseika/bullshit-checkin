@@ -14,6 +14,7 @@ import {
   QueryDocumentSnapshot,
   DocumentData,
 } from "firebase/firestore";
+import { formatDateToJST, formatTimeToJST, getJSTTodayStart, getJSTNow } from "@/utils/dateUtils";
 
 // ダッシュボード用のチェックインデータ型
 export interface DashboardCheckInData {
@@ -58,11 +59,10 @@ export interface DashboardStats {
 }
 
 /**
- * 今日の日付範囲を取得
+ * 今日の日付範囲を取得（JST）
  */
 function getTodayDateRange() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getJSTTodayStart();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
   return { today, tomorrow };
@@ -72,8 +72,8 @@ function getTodayDateRange() {
  * 今日のチェックイン情報を取得
  */
 export async function getTodayCheckIns(): Promise<DashboardCheckInData[]> {
-  const { today, tomorrow } = getTodayDateRange();
-  const todayStr = today.toISOString().split("T")[0];
+  const { today } = getTodayDateRange();
+  const todayStr = formatDateToJST(today);
 
   const checkInsRef = collection(db, "checkins");
   const q = query(
@@ -108,7 +108,7 @@ export async function getRecentCheckIns(limitCount: number = 5): Promise<Dashboa
  */
 export async function getTodayBookings(): Promise<DashboardBookingData[]> {
   const { today } = getTodayDateRange();
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = formatDateToJST(today);
 
   const bookingsRef = collection(db, "bookings");
   const q = query(
@@ -128,9 +128,9 @@ export async function getTodayBookings(): Promise<DashboardBookingData[]> {
  * 現在利用中の部屋数を取得
  */
 export async function getCurrentlyInUseCount(): Promise<number> {
-  const now = new Date();
-  const currentTime = now.toTimeString().slice(0, 5); // HH:MM形式
-  const todayStr = now.toISOString().split("T")[0];
+  const now = getJSTNow();
+  const currentTime = formatTimeToJST(now); // HH:MM形式
+  const todayStr = formatDateToJST(now);
 
   const checkInsRef = collection(db, "checkins");
   const q = query(
