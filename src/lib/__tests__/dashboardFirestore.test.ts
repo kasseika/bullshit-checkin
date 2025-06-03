@@ -11,7 +11,7 @@ import {
 } from "../dashboardFirestore";
 
 jest.mock("../firebase", () => ({
-  db: {},
+  firestoreDb: {},
 }));
 
 jest.mock("firebase/firestore", () => ({

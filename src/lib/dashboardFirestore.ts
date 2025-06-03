@@ -2,7 +2,7 @@
  * ダッシュボード用のFirestore関数
  * チェックイン情報と予約情報を取得する関数を提供
  */
-import { db } from "./firebase";
+import { firestoreDb as db } from "./firebase";
 import {
   collection,
   query,
