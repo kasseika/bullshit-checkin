@@ -46,20 +46,23 @@ describe('dateUtils', () => {
   describe('getJSTTodayStart', () => {
     it('JSTの今日の開始時刻（0:00）を取得する', () => {
       const result = getJSTTodayStart();
-      expect(result.getHours()).toBe(0);
-      expect(result.getMinutes()).toBe(0);
-      expect(result.getSeconds()).toBe(0);
-      expect(result.getMilliseconds()).toBe(0);
+      // JSTでフォーマットして確認
+      const jstString = result.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo', hour12: false });
+      const timePart = jstString.split(' ')[1] || '';
+      expect(timePart.startsWith('0:00:00')).toBe(true);
     });
   });
 
   describe('getJSTTodayEnd', () => {
     it('JSTの今日の終了時刻（23:59:59）を取得する', () => {
       const result = getJSTTodayEnd();
-      expect(result.getHours()).toBe(23);
-      expect(result.getMinutes()).toBe(59);
-      expect(result.getSeconds()).toBe(59);
-      expect(result.getMilliseconds()).toBe(999);
+      // JSTでフォーマットして確認
+      const jstString = result.toLocaleString('ja-JP', { 
+        timeZone: 'Asia/Tokyo', 
+        hour12: false
+      });
+      const timePart = jstString.split(' ')[1] || '';
+      expect(timePart.startsWith('23:59:59')).toBe(true);
     });
   });
 
@@ -69,9 +72,13 @@ describe('dateUtils', () => {
       const result = getJSTNow();
       const after = new Date();
       
-      // 結果が前後の時刻の間にあることを確認
-      expect(result.getTime()).toBeGreaterThanOrEqual(before.getTime() - 1000); // 1秒の余裕を持たせる
-      expect(result.getTime()).toBeLessThanOrEqual(after.getTime() + 1000); // 1秒の余裕を持たせる
+      // getJSTNowは通常のDateオブジェクトを返すので、
+      // タイムスタンプが同じ範囲内にあることを確認
+      expect(result.getTime()).toBeGreaterThanOrEqual(before.getTime() - 100); // 100msの余裕
+      expect(result.getTime()).toBeLessThanOrEqual(after.getTime() + 100); // 100msの余裕
+      
+      // Dateオブジェクトであることを確認
+      expect(result).toBeInstanceOf(Date);
     });
   });
 });

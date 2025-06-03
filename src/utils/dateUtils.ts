@@ -59,10 +59,19 @@ export function formatDateTimeToJST(date: Date): string {
  * @returns JSTの今日の0:00を表すDate
  */
 export function getJSTTodayStart(): Date {
+  // 現在のUTC時刻を取得
   const now = new Date();
-  const jstDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
-  jstDate.setHours(0, 0, 0, 0);
-  return jstDate;
+  // JSTオフセット（+9時間）を適用
+  const jstOffset = 9 * 60 * 60 * 1000; // 9時間をミリ秒に変換
+  const jstTime = new Date(now.getTime() + jstOffset);
+  
+  // JST基準で日付の開始時刻を計算
+  const year = jstTime.getUTCFullYear();
+  const month = jstTime.getUTCMonth();
+  const date = jstTime.getUTCDate();
+  
+  // UTC時刻でJSTの0:00を表現（UTC時刻では前日の15:00）
+  return new Date(Date.UTC(year, month, date) - jstOffset);
 }
 
 /**
@@ -71,9 +80,8 @@ export function getJSTTodayStart(): Date {
  */
 export function getJSTTodayEnd(): Date {
   const todayStart = getJSTTodayStart();
-  const todayEnd = new Date(todayStart);
-  todayEnd.setHours(23, 59, 59, 999);
-  return todayEnd;
+  // 23時間59分59秒999ミリ秒を追加
+  return new Date(todayStart.getTime() + (24 * 60 * 60 * 1000) - 1);
 }
 
 /**
@@ -81,5 +89,7 @@ export function getJSTTodayEnd(): Date {
  * @returns JSTの現在時刻
  */
 export function getJSTNow(): Date {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+  // 現在のUTC時刻をそのまま返す（DateオブジェクトはUTCで内部管理される）
+  // 表示する際にtoLocaleString等でJSTに変換する
+  return new Date();
 }
