@@ -10,9 +10,7 @@ import { Card } from "@/components/ui/card";
 import { 
   ChartContainer, 
   ChartTooltip, 
-  ChartTooltipContent, 
-  ChartLegend, 
-  ChartLegendContent 
+  ChartTooltipContent
 } from "@/components/ui/chart";
 import { getMonthlyStats, MonthlyStats, getMonthlyCheckIns, DashboardCheckInData } from "@/lib/dashboardFirestore";
 import { formatDateToJSTWithSlash } from "@/utils/dateUtils";
@@ -86,7 +84,7 @@ function getDisplayLabel(key: string, category: string): string {
 }
 
 // カスタムXAxisTickコンポーネント
-function CustomXAxisTick({ x, y, payload }: any) {
+function CustomXAxisTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: string } }) {
   const lines = payload.value.split('\n');
   return (
     <g transform={`translate(${x},${y})`}>
@@ -199,7 +197,7 @@ function DailyUsersChart({ checkIns, year, month }: {
 // 時間帯別利用状況パイチャートコンポーネント
 function TimeSlotPieChart({ timeSlotStats }: { timeSlotStats: Record<string, number> }) {
   const data = Object.entries(timeSlotStats)
-    .filter(([_, value]) => value > 0) // 0の項目は除外
+    .filter(([, value]) => value > 0) // 0の項目は除外
     .map(([key, value]) => ({
       name: getDisplayLabel(key, "時間帯別"),
       value,
@@ -422,7 +420,7 @@ function RoomUsageChart({ roomStats }: { roomStats: Record<string, number> }) {
 function ParticipantCountChart({ participantCountStats }: { participantCountStats: Record<string, number> }) {
   // 人数でソートしたデータを作成（0人は除外）
   const data = Object.entries(participantCountStats)
-    .filter(([_, count]) => count > 0)
+    .filter(([, count]) => count > 0)
     .map(([people, checkInCount]) => ({
       people: `${people}人`,
       checkIns: checkInCount,

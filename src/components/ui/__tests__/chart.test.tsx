@@ -16,7 +16,7 @@ import {
 
 // ResizeObserver のモック
 global.ResizeObserver = class ResizeObserver {
-  constructor(callback: ResizeObserverCallback) {
+  constructor() {
     // モック実装
   }
   observe() {}
