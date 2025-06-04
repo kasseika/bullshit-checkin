@@ -392,6 +392,12 @@ describe("dashboardFirestore", () => {
       expect(result.roomStats["1番"]).toBe(0);
       expect(result.roomStats["6番大部屋"]).toBe(0);
       expect(result.roomStats["6番工作室"]).toBe(0);
+      
+      // 人数別統計（チェックインごとの人数を確認）
+      expect(result.participantCountStats["1"]).toBe(1); // 1人のチェックインが1回
+      expect(result.participantCountStats["2"]).toBe(1); // 2人のチェックインが1回  
+      expect(result.participantCountStats["3"]).toBe(1); // 3人のチェックインが1回
+      expect(result.participantCountStats["0"]).toBeUndefined(); // 0人は除外
     });
 
     it("エラー時はゼロを返す", async () => {
@@ -411,6 +417,7 @@ describe("dashboardFirestore", () => {
       expect(result.purposeStats.meeting).toBe(0);
       expect(result.dayOfWeekStats.monday).toBe(0);
       expect(result.timeSlotStats.morning).toBe(0);
+      expect(result.participantCountStats).toEqual({});
     });
   });
 });

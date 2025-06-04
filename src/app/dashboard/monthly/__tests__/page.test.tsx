@@ -118,6 +118,11 @@ describe("MonthlyDashboardPage", () => {
         "会議室B": 150,
         "セミナー室": 100,
       },
+      participantCountStats: {
+        "1": 5,
+        "2": 10,
+        "3": 8,
+      },
     });
     
     mockGetMonthlyCheckIns.mockResolvedValue(mockCheckInsData);
@@ -142,6 +147,7 @@ describe("MonthlyDashboardPage", () => {
     expect(screen.getByText("日別利用者数")).toBeInTheDocument();
     expect(screen.getByText("時間帯別利用状況")).toBeInTheDocument();
     expect(screen.getByText("部屋別利用統計")).toBeInTheDocument();
+    expect(screen.getByText("人数別チェックイン統計")).toBeInTheDocument();
     
     // 詳細統計の表示確認
     expect(screen.getByText("詳細統計")).toBeInTheDocument();
@@ -166,6 +172,7 @@ describe("MonthlyDashboardPage", () => {
       dayOfWeekStats: { monday: 0, tuesday: 0, wednesday: 0, thursday: 0, friday: 0, saturday: 0, sunday: 0 },
       timeSlotStats: { morning: 0, afternoon: 0, evening: 0, unknown: 0 },
       roomStats: {},
+      participantCountStats: {},
     });
     
     mockGetMonthlyCheckIns.mockResolvedValue([]);
@@ -232,6 +239,7 @@ describe("MonthlyDashboardPage", () => {
       dayOfWeekStats: { monday: 0, tuesday: 0, wednesday: 0, thursday: 0, friday: 0, saturday: 0, sunday: 0 },
       timeSlotStats: { morning: 0, afternoon: 0, evening: 0, unknown: 0 },
       roomStats: {},
+      participantCountStats: {},
     });
     resolveCheckIns([]);
 
@@ -273,6 +281,7 @@ describe("MonthlyDashboardPage", () => {
       dayOfWeekStats: { monday: 0, tuesday: 0, wednesday: 0, thursday: 0, friday: 0, saturday: 0, sunday: 0 },
       timeSlotStats: { morning: 0, afternoon: 0, evening: 0, unknown: 0 },
       roomStats: {},
+      participantCountStats: {},
     });
     
     mockGetMonthlyCheckIns.mockResolvedValue([]);
@@ -331,6 +340,11 @@ describe("MonthlyDashboardPage", () => {
         "会議室A": 50,
         "会議室B": 80,
         "セミナー室": 120,
+      },
+      participantCountStats: {
+        "1": 10,
+        "2": 15,
+        "3": 5,
       },
     });
     
@@ -401,6 +415,9 @@ describe("MonthlyDashboardPage", () => {
         "会議室A": 50,
         "会議室B": 80,
       },
+      participantCountStats: {
+        "3": 1,
+      },
     });
     
     mockGetMonthlyCheckIns.mockResolvedValue(mockCheckInsData);
@@ -415,6 +432,7 @@ describe("MonthlyDashboardPage", () => {
       expect(screen.getByText("曜日別利用統計")).toBeInTheDocument();
       expect(screen.getByText("時間帯別利用状況")).toBeInTheDocument();
       expect(screen.getByText("部屋別利用統計")).toBeInTheDocument();
+      expect(screen.getByText("人数別チェックイン統計")).toBeInTheDocument();
       
       // Rechartsコンポーネントのモックが呼ばれているか確認
       expect(screen.getAllByTestId("responsive-container").length).toBeGreaterThan(0);

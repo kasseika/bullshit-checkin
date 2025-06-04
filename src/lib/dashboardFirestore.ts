@@ -189,6 +189,7 @@ export interface MonthlyStats {
   dayOfWeekStats: DayOfWeekStats;
   timeSlotStats: TimeSlotStats;
   roomStats: RoomStats;  // 部屋別統計を追加
+  participantCountStats: ParticipantCountStats;  // 人数別統計を追加
 }
 
 // 年代別統計
@@ -240,6 +241,11 @@ export interface TimeSlotStats {
 // 部屋別統計
 export interface RoomStats {
   [room: string]: number;  // 部屋名: 利用者数
+}
+
+// 人数別統計
+export interface ParticipantCountStats {
+  [count: string]: number;  // 人数: チェックイン回数
 }
 
 /**
@@ -510,6 +516,9 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       roomStats[room] = 0;
     });
     
+    // 人数別統計を初期化
+    const participantCountStats: ParticipantCountStats = {};
+    
     // 各チェックインデータを集計
     checkIns.forEach(checkIn => {
       const userCount = checkIn.count || 0;
@@ -537,6 +546,12 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
         const normalizedRoom = normalizeRoomName(checkIn.room);
         roomStats[normalizedRoom] = (roomStats[normalizedRoom] || 0) + userCount;
       }
+      
+      // 人数別統計（0人は除外）
+      if (userCount > 0) {
+        const countKey = userCount.toString();
+        participantCountStats[countKey] = (participantCountStats[countKey] || 0) + 1;
+      }
     });
     
     return {
@@ -552,6 +567,7 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       dayOfWeekStats,
       timeSlotStats,
       roomStats,
+      participantCountStats,
     };
   } catch (error) {
     console.error("Error fetching monthly stats:", error);
@@ -598,6 +614,7 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
         unknown: 0,
       },
       roomStats: {},
+      participantCountStats: {},
     };
   }
 }

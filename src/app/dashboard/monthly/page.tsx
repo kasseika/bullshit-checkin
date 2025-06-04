@@ -27,7 +27,9 @@ function StatsCard({ title, data }: { title: string; data: Record<string, number
         {Object.entries(data).map(([key, value]) => (
           <div key={key} className="flex justify-between">
             <span className="text-sm text-gray-600">{getDisplayLabel(key, title)}</span>
-            <span className="font-medium">{value}人</span>
+            <span className="font-medium">
+              {title === "人数別" ? `${value}回` : `${value}人`}
+            </span>
           </div>
         ))}
       </div>
@@ -71,8 +73,14 @@ function getDisplayLabel(key: string, category: string): string {
       afternoon: "午後",
       evening: "夜",
       unknown: "不明"
-    }
+    },
+    "人数別": {} // 人数はそのまま表示
   };
+  
+  // 人数別の場合は「X人」として表示
+  if (category === "人数別") {
+    return `${key}人`;
+  }
   
   return labels[category]?.[key] || key;
 }
@@ -410,6 +418,53 @@ function RoomUsageChart({ roomStats }: { roomStats: Record<string, number> }) {
   );
 }
 
+// 人数別チェックイン統計バーチャートコンポーネント
+function ParticipantCountChart({ participantCountStats }: { participantCountStats: Record<string, number> }) {
+  // 人数でソートしたデータを作成（0人は除外）
+  const data = Object.entries(participantCountStats)
+    .filter(([_, count]) => count > 0)
+    .map(([people, checkInCount]) => ({
+      people: `${people}人`,
+      checkIns: checkInCount,
+      peopleNum: parseInt(people)
+    }))
+    .sort((a, b) => a.peopleNum - b.peopleNum);
+
+  const chartConfig = {
+    checkIns: {
+      label: "チェックイン回数",
+      color: "#3b82f6",
+    },
+  };
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">人数別チェックイン統計</h3>
+      {data.length > 0 ? (
+        <ChartContainer config={chartConfig} className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data}>
+              <XAxis 
+                dataKey="people" 
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis tick={{ fontSize: 12 }} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar dataKey="checkIns" fill="var(--color-checkIns)">
+                <LabelList dataKey="checkIns" position="top" fontSize={12} />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      ) : (
+        <div className="h-[300px] flex items-center justify-center text-gray-500">
+          データがありません
+        </div>
+      )}
+    </Card>
+  );
+}
+
 export default function MonthlyDashboardPage() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
@@ -539,8 +594,14 @@ export default function MonthlyDashboardPage() {
               <TimeSlotPieChart timeSlotStats={stats.timeSlotStats} />
             </div>
             
-            {/* 部屋別利用統計バーチャート */}
-            <RoomUsageChart roomStats={stats.roomStats} />
+            {/* 統計別チャート3行目 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 部屋別利用統計バーチャート */}
+              <RoomUsageChart roomStats={stats.roomStats} />
+              
+              {/* 人数別チェックイン統計バーチャート */}
+              <ParticipantCountChart participantCountStats={stats.participantCountStats} />
+            </div>
           </div>
 
           {/* 詳細統計 */}
@@ -552,6 +613,7 @@ export default function MonthlyDashboardPage() {
               <StatsCard title="曜日別" data={stats.dayOfWeekStats} />
               <StatsCard title="時間帯別" data={stats.timeSlotStats} />
               <StatsCard title="部屋別" data={stats.roomStats} />
+              <StatsCard title="人数別" data={stats.participantCountStats} />
             </div>
           </div>
 
