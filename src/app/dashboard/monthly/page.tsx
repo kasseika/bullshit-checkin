@@ -500,7 +500,14 @@ export default function MonthlyDashboardPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">月別集計</h1>
+      <div className="flex items-center gap-4 mb-8">
+        <h1 className="text-3xl font-bold">月別集計</h1>
+        <span className="text-gray-600">
+          {selectedYear}年{selectedMonth}月1日 〜{" "}
+          {selectedYear}年{selectedMonth}月
+          {new Date(selectedYear, selectedMonth, 0).getDate()}日
+        </span>
+      </div>
 
       {/* 年月選択 */}
       <div className="flex gap-4 mb-8">
@@ -617,15 +624,6 @@ export default function MonthlyDashboardPage() {
             </div>
           </div>
 
-          {/* 期間表示 */}
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">集計期間</h2>
-            <p className="text-gray-600">
-              {selectedYear}年{selectedMonth}月1日 〜{" "}
-              {selectedYear}年{selectedMonth}月
-              {new Date(selectedYear, selectedMonth, 0).getDate()}日
-            </p>
-          </Card>
         </div>
       ) : null}
     </div>
