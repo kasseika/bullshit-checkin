@@ -372,7 +372,7 @@ describe("dashboardFirestore", () => {
       expect(result.dayOfWeekStats.monday).toBe(1);
       
       // 時間帯別統計
-      expect(result.timeSlotStats.morning).toBe(4); // 10:00 and 09:00
+      expect(result.timeSlotStats.morning).toBe(4); // 09:00 and 10:00
       expect(result.timeSlotStats.afternoon).toBe(2); // 14:00
       
       // 部屋別統計（部屋コードが日本語名に正規化されていることを確認）

@@ -67,9 +67,9 @@ function getDisplayLabel(key: string, category: string): string {
       sunday: "日"
     },
     "時間帯別": {
-      morning: "午前(9:00-13:00)",
-      afternoon: "午後(13:00-18:00)",
-      evening: "夜(イベント時のみ利用)",
+      morning: "午前",
+      afternoon: "午後",
+      evening: "夜",
       unknown: "不明"
     }
   };
