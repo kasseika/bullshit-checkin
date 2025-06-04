@@ -286,7 +286,7 @@ describe("dashboardFirestore", () => {
         {
           id: "1",
           data: () => ({
-            room: "会議室A",
+            room: "large4",
             startDate: "2025-01-15",
             startTime: "10:00",
             endTime: "11:00",
@@ -298,7 +298,7 @@ describe("dashboardFirestore", () => {
         {
           id: "2",
           data: () => ({
-            room: "会議室B",
+            room: "private4",
             startDate: "2025-01-15",
             startTime: "14:00",
             endTime: "15:00",
@@ -310,7 +310,7 @@ describe("dashboardFirestore", () => {
         {
           id: "3",
           data: () => ({
-            room: "会議室C",
+            room: "tour",
             startDate: "2025-01-20",
             startTime: "09:00",
             endTime: "10:00",
@@ -374,6 +374,24 @@ describe("dashboardFirestore", () => {
       // 時間帯別統計
       expect(result.timeSlotStats.morning).toBe(4); // 10:00 and 09:00
       expect(result.timeSlotStats.afternoon).toBe(2); // 14:00
+      
+      // 部屋別統計（部屋コードが日本語名に正規化されていることを確認）
+      expect(result.roomStats["4番大部屋"]).toBe(3);  // large4 -> 4番大部屋
+      expect(result.roomStats["4番個室"]).toBe(2);    // private4 -> 4番個室
+      expect(result.roomStats["見学"]).toBe(1);        // tour -> 見学
+      
+      // 全ての部屋が含まれていることを確認
+      expect(result.roomStats).toHaveProperty("1番");
+      expect(result.roomStats).toHaveProperty("4番個室");
+      expect(result.roomStats).toHaveProperty("4番大部屋");
+      expect(result.roomStats).toHaveProperty("6番大部屋");
+      expect(result.roomStats).toHaveProperty("6番工作室");
+      expect(result.roomStats).toHaveProperty("見学");
+      
+      // 0人の部屋も含まれていることを確認
+      expect(result.roomStats["1番"]).toBe(0);
+      expect(result.roomStats["6番大部屋"]).toBe(0);
+      expect(result.roomStats["6番工作室"]).toBe(0);
     });
 
     it("エラー時はゼロを返す", async () => {

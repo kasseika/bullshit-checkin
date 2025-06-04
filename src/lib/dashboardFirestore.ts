@@ -188,6 +188,7 @@ export interface MonthlyStats {
   purposeStats: PurposeStats;
   dayOfWeekStats: DayOfWeekStats;
   timeSlotStats: TimeSlotStats;
+  roomStats: RoomStats;  // 部屋別統計を追加
 }
 
 // 年代別統計
@@ -230,6 +231,11 @@ export interface TimeSlotStats {
   afternoon: number;  // 午後(13:00-18:00)
   evening: number;    // 夜(イベント時のみ利用)
   unknown: number;    // 不明
+}
+
+// 部屋別統計
+export interface RoomStats {
+  [room: string]: number;  // 部屋名: 利用者数
 }
 
 /**
@@ -386,6 +392,41 @@ export async function getMonthlyBookings(year: number, month: number): Promise<D
   });
 }
 
+// 部屋コードと日本語名のマッピング
+const ROOM_CODE_TO_NAME: { [key: string]: string } = {
+  "room1": "1番",
+  "private4": "4番個室",
+  "large4": "4番大部屋",
+  "large6": "6番大部屋",
+  "studio6": "6番工作室",
+  "tour": "見学",
+  // 既に日本語名の場合はそのままマッピング
+  "1番": "1番",
+  "4番個室": "4番個室",
+  "4番大部屋": "4番大部屋",
+  "6番大部屋": "6番大部屋",
+  "6番工作室": "6番工作室",
+  "6番 大部屋・工作室": "6番大部屋",  // 旧名称の統一
+  "見学": "見学",
+};
+
+// 全ての部屋のリスト（0人の部屋も表示するため）
+const ALL_ROOMS = [
+  "1番",
+  "4番個室",
+  "4番大部屋",
+  "6番大部屋",
+  "6番工作室",
+  "見学",
+];
+
+/**
+ * 部屋名を正規化する
+ */
+function normalizeRoomName(room: string): string {
+  return ROOM_CODE_TO_NAME[room] || room;
+}
+
 /**
  * 月別の統計情報を取得
  */
@@ -459,6 +500,12 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       unknown: 0,
     };
     
+    // 部屋別統計を初期化（全ての部屋を0で初期化）
+    const roomStats: RoomStats = {};
+    ALL_ROOMS.forEach(room => {
+      roomStats[room] = 0;
+    });
+    
     // 各チェックインデータを集計
     checkIns.forEach(checkIn => {
       const userCount = checkIn.count || 0;
@@ -480,6 +527,12 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       // 時間帯別統計
       const timeCategory = categorizeTimeSlot(checkIn.startTime || "");
       timeSlotStats[timeCategory] += userCount;
+      
+      // 部屋別統計（部屋名を正規化）
+      if (checkIn.room) {
+        const normalizedRoom = normalizeRoomName(checkIn.room);
+        roomStats[normalizedRoom] = (roomStats[normalizedRoom] || 0) + userCount;
+      }
     });
     
     return {
@@ -494,6 +547,7 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       purposeStats,
       dayOfWeekStats,
       timeSlotStats,
+      roomStats,
     };
   } catch (error) {
     console.error("Error fetching monthly stats:", error);
@@ -539,6 +593,7 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
         evening: 0,
         unknown: 0,
       },
+      roomStats: {},
     };
   }
 }

@@ -169,6 +169,7 @@ export default function MonthlyDashboardPage() {
             <StatsCard title="目的別" data={stats.purposeStats} />
             <StatsCard title="曜日別" data={stats.dayOfWeekStats} />
             <StatsCard title="時間帯別" data={stats.timeSlotStats} />
+            <StatsCard title="部屋別" data={stats.roomStats} />
           </div>
 
           {/* 期間表示 */}

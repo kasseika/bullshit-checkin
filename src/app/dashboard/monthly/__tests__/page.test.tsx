@@ -64,6 +64,11 @@ describe("MonthlyDashboardPage", () => {
         evening: 20,
         unknown: 0,
       },
+      roomStats: {
+        "会議室A": 100,
+        "会議室B": 150,
+        "セミナー室": 100,
+      },
     });
 
     render(<MonthlyDashboardPage />);
@@ -81,6 +86,7 @@ describe("MonthlyDashboardPage", () => {
     expect(screen.getByText("目的別")).toBeInTheDocument();
     expect(screen.getByText("曜日別")).toBeInTheDocument();
     expect(screen.getByText("時間帯別")).toBeInTheDocument();
+    expect(screen.getByText("部屋別")).toBeInTheDocument();
   });
 
   it("年月を変更するとデータを再取得する", async () => {
@@ -96,6 +102,7 @@ describe("MonthlyDashboardPage", () => {
       purposeStats: { meeting: 0, telework: 0, study: 0, event: 0, digital: 0, inspection: 0, other: 0, unknown: 0 },
       dayOfWeekStats: { monday: 0, tuesday: 0, wednesday: 0, thursday: 0, friday: 0, saturday: 0, sunday: 0 },
       timeSlotStats: { morning: 0, afternoon: 0, evening: 0, unknown: 0 },
+      roomStats: {},
     });
 
     render(<MonthlyDashboardPage />);
@@ -147,6 +154,7 @@ describe("MonthlyDashboardPage", () => {
       purposeStats: { meeting: 0, telework: 0, study: 0, event: 0, digital: 0, inspection: 0, other: 0, unknown: 0 },
       dayOfWeekStats: { monday: 0, tuesday: 0, wednesday: 0, thursday: 0, friday: 0, saturday: 0, sunday: 0 },
       timeSlotStats: { morning: 0, afternoon: 0, evening: 0, unknown: 0 },
+      roomStats: {},
     });
 
     await waitFor(() => {
@@ -185,6 +193,7 @@ describe("MonthlyDashboardPage", () => {
       purposeStats: { meeting: 0, telework: 0, study: 0, event: 0, digital: 0, inspection: 0, other: 0, unknown: 0 },
       dayOfWeekStats: { monday: 0, tuesday: 0, wednesday: 0, thursday: 0, friday: 0, saturday: 0, sunday: 0 },
       timeSlotStats: { morning: 0, afternoon: 0, evening: 0, unknown: 0 },
+      roomStats: {},
     });
 
     render(<MonthlyDashboardPage />);
@@ -237,6 +246,11 @@ describe("MonthlyDashboardPage", () => {
         evening: 20,
         unknown: 0,
       },
+      roomStats: {
+        "会議室A": 50,
+        "会議室B": 80,
+        "セミナー室": 120,
+      },
     });
 
     render(<MonthlyDashboardPage />);
@@ -247,6 +261,7 @@ describe("MonthlyDashboardPage", () => {
       expect(screen.getByText("目的別")).toBeInTheDocument();
       expect(screen.getByText("曜日別")).toBeInTheDocument();
       expect(screen.getByText("時間帯別")).toBeInTheDocument();
+      expect(screen.getByText("部屋別")).toBeInTheDocument();
 
       // 各カテゴリのラベルが表示されていることを確認
       expect(screen.getByText("10代以下")).toBeInTheDocument();
@@ -259,10 +274,11 @@ describe("MonthlyDashboardPage", () => {
       expect(screen.getByText("午後(13:00-18:00)")).toBeInTheDocument();
 
       // いくつかのユニークな数値が表示されていることを確認
-      expect(screen.getByText("80人")).toBeInTheDocument(); // 20代
+      expect(screen.getAllByText("80人")).toHaveLength(2); // 20代と会議室B
       expect(screen.getByText("100人")).toBeInTheDocument(); // 会議・打合せ利用
       expect(screen.getByText("38人")).toBeInTheDocument(); // 火曜日
       expect(screen.getByText("110人")).toBeInTheDocument(); // 午後
+      expect(screen.getAllByText("120人")).toHaveLength(2); // 午前とセミナー室
     });
   });
 });
