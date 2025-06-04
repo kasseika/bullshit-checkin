@@ -77,6 +77,44 @@ function getDisplayLabel(key: string, category: string): string {
   return labels[category]?.[key] || key;
 }
 
+// カスタムXAxisTickコンポーネント
+function CustomXAxisTick({ x, y, payload }: any) {
+  const lines = payload.value.split('\n');
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {lines.map((line: string, index: number) => (
+        <text
+          key={index}
+          x={0}
+          y={index * 14}
+          dy={14}
+          textAnchor="middle"
+          fill="#666"
+          fontSize={11}
+        >
+          {line}
+        </text>
+      ))}
+    </g>
+  );
+}
+
+// カスタムツールチップコンポーネント
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: { payload: { tooltipDate: string }; value: number }[] }) {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
+        <p className="text-sm font-medium text-gray-900">{data.tooltipDate}</p>
+        <p className="text-sm text-blue-600">
+          利用者数: <span className="font-medium">{payload[0].value}人</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+}
+
 // 日別利用者数チャートコンポーネント
 function DailyUsersChart({ checkIns, year, month }: { 
   checkIns: DashboardCheckInData[]; 
@@ -102,11 +140,21 @@ function DailyUsersChart({ checkIns, year, month }: {
     });
     
     // チャート用データに変換
-    return Object.entries(dailyUsers).map(([date, users]) => ({
-      date: `${parseInt(date.split('-')[2])}日`,
-      users,
-      fullDate: date
-    }));
+    return Object.entries(dailyUsers).map(([date, users]) => {
+      const dateObj = new Date(date);
+      const day = parseInt(date.split('-')[2]);
+      const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][dateObj.getDay()];
+      const [year, month, dayStr] = date.split('-');
+      const tooltipDate = `${year}/${parseInt(month)}/${parseInt(dayStr)} ${dayOfWeek}`;
+      return {
+        date: `${day}日`,
+        dayOfWeek,
+        displayLabel: `${day}日\n${dayOfWeek}`,
+        tooltipDate,
+        users,
+        fullDate: date
+      };
+    });
   })();
   
   const chartConfig = {
@@ -123,12 +171,13 @@ function DailyUsersChart({ checkIns, year, month }: {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={dailyData}>
             <XAxis 
-              dataKey="date" 
-              tick={{ fontSize: 12 }}
-              interval={Math.floor(dailyData.length / 10)} // 適度な間隔で表示
+              dataKey="displayLabel" 
+              tick={<CustomXAxisTick />}
+              interval={0} // すべてのラベルを表示
+              height={50}
             />
             <YAxis tick={{ fontSize: 12 }} />
-            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartTooltip content={<CustomTooltip />} />
             <Bar dataKey="users" fill="var(--color-users)">
               <LabelList dataKey="users" position="top" fontSize={12} />
             </Bar>

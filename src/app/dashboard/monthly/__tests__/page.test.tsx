@@ -353,8 +353,8 @@ describe("MonthlyDashboardPage", () => {
       expect(screen.getByText("テレワーク利用")).toBeInTheDocument();
       expect(screen.getByText("月")).toBeInTheDocument();
       expect(screen.getByText("火")).toBeInTheDocument();
-      expect(screen.getByText("午前(9:00-13:00)")).toBeInTheDocument();
-      expect(screen.getByText("午後(13:00-18:00)")).toBeInTheDocument();
+      expect(screen.getByText("午前")).toBeInTheDocument();
+      expect(screen.getByText("午後")).toBeInTheDocument();
 
       // いくつかのユニークな数値が表示されていることを確認
       expect(screen.getAllByText("80人")).toHaveLength(2); // 20代と会議室B
