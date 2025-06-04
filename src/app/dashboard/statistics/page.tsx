@@ -1,6 +1,6 @@
 /**
- * 年月別集計ページ
- * 月単位でのチェックイン・予約データを集計表示
+ * 集計ページ
+ * 期間指定でのチェックイン・予約データを集計表示
  * バーチャート・パイチャート機能を含む
  */
 "use client";
@@ -465,7 +465,7 @@ function ParticipantCountChart({ participantCountStats }: { participantCountStat
   );
 }
 
-export default function MonthlyDashboardPage() {
+export default function StatisticsPage() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [stats, setStats] = useState<MonthlyStats | null>(null);
@@ -501,7 +501,7 @@ export default function MonthlyDashboardPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
-        <h1 className="text-3xl font-bold">月別集計</h1>
+        <h1 className="text-3xl font-bold">集計</h1>
         <span className="text-gray-600">
           {selectedYear}年{selectedMonth}月1日 〜{" "}
           {selectedYear}年{selectedMonth}月

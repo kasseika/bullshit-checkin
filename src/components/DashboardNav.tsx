@@ -18,9 +18,9 @@ export function DashboardNav() {
       isActive: pathname === "/dashboard",
     },
     {
-      href: "/dashboard/monthly",
-      label: "月別集計",
-      isActive: pathname === "/dashboard/monthly",
+      href: "/dashboard/statistics",
+      label: "集計",
+      isActive: pathname === "/dashboard/statistics",
     },
   ];
 

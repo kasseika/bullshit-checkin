@@ -1,9 +1,9 @@
 /**
- * 年月別集計ページのテスト
+ * 集計ページのテスト
  * グラフ表示機能を含む
  */
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import MonthlyDashboardPage from "../page";
+import StatisticsPage from "../page";
 import { getMonthlyStats, getMonthlyCheckIns } from "@/lib/dashboardFirestore";
 import type { MonthlyStats, DashboardCheckInData } from "@/lib/dashboardFirestore";
 
@@ -37,7 +37,7 @@ jest.mock("@/lib/dashboardFirestore", () => ({
 const mockGetMonthlyStats = getMonthlyStats as jest.MockedFunction<typeof getMonthlyStats>;
 const mockGetMonthlyCheckIns = getMonthlyCheckIns as jest.MockedFunction<typeof getMonthlyCheckIns>;
 
-describe("MonthlyDashboardPage", () => {
+describe("StatisticsPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -127,14 +127,14 @@ describe("MonthlyDashboardPage", () => {
     
     mockGetMonthlyCheckIns.mockResolvedValue(mockCheckInsData);
 
-    render(<MonthlyDashboardPage />);
+    render(<StatisticsPage />);
 
     await waitFor(() => {
       expect(mockGetMonthlyStats).toHaveBeenCalledWith(currentYear, currentMonth);
       expect(mockGetMonthlyCheckIns).toHaveBeenCalledWith(currentYear, currentMonth);
     });
 
-    expect(screen.getByText("月別集計")).toBeInTheDocument();
+    expect(screen.getByText("集計")).toBeInTheDocument();
     // 総チェックイン数の確認（カード内）
     await waitFor(() => {
       expect(screen.getByText("総チェックイン数")).toBeInTheDocument();
@@ -177,7 +177,7 @@ describe("MonthlyDashboardPage", () => {
     
     mockGetMonthlyCheckIns.mockResolvedValue([]);
 
-    render(<MonthlyDashboardPage />);
+    render(<StatisticsPage />);
 
     // 年を変更
     const yearSelect = screen.getByDisplayValue(/年$/);
@@ -219,7 +219,7 @@ describe("MonthlyDashboardPage", () => {
     mockGetMonthlyStats.mockReturnValue(statsPromise);
     mockGetMonthlyCheckIns.mockReturnValue(checkInsPromise);
 
-    render(<MonthlyDashboardPage />);
+    render(<StatisticsPage />);
 
     // ローディング中の表示を確認（animate-pulseクラスを持つ要素を探す）
     const loadingElements = document.querySelectorAll(".animate-pulse");
@@ -255,7 +255,7 @@ describe("MonthlyDashboardPage", () => {
     mockGetMonthlyStats.mockRejectedValue(new Error("データ取得エラー"));
     mockGetMonthlyCheckIns.mockRejectedValue(new Error("チェックインデータ取得エラー"));
 
-    render(<MonthlyDashboardPage />);
+    render(<StatisticsPage />);
 
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -286,7 +286,7 @@ describe("MonthlyDashboardPage", () => {
     
     mockGetMonthlyCheckIns.mockResolvedValue([]);
 
-    render(<MonthlyDashboardPage />);
+    render(<StatisticsPage />);
 
     await waitFor(() => {
       expect(screen.getByText("-")).toBeInTheDocument();
@@ -350,7 +350,7 @@ describe("MonthlyDashboardPage", () => {
     
     mockGetMonthlyCheckIns.mockResolvedValue([]);
 
-    render(<MonthlyDashboardPage />);
+    render(<StatisticsPage />);
 
     await waitFor(() => {
       // 統計カテゴリのタイトルが表示されていることを確認
@@ -422,7 +422,7 @@ describe("MonthlyDashboardPage", () => {
     
     mockGetMonthlyCheckIns.mockResolvedValue(mockCheckInsData);
 
-    render(<MonthlyDashboardPage />);
+    render(<StatisticsPage />);
 
     await waitFor(() => {
       // グラフ関連のコンポーネントが表示されているか確認

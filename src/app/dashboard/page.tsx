@@ -5,7 +5,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
@@ -73,12 +72,6 @@ export default function DashboardPage() {
         <div className="text-sm text-muted-foreground">
           最終更新: {lastUpdate} (JST)
         </div>
-        <Link 
-          href="/dashboard/monthly" 
-          className="text-sm font-medium text-primary hover:underline"
-        >
-          月別集計を見る →
-        </Link>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
