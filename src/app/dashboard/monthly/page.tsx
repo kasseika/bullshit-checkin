@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/chart";
 import { getMonthlyStats, MonthlyStats, getMonthlyCheckIns, DashboardCheckInData } from "@/lib/dashboardFirestore";
 import { formatDateToJSTWithSlash } from "@/utils/dateUtils";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, LabelList } from "recharts";
 
 // 統計表示用のコンポーネント
 function StatsCard({ title, data }: { title: string; data: Record<string, number> }) {
@@ -129,7 +129,9 @@ function DailyUsersChart({ checkIns, year, month }: {
             />
             <YAxis tick={{ fontSize: 12 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="users" fill="var(--color-users)" />
+            <Bar dataKey="users" fill="var(--color-users)">
+              <LabelList dataKey="users" position="top" fontSize={12} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </ChartContainer>
@@ -168,8 +170,8 @@ function TimeSlotPieChart({ timeSlotStats }: { timeSlotStats: Record<string, num
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => 
-                  `${name} ${(percent * 100).toFixed(0)}%`
+                label={({ name, percent, value }) => 
+                  `${name} ${value}人 (${(percent * 100).toFixed(0)}%)`
                 }
                 outerRadius={80}
                 fill="#8884d8"
@@ -227,7 +229,9 @@ function AgeGroupChart({ ageGroupStats }: { ageGroupStats: Record<string, number
             />
             <YAxis tick={{ fontSize: 12 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="users" fill="var(--color-users)" />
+            <Bar dataKey="users" fill="var(--color-users)">
+              <LabelList dataKey="users" position="top" fontSize={12} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </ChartContainer>
@@ -267,7 +271,9 @@ function PurposeChart({ purposeStats }: { purposeStats: Record<string, number> }
             />
             <YAxis tick={{ fontSize: 12 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="users" fill="var(--color-users)" />
+            <Bar dataKey="users" fill="var(--color-users)">
+              <LabelList dataKey="users" position="top" fontSize={12} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </ChartContainer>
@@ -304,7 +310,9 @@ function DayOfWeekChart({ dayOfWeekStats }: { dayOfWeekStats: Record<string, num
             />
             <YAxis tick={{ fontSize: 12 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="users" fill="var(--color-users)" />
+            <Bar dataKey="users" fill="var(--color-users)">
+              <LabelList dataKey="users" position="top" fontSize={12} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </ChartContainer>
@@ -343,7 +351,9 @@ function RoomUsageChart({ roomStats }: { roomStats: Record<string, number> }) {
             />
             <YAxis tick={{ fontSize: 12 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="users" fill="var(--color-users)" />
+            <Bar dataKey="users" fill="var(--color-users)">
+              <LabelList dataKey="users" position="top" fontSize={12} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </ChartContainer>
