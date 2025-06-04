@@ -1,13 +1,22 @@
 /**
  * 年月別集計ページ
  * 月単位でのチェックイン・予約データを集計表示
+ * バーチャート・パイチャート機能を含む
  */
 "use client";
 
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { getMonthlyStats, MonthlyStats } from "@/lib/dashboardFirestore";
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent, 
+  ChartLegend, 
+  ChartLegendContent 
+} from "@/components/ui/chart";
+import { getMonthlyStats, MonthlyStats, getMonthlyCheckIns, DashboardCheckInData } from "@/lib/dashboardFirestore";
 import { formatDateToJSTWithSlash } from "@/utils/dateUtils";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 // 統計表示用のコンポーネント
 function StatsCard({ title, data }: { title: string; data: Record<string, number> }) {
@@ -68,10 +77,285 @@ function getDisplayLabel(key: string, category: string): string {
   return labels[category]?.[key] || key;
 }
 
+// 日別利用者数チャートコンポーネント
+function DailyUsersChart({ checkIns, year, month }: { 
+  checkIns: DashboardCheckInData[]; 
+  year: number; 
+  month: number; 
+}) {
+  // 日別のデータを集計
+  const dailyData = (() => {
+    const dailyUsers: Record<string, number> = {};
+    
+    // 月の全日付を初期化
+    const daysInMonth = new Date(year, month, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      dailyUsers[dateStr] = 0;
+    }
+    
+    // チェックインデータを集計
+    checkIns.forEach(checkIn => {
+      if (checkIn.startDate) {
+        dailyUsers[checkIn.startDate] = (dailyUsers[checkIn.startDate] || 0) + (checkIn.count || 0);
+      }
+    });
+    
+    // チャート用データに変換
+    return Object.entries(dailyUsers).map(([date, users]) => ({
+      date: `${parseInt(date.split('-')[2])}日`,
+      users,
+      fullDate: date
+    }));
+  })();
+  
+  const chartConfig = {
+    users: {
+      label: "利用者数",
+      color: "#3b82f6",
+    },
+  };
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">日別利用者数</h3>
+      <ChartContainer config={chartConfig} className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={dailyData}>
+            <XAxis 
+              dataKey="date" 
+              tick={{ fontSize: 12 }}
+              interval={Math.floor(dailyData.length / 10)} // 適度な間隔で表示
+            />
+            <YAxis tick={{ fontSize: 12 }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="users" fill="var(--color-users)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+    </Card>
+  );
+}
+
+// 時間帯別利用状況パイチャートコンポーネント
+function TimeSlotPieChart({ timeSlotStats }: { timeSlotStats: Record<string, number> }) {
+  const data = Object.entries(timeSlotStats)
+    .filter(([_, value]) => value > 0) // 0の項目は除外
+    .map(([key, value]) => ({
+      name: getDisplayLabel(key, "時間帯別"),
+      value,
+      key
+    }));
+
+  const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b'];
+  
+  const chartConfig = {
+    morning: { label: "午前", color: "#3b82f6" },
+    afternoon: { label: "午後", color: "#ef4444" },
+    evening: { label: "夜", color: "#22c55e" },
+    unknown: { label: "不明", color: "#f59e0b" },
+  };
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">時間帯別利用状況</h3>
+      {data.length > 0 ? (
+        <ChartContainer config={chartConfig} className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => 
+                  `${name} ${(percent * 100).toFixed(0)}%`
+                }
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {data.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={COLORS[index % COLORS.length]} 
+                  />
+                ))}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      ) : (
+        <div className="h-[300px] flex items-center justify-center text-gray-500">
+          データがありません
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// 年代別利用統計バーチャートコンポーネント
+function AgeGroupChart({ ageGroupStats }: { ageGroupStats: Record<string, number> }) {
+  // 年代の固定順序
+  const ageOrder = ['under20', 'twenties', 'thirties', 'forties', 'fifties', 'over60', 'unknown'];
+  const data = ageOrder.map(age => ({
+    ageGroup: getDisplayLabel(age, "年代別"),
+    users: ageGroupStats[age] || 0,
+    key: age
+  }));
+
+  const chartConfig = {
+    users: {
+      label: "利用者数",
+      color: "#3b82f6",
+    },
+  };
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">年代別利用統計</h3>
+      <ChartContainer config={chartConfig} className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis 
+              dataKey="ageGroup" 
+              tick={{ fontSize: 12 }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis tick={{ fontSize: 12 }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="users" fill="var(--color-users)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+    </Card>
+  );
+}
+
+// 目的別利用統計バーチャートコンポーネント
+function PurposeChart({ purposeStats }: { purposeStats: Record<string, number> }) {
+  // 目的の固定順序
+  const purposeOrder = ['meeting', 'telework', 'study', 'event', 'digital', 'inspection', 'other', 'unknown'];
+  const data = purposeOrder.map(purpose => ({
+    purpose: getDisplayLabel(purpose, "目的別"),
+    users: purposeStats[purpose] || 0,
+    key: purpose
+  }));
+
+  const chartConfig = {
+    users: {
+      label: "利用者数",
+      color: "#3b82f6",
+    },
+  };
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">目的別利用統計</h3>
+      <ChartContainer config={chartConfig} className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis 
+              dataKey="purpose" 
+              tick={{ fontSize: 12 }}
+              angle={-45}
+              textAnchor="end"
+              height={80}
+            />
+            <YAxis tick={{ fontSize: 12 }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="users" fill="var(--color-users)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+    </Card>
+  );
+}
+
+// 曜日別利用統計バーチャートコンポーネント
+function DayOfWeekChart({ dayOfWeekStats }: { dayOfWeekStats: Record<string, number> }) {
+  // 曜日の順序を保持してデータを作成
+  const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const data = dayOrder.map(day => ({
+    dayOfWeek: getDisplayLabel(day, "曜日別"),
+    users: dayOfWeekStats[day] || 0,
+    key: day
+  }));
+
+  const chartConfig = {
+    users: {
+      label: "利用者数",
+      color: "#3b82f6",
+    },
+  };
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">曜日別利用統計</h3>
+      <ChartContainer config={chartConfig} className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis 
+              dataKey="dayOfWeek" 
+              tick={{ fontSize: 12 }}
+            />
+            <YAxis tick={{ fontSize: 12 }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="users" fill="var(--color-users)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+    </Card>
+  );
+}
+
+// 部屋別利用統計バーチャートコンポーネント
+function RoomUsageChart({ roomStats }: { roomStats: Record<string, number> }) {
+  // 部屋の固定順序（dashboardFirestore.tsのALL_ROOMSと同じ順序）
+  const roomOrder = ["1番", "4番個室", "4番大部屋", "6番大部屋", "6番工作室", "見学"];
+  const data = roomOrder.map(room => ({
+    room,
+    users: roomStats[room] || 0
+  }));
+
+  const chartConfig = {
+    users: {
+      label: "利用者数",
+      color: "#3b82f6",
+    },
+  };
+
+  return (
+    <Card className="p-6">
+      <h3 className="text-lg font-semibold mb-4">部屋別利用統計</h3>
+      <ChartContainer config={chartConfig} className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis 
+              dataKey="room" 
+              tick={{ fontSize: 12 }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis tick={{ fontSize: 12 }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="users" fill="var(--color-users)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+    </Card>
+  );
+}
+
 export default function MonthlyDashboardPage() {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [stats, setStats] = useState<MonthlyStats | null>(null);
+  const [checkIns, setCheckIns] = useState<DashboardCheckInData[]>([]);
   const [loading, setLoading] = useState(false);
 
   // 年月選択の選択肢を生成
@@ -84,8 +368,12 @@ export default function MonthlyDashboardPage() {
     const fetchMonthlyStats = async () => {
       setLoading(true);
       try {
-        const data = await getMonthlyStats(selectedYear, selectedMonth);
-        setStats(data);
+        const [statsData, checkInsData] = await Promise.all([
+          getMonthlyStats(selectedYear, selectedMonth),
+          getMonthlyCheckIns(selectedYear, selectedMonth)
+        ]);
+        setStats(statsData);
+        setCheckIns(checkInsData);
       } catch (error) {
         console.error("Error fetching monthly stats:", error);
       } finally {
@@ -163,13 +451,49 @@ export default function MonthlyDashboardPage() {
             </Card>
           </div>
 
+          {/* グラフ表示 */}
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold">グラフ表示</h2>
+            
+            {/* 日別利用者数バーチャート */}
+            <DailyUsersChart 
+              checkIns={checkIns} 
+              year={selectedYear} 
+              month={selectedMonth} 
+            />
+            
+            {/* 統計別チャート1行目 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 年代別バーチャート */}
+              <AgeGroupChart ageGroupStats={stats.ageGroupStats} />
+              
+              {/* 目的別バーチャート */}
+              <PurposeChart purposeStats={stats.purposeStats} />
+            </div>
+            
+            {/* 統計別チャート2行目 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 曜日別バーチャート */}
+              <DayOfWeekChart dayOfWeekStats={stats.dayOfWeekStats} />
+              
+              {/* 時間帯別パイチャート */}
+              <TimeSlotPieChart timeSlotStats={stats.timeSlotStats} />
+            </div>
+            
+            {/* 部屋別利用統計バーチャート */}
+            <RoomUsageChart roomStats={stats.roomStats} />
+          </div>
+
           {/* 詳細統計 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <StatsCard title="年代別" data={stats.ageGroupStats} />
-            <StatsCard title="目的別" data={stats.purposeStats} />
-            <StatsCard title="曜日別" data={stats.dayOfWeekStats} />
-            <StatsCard title="時間帯別" data={stats.timeSlotStats} />
-            <StatsCard title="部屋別" data={stats.roomStats} />
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">詳細統計</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <StatsCard title="年代別" data={stats.ageGroupStats} />
+              <StatsCard title="目的別" data={stats.purposeStats} />
+              <StatsCard title="曜日別" data={stats.dayOfWeekStats} />
+              <StatsCard title="時間帯別" data={stats.timeSlotStats} />
+              <StatsCard title="部屋別" data={stats.roomStats} />
+            </div>
           </div>
 
           {/* 期間表示 */}
