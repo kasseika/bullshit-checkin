@@ -200,6 +200,7 @@ export interface AgeGroupStats {
   fifties: number;    // 50代
   over60: number;     // 60代以上
   unknown: number;    // 不明
+  [key: string]: number;  // インデックスシグネチャ
 }
 
 // 目的別統計
@@ -212,6 +213,7 @@ export interface PurposeStats {
   inspection: number;      // 視察・見学・取材
   other: number;           // その他(IT相談、機器貸出等)
   unknown: number;         // 不明
+  [key: string]: number;   // インデックスシグネチャ
 }
 
 // 曜日別統計
@@ -223,6 +225,7 @@ export interface DayOfWeekStats {
   friday: number;
   saturday: number;
   sunday: number;
+  [key: string]: number;   // インデックスシグネチャ
 }
 
 // 時間帯別統計
@@ -231,6 +234,7 @@ export interface TimeSlotStats {
   afternoon: number;  // 午後(13:00-18:00)
   evening: number;    // 夜(イベント時のみ利用)
   unknown: number;    // 不明
+  [key: string]: number;   // インデックスシグネチャ
 }
 
 // 部屋別統計
