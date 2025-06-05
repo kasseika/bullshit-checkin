@@ -16,16 +16,27 @@ jest.mock('next/navigation', () => ({
 describe('CountSelectionPage', () => {
   const mockPush = jest.fn();
   const mockRouter = { push: mockPush };
-  const mockSearchParams = new URLSearchParams();
+  let mockSearchParams: Map<string, string>;
+  let searchParamsObject: any;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSearchParams = new Map();
+    
+    // URLSearchParamsライクなオブジェクトを作成
+    searchParamsObject = {
+      get: (key: string) => mockSearchParams.get(key) || null,
+      set: (key: string, value: string) => mockSearchParams.set(key, value),
+      clear: () => mockSearchParams.clear(),
+    };
+    
     (useRouter as jest.Mock).mockReturnValue(mockRouter);
-    (useSearchParams as jest.Mock).mockReturnValue(mockSearchParams);
+    (useSearchParams as jest.Mock).mockReturnValue(searchParamsObject);
   });
 
   test('工作室選択時に利用目的を制作で固定してアンケートページに遷移する', async () => {
     // 工作室の予約情報をセットアップ
+    mockSearchParams.clear(); // 前のテストのパラメータをクリア
     mockSearchParams.set('room', 'workshop6');
     mockSearchParams.set('startTime', '10:00');
     mockSearchParams.set('endTime', '12:00');
@@ -45,7 +56,8 @@ describe('CountSelectionPage', () => {
   });
 
   test('工作室以外の部屋選択時は通常通り利用目的ページに遷移する', async () => {
-    // 通常の部屋の予約情報をセットアップ
+    // 通常の部屋の予約情報をセットアップ（reservationIdなし）
+    mockSearchParams.clear(); // 前のテストのパラメータをクリア
     mockSearchParams.set('room', 'room1');
     mockSearchParams.set('startTime', '10:00');
     mockSearchParams.set('endTime', '12:00');
@@ -64,6 +76,7 @@ describe('CountSelectionPage', () => {
   });
 
   test('人数を変更できる', () => {
+    mockSearchParams.clear(); // 前のテストのパラメータをクリア
     mockSearchParams.set('room', 'room1');
     mockSearchParams.set('startTime', '10:00');
     mockSearchParams.set('endTime', '12:00');
