@@ -12,8 +12,9 @@ import {
   ChartTooltip, 
   ChartTooltipContent
 } from "@/components/ui/chart";
-import { getMonthlyStats, MonthlyStats, getMonthlyCheckIns, DashboardCheckInData } from "@/lib/dashboardFirestore";
+import { getDateRangeStats, MonthlyStats, getDateRangeCheckIns, DashboardCheckInData } from "@/lib/dashboardFirestore";
 import { formatDateToJSTWithSlash } from "@/utils/dateUtils";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, LabelList } from "recharts";
 
 // 統計表示用のコンポーネント
@@ -85,7 +86,7 @@ function getDisplayLabel(key: string, category: string): string {
 
 // カスタムXAxisTickコンポーネント
 function CustomXAxisTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: string } }) {
-  const lines = payload.value.split('\n');
+  const lines = payload?.value?.split('\n') || [''];
   return (
     <g transform={`translate(${x},${y})`}>
       {lines.map((line: string, index: number) => (
@@ -122,20 +123,21 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: { payl
 }
 
 // 日別利用者数チャートコンポーネント
-function DailyUsersChart({ checkIns, year, month }: { 
-  checkIns: DashboardCheckInData[]; 
-  year: number; 
-  month: number; 
+function DailyUsersChart({ checkIns, fromDate, toDate }: { 
+  checkIns: DashboardCheckInData[];
+  fromDate: Date;
+  toDate: Date;
 }) {
   // 日別のデータを集計
   const dailyData = (() => {
     const dailyUsers: Record<string, number> = {};
     
-    // 月の全日付を初期化
-    const daysInMonth = new Date(year, month, 0).getDate();
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    // 期間内の全日付を初期化
+    const currentDate = new Date(fromDate);
+    while (currentDate <= toDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
       dailyUsers[dateStr] = 0;
+      currentDate.setDate(currentDate.getDate() + 1);
     }
     
     // チェックインデータを集計
@@ -232,7 +234,7 @@ function TimeSlotPieChart({ timeSlotStats }: { timeSlotStats: Record<string, num
                 fill="#8884d8"
                 dataKey="value"
               >
-                {data.map((entry, index) => (
+                {data.map((_, index) => (
                   <Cell 
                     key={`cell-${index}`} 
                     fill={COLORS[index % COLORS.length]} 
@@ -464,74 +466,71 @@ function ParticipantCountChart({ participantCountStats }: { participantCountStat
 }
 
 export default function StatisticsPage() {
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  // デフォルトは今月の範囲
+  const today = new Date();
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  
+  const [dateRange, setDateRange] = useState({
+    from: firstDayOfMonth,
+    to: lastDayOfMonth
+  });
   const [stats, setStats] = useState<MonthlyStats | null>(null);
   const [checkIns, setCheckIns] = useState<DashboardCheckInData[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 年月選択の選択肢を生成
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 3 }, (_, i) => currentYear - i);
-  const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
   // データの取得
   useEffect(() => {
-    const fetchMonthlyStats = async () => {
+    const fetchDateRangeStats = async () => {
+      if (!dateRange.from || !dateRange.to) return;
+      
       setLoading(true);
       try {
         const [statsData, checkInsData] = await Promise.all([
-          getMonthlyStats(selectedYear, selectedMonth),
-          getMonthlyCheckIns(selectedYear, selectedMonth)
+          getDateRangeStats(dateRange.from, dateRange.to),
+          getDateRangeCheckIns(dateRange.from, dateRange.to)
         ]);
         setStats(statsData);
         setCheckIns(checkInsData);
       } catch (error) {
-        console.error("Error fetching monthly stats:", error);
+        console.error("Error fetching date range stats:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMonthlyStats();
-  }, [selectedYear, selectedMonth]);
+    fetchDateRangeStats();
+  }, [dateRange]);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold">集計</h1>
         <span className="text-gray-600">
-          {selectedYear}年{selectedMonth}月1日 〜{" "}
-          {selectedYear}年{selectedMonth}月
-          {new Date(selectedYear, selectedMonth, 0).getDate()}日
+          {dateRange.from && dateRange.to &&
+            `${formatDateToJSTWithSlash(dateRange.from)} 〜 ${formatDateToJSTWithSlash(dateRange.to)}`
+          }
         </span>
       </div>
 
-      {/* 年月選択 */}
-      <div className="flex gap-4 mb-8">
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="px-4 py-2 border rounded-md"
-        >
-          {years.map((year) => (
-            <option key={year} value={year}>
-              {year}年
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(Number(e.target.value))}
-          className="px-4 py-2 border rounded-md"
-        >
-          {months.map((month) => (
-            <option key={month} value={month}>
-              {month}月
-            </option>
-          ))}
-        </select>
+      {/* 日付範囲選択 */}
+      <div className="mb-8">
+        <DateRangePicker
+          initialDateFrom={dateRange.from}
+          initialDateTo={dateRange.to}
+          onUpdate={({ range }) => {
+            if (range.from && range.to) {
+              setDateRange({
+                from: range.from,
+                to: range.to
+              });
+            }
+          }}
+          align="start"
+          locale="ja-JP"
+          showCompare={false}
+        />
       </div>
 
       {/* 統計情報 */}
@@ -577,8 +576,8 @@ export default function StatisticsPage() {
             {/* 日別利用者数バーチャート */}
             <DailyUsersChart 
               checkIns={checkIns} 
-              year={selectedYear} 
-              month={selectedMonth} 
+              fromDate={dateRange.from} 
+              toDate={dateRange.to} 
             />
             
             {/* 統計別チャート1行目 */}

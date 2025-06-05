@@ -618,3 +618,196 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
     };
   }
 }
+
+/**
+ * 指定した日付範囲のチェックイン情報を取得
+ */
+export async function getDateRangeCheckIns(fromDate: Date, toDate: Date): Promise<DashboardCheckInData[]> {
+  const startDateStr = formatDateToJST(fromDate);
+  const endDateStr = formatDateToJST(toDate);
+  
+  const checkInsRef = collection(db, "checkins");
+  const q = query(
+    checkInsRef,
+    where("startDate", ">=", startDateStr),
+    where("startDate", "<=", endDateStr),
+    orderBy("startDate", "desc")
+  );
+  
+  const querySnapshot = await getDocs(q);
+  const checkIns = querySnapshot.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as DashboardCheckInData[];
+  
+  // クライアント側でcreatedAtでソート
+  return checkIns.sort((a, b) => {
+    if (a.createdAt && b.createdAt) {
+      return b.createdAt.seconds - a.createdAt.seconds;
+    }
+    return 0;
+  });
+}
+
+/**
+ * 指定した日付範囲の統計情報を取得
+ */
+export async function getDateRangeStats(fromDate: Date, toDate: Date): Promise<MonthlyStats> {
+  const checkIns = await getDateRangeCheckIns(fromDate, toDate);
+  
+  if (checkIns.length === 0) {
+    return {
+      totalCheckIns: 0,
+      totalUsers: 0,
+      peakDay: null,
+      peakDayCheckIns: 0,
+      ageGroupStats: {
+        under20: 0,
+        twenties: 0,
+        thirties: 0,
+        forties: 0,
+        fifties: 0,
+        over60: 0,
+        unknown: 0,
+      },
+      purposeStats: {
+        meeting: 0,
+        telework: 0,
+        study: 0,
+        event: 0,
+        digital: 0,
+        inspection: 0,
+        other: 0,
+        unknown: 0,
+      },
+      dayOfWeekStats: {
+        monday: 0,
+        tuesday: 0,
+        wednesday: 0,
+        thursday: 0,
+        friday: 0,
+        saturday: 0,
+        sunday: 0,
+      },
+      timeSlotStats: {
+        morning: 0,
+        afternoon: 0,
+        evening: 0,
+        unknown: 0,
+      },
+      roomStats: {},
+      participantCountStats: {},
+    };
+  }
+
+  // 統計データを初期化
+  const ageGroupStats: AgeGroupStats = {
+    under20: 0,
+    twenties: 0,
+    thirties: 0,
+    forties: 0,
+    fifties: 0,
+    over60: 0,
+    unknown: 0,
+  };
+
+  const purposeStats: PurposeStats = {
+    meeting: 0,
+    telework: 0,
+    study: 0,
+    event: 0,
+    digital: 0,
+    inspection: 0,
+    other: 0,
+    unknown: 0,
+  };
+
+  const dayOfWeekStats: DayOfWeekStats = {
+    monday: 0,
+    tuesday: 0,
+    wednesday: 0,
+    thursday: 0,
+    friday: 0,
+    saturday: 0,
+    sunday: 0,
+  };
+
+  const timeSlotStats: TimeSlotStats = {
+    morning: 0,
+    afternoon: 0,
+    evening: 0,
+    unknown: 0,
+  };
+
+  const roomStats: RoomStats = {};
+  const participantCountStats: ParticipantCountStats = {};
+
+  // 日別のチェックイン数を追跡（ピーク日算出用）
+  const dailyCheckIns: Record<string, number> = {};
+
+  // 全ての部屋を初期化
+  ALL_ROOMS.forEach(room => {
+    roomStats[room] = 0;
+  });
+
+  // チェックインデータを集計
+  let totalUsers = 0;
+  checkIns.forEach(checkIn => {
+    const userCount = checkIn.count || 0;
+    totalUsers += userCount;
+
+    // 年代別統計
+    const ageGroup = categorizeAgeGroup(checkIn.ageGroup);
+    ageGroupStats[ageGroup] += userCount;
+
+    // 目的別統計
+    const purpose = categorizePurpose(checkIn.purpose);
+    purposeStats[purpose] += userCount;
+
+    // 曜日別統計
+    if (checkIn.startDate) {
+      const dayOfWeek = getDayOfWeek(checkIn.startDate);
+      dayOfWeekStats[dayOfWeek] += userCount;
+
+      // 日別チェックイン数を記録
+      dailyCheckIns[checkIn.startDate] = (dailyCheckIns[checkIn.startDate] || 0) + 1;
+    }
+
+    // 時間帯別統計
+    const timeSlot = categorizeTimeSlot(checkIn.startTime);
+    timeSlotStats[timeSlot] += userCount;
+
+    // 部屋別統計
+    if (checkIn.room && ALL_ROOMS.includes(checkIn.room)) {
+      roomStats[checkIn.room] += userCount;
+    }
+
+    // 人数別統計
+    const participantCount = userCount.toString();
+    participantCountStats[participantCount] = (participantCountStats[participantCount] || 0) + 1;
+  });
+
+  // ピーク日を算出
+  let peakDay: string | null = null;
+  let peakDayCheckIns = 0;
+
+  Object.entries(dailyCheckIns).forEach(([date, count]) => {
+    if (count > peakDayCheckIns) {
+      peakDay = date;
+      peakDayCheckIns = count;
+    }
+  });
+
+  return {
+    totalCheckIns: checkIns.length,
+    totalUsers,
+    peakDay,
+    peakDayCheckIns,
+    ageGroupStats,
+    purposeStats,
+    dayOfWeekStats,
+    timeSlotStats,
+    roomStats,
+    participantCountStats,
+  };
+}
