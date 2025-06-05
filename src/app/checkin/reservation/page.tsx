@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Suspense, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getTodayReservations, Reservation } from "@/lib/googleCalendar";
+import { getTodayReservations, Reservation, determineRoom6Type } from "@/lib/googleCalendar";
 import { getCheckedInReservationIds } from "@/lib/firestore";
 
 // 部屋名のマッピング
@@ -133,11 +133,18 @@ function ReservationSelection() {
     // 選択された予約の時間もJSTに変換（すでに変換済みのデータを使用）
     // 確認ダイアログを表示せずに直接時間選択画面に遷移
     if (room) {
+      // 6番系の部屋の場合、予約タイトルから適切な部屋タイプを判定
+      let actualRoom = room;
+      if (room === 'large6' || room === 'workshop6') {
+        // 予約タイトルから工作室かどうかを判定
+        actualRoom = determineRoom6Type(reservation.title);
+      }
+      
       // 次の予約情報を取得
       const nextRes = findNextReservationAfter(reservation, reservations);
       
       // 時間選択画面に遷移（予約情報と次の予約情報を渡す）
-      let url = `/checkin/time?room=${room}&startTime=${reservation.startTime}&endTime=${reservation.endTime}&reservationId=${reservation.id}`;
+      let url = `/checkin/time?room=${actualRoom}&startTime=${reservation.startTime}&endTime=${reservation.endTime}&reservationId=${reservation.id}`;
       
       // 次の予約がある場合は、その開始時間を終了時間の上限として渡す
       if (nextRes) {

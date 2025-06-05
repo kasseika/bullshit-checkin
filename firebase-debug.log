@@ -1,0 +1,22 @@
+[debug] [2025-06-05T08:50:58.265Z] ----------------------------------------------------------------------
+[debug] [2025-06-05T08:50:58.267Z] Command:       /Users/mtane0412/.volta/tools/image/node/22.13.1/bin/node /Users/mtane0412/.volta/tools/image/packages/firebase-tools/bin/firebase deploy --only functions
+[debug] [2025-06-05T08:50:58.267Z] CLI Version:   14.3.1
+[debug] [2025-06-05T08:50:58.267Z] Platform:      darwin
+[debug] [2025-06-05T08:50:58.267Z] Node Version:  v22.13.1
+[debug] [2025-06-05T08:50:58.268Z] Time:          Thu Jun 05 2025 17:50:58 GMT+0900 (Japan Standard Time)
+[debug] [2025-06-05T08:50:58.268Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-06-05T08:50:58.358Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-06-05T08:50:58.358Z] > authorizing via signed-in user (tane@kasseika.club)
+[debug] [2025-06-05T08:50:58.358Z] [iam] checking project bullshit-checkin for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2025-06-05T08:50:58.359Z] Checked if tokens are valid: true, expires at: 1749115110666
+[debug] [2025-06-05T08:50:58.359Z] Checked if tokens are valid: true, expires at: 1749115110666
+[debug] [2025-06-05T08:50:58.359Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/bullshit-checkin:testIamPermissions [none]
+[debug] [2025-06-05T08:50:58.359Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/bullshit-checkin:testIamPermissions x-goog-quota-user=projects/bullshit-checkin
+[debug] [2025-06-05T08:50:58.359Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/bullshit-checkin:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-06-05T08:50:59.225Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/bullshit-checkin:testIamPermissions 200
+[debug] [2025-06-05T08:50:59.225Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/bullshit-checkin:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-06-05T08:50:59.225Z] Checked if tokens are valid: true, expires at: 1749115110666
+[debug] [2025-06-05T08:50:59.225Z] Checked if tokens are valid: true, expires at: 1749115110666
+[debug] [2025-06-05T08:50:59.225Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/bullshit-checkin/serviceAccounts/bullshit-checkin@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-06-05T08:50:59.225Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/bullshit-checkin/serviceAccounts/bullshit-checkin@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}

@@ -21,8 +21,7 @@ interface Room {
 // 予約ありの場合の部屋リスト
 const reservationRooms: Room[] = [
   { id: "private4", name: "4番個室" },
-  { id: "large6", name: "6番大部屋" },
-  { id: "workshop6", name: "6番工作室" },
+  { id: "room6", name: "6番大部屋・工作室" },
 ];
 
 // 予約なしの場合の部屋リスト
@@ -45,7 +44,9 @@ const noReservationRooms: Room[] = [
     
     if (hasReservation) {
       // 予約ありの場合は予約選択画面へ
-      router.push(`/checkin/reservation?room=${roomId}`);
+      // room6の場合は6番系の予約を表示するためにlarge6パラメータを使用
+      const targetRoom = roomId === "room6" ? "large6" : roomId;
+      router.push(`/checkin/reservation?room=${targetRoom}`);
     } else {
       // 予約なしの場合
       if (roomId === "private4" || roomId === "large6") {

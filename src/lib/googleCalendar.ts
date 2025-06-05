@@ -33,6 +33,26 @@ export function extractRoomIdentifier(title: string): string | null {
   return match ? match[1] : null;
 }
 
+/**
+ * 予約タイトルから6番の部屋タイプ（大部屋・工作室）を判定する関数
+ * @param reservationTitle 予約のタイトル
+ * @returns 'large6' (大部屋) または 'workshop6' (工作室)
+ */
+export function determineRoom6Type(reservationTitle: string): 'large6' | 'workshop6' {
+  const title = reservationTitle.toLowerCase();
+  
+  // 工作室関連キーワードをチェック
+  const workshopKeywords = ['工作室', 'レーザー加工機', '3dプリンター', '3dプリンタ'];
+  
+  // タイトルまたは括弧内に工作室関連キーワードが含まれているかチェック
+  if (workshopKeywords.some(keyword => title.includes(keyword))) {
+    return 'workshop6';
+  }
+  
+  // デフォルトは大部屋
+  return 'large6';
+}
+
 // 特定の部屋の当日の予約を取得する関数
 export async function getTodayReservations(roomId: string): Promise<Reservation[]> {
   try {
