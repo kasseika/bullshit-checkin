@@ -30,6 +30,9 @@ function CountSelection() {
       if (purpose) {
         // 見学の場合はアンケートページに直接遷移
         url = `/checkin/survey?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=${purpose}`;
+      } else if (room === "workshop6") {
+        // 工作室の場合は利用目的を「制作」で固定してアンケートページに直接遷移
+        url = `/checkin/survey?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}&purpose=creation`;
       } else {
         // 通常の場合は利用目的ページへ
         url = `/checkin/purpose?room=${room}&startTime=${startTime}&endTime=${endTime}&count=${count}`;
