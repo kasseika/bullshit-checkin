@@ -777,9 +777,10 @@ export async function getDateRangeStats(fromDate: Date, toDate: Date): Promise<M
     const timeSlot = categorizeTimeSlot(checkIn.startTime);
     timeSlotStats[timeSlot] += userCount;
 
-    // 部屋別統計
-    if (checkIn.room && ALL_ROOMS.includes(checkIn.room)) {
-      roomStats[checkIn.room] += userCount;
+    // 部屋別統計（部屋名を正規化）
+    if (checkIn.room) {
+      const normalizedRoom = normalizeRoomName(checkIn.room);
+      roomStats[normalizedRoom] = (roomStats[normalizedRoom] || 0) + userCount;
     }
 
     // 人数別統計
