@@ -1,5 +1,6 @@
 import {
   extractRoomIdentifier,
+  determineRoom6Type,
   getTodayReservations,
   isRoomAvailable,
   addCheckInEvent,
@@ -14,6 +15,7 @@ jest.mock('../googleCalendar', () => {
   const originalModule = jest.requireActual('../googleCalendar');
   return {
     extractRoomIdentifier: originalModule.extractRoomIdentifier,
+    determineRoom6Type: originalModule.determineRoom6Type,
     getTodayReservations: jest.fn(),
     isRoomAvailable: jest.fn(),
     addCheckInEvent: jest.fn(),
@@ -35,12 +37,41 @@ describe('extractRoomIdentifier', () => {
   it('タイトルから部屋識別子を正しく抽出する', () => {
     expect(extractRoomIdentifier('4番個室_予約タイトル')).toBe('4番個室');
     expect(extractRoomIdentifier('6番_ミーティング')).toBe('6番');
+    expect(extractRoomIdentifier('6番大部屋_当日チェックイン')).toBe('6番大部屋');
+    expect(extractRoomIdentifier('6番工作室_当日チェックイン')).toBe('6番工作室');
     expect(extractRoomIdentifier('タイトルのみ')).toBeNull();
   });
 
   it('全角数字を含むタイトルから部屋識別子を正しく抽出する', () => {
     expect(extractRoomIdentifier('４番個室_予約タイトル')).toBe('4番個室');
     expect(extractRoomIdentifier('６番_ミーティング')).toBe('6番');
+  });
+});
+
+describe('determineRoom6Type', () => {
+  it('工作室関連キーワードが含まれる場合はworkshop6を返す', () => {
+    expect(determineRoom6Type('6番工作室_山田太郎様')).toBe('workshop6');
+    expect(determineRoom6Type('6番_田中様 (工作室)')).toBe('workshop6');
+    expect(determineRoom6Type('6番_レーザー加工機利用')).toBe('workshop6');
+    expect(determineRoom6Type('6番_3Dプリンター使用')).toBe('workshop6');
+    expect(determineRoom6Type('6番_3Dプリンタ利用')).toBe('workshop6');
+  });
+
+  it('工作室関連キーワードが含まれない場合はlarge6を返す', () => {
+    expect(determineRoom6Type('6番_山田太郎様')).toBe('large6');
+    expect(determineRoom6Type('6番大部屋_当日チェックイン')).toBe('large6');
+    expect(determineRoom6Type('6番_会議利用')).toBe('large6');
+    expect(determineRoom6Type('6番_研修')).toBe('large6');
+  });
+
+  it('大文字小文字を区別しない', () => {
+    expect(determineRoom6Type('6番_WORKSHOP利用')).toBe('large6'); // 工作室キーワードではない
+    expect(determineRoom6Type('6番_工作室利用')).toBe('workshop6');
+    expect(determineRoom6Type('6番_レーザー加工機')).toBe('workshop6');
+  });
+
+  it('空文字列の場合はlarge6を返す', () => {
+    expect(determineRoom6Type('')).toBe('large6');
   });
 });
 

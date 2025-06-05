@@ -15,7 +15,7 @@ const roomNames: Record<string, string> = {
   "private4": "4番個室",
   "large4": "4番大部屋",
   "large6": "6番大部屋",
-  "studio6": "6番工作室",
+  "workshop6": "6番工作室",
   "tour": "見学",
 };
 
@@ -209,7 +209,7 @@ function Confirm() {
         }
         
         // 予約なしで4番個室または6番大部屋または6番工作室を選択した場合、Googleカレンダーに予定を追加
-        if (navigator.onLine && !reservationId && (room === "private4" || room === "large6" || room === "studio6")) {
+        if (navigator.onLine && !reservationId && (room === "private4" || room === "large6" || room === "workshop6")) {
           try {
             console.log(`${roomNames[room]}のチェックインをカレンダーに追加します。部屋ID: ${room}`);
             const calendarSuccess = await addCheckInEvent(room, startTime, endTime);

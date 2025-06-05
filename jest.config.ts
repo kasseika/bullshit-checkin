@@ -24,25 +24,21 @@ const config: Config = {
     '!src/**/*.d.ts',
     '!src/types/**',
   ],
-  // ログ出力を最小限にする設定
+  // CI環境の考慮
   verbose: false,
-  // カスタムレポーターを使用してテスト出力をシンプルにする
-  reporters: [
-    '<rootDir>/jest-custom-reporter.js'
-  ],
-  // コンソール出力の制御
-  silent: true,
+  // 環境に応じたレポーター設定
+  reporters: process.env.CI 
+    ? ['default']  // CI環境では標準レポーター
+    : ['<rootDir>/jest-custom-reporter.js'],  // ローカルではカスタムレポーター
+  // CI環境では詳細なログを出力
+  silent: !process.env.CI,
   logHeapUsage: false,
-  // テスト失敗時のエラー出力を簡略化
   errorOnDeprecated: true,
-  // テスト実行中の進行状況表示を最小限に
   notify: false,
   bail: 0,
-  // エラー表示の簡略化
+  // 正しいexit code設定
   testFailureExitCode: 1,
-  // DOMのスナップショット出力を制限
   snapshotSerializers: [],
-  // テスト実行中の進行状況表示を最小限に
   noStackTrace: false,
 };
 

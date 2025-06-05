@@ -63,7 +63,7 @@ describe("部屋選択画面", () => {
 
     // 予約ありの場合は4番個室と6番大部屋のみ表示
     expect(screen.getByText("4番個室")).toBeInTheDocument();
-    expect(screen.getByText("6番 大部屋・工作室")).toBeInTheDocument();
+    expect(screen.getByText("6番大部屋・工作室")).toBeInTheDocument();
 
     // 説明文は表示されない
     expect(screen.queryByText("Web会議等。予約がないときに使えます")).not.toBeInTheDocument();
