@@ -140,7 +140,7 @@ export const getCalendarReservations = functions.region('asia-northeast1').https
           case 'large4':
             return identifier === '4番大部屋';
           case 'large6':
-          case 'studio6':
+          case 'workshop6':
             // 6番の場合は特殊処理（大部屋と工作室は同時に予約できない）
             return identifier === '6番';
           case 'room1':
@@ -246,7 +246,7 @@ export const getCalendarReservationsApi = functions.region('asia-northeast1').ht
           case 'large4':
             return identifier === '4番大部屋';
           case 'large6':
-          case 'studio6':
+          case 'workshop6':
             return identifier === '6番';
           case 'room1':
             return identifier === '1番';
@@ -302,8 +302,14 @@ export const addCalendarEvent = functions.region('asia-northeast1').https.onCall
         eventTitle = '6番_当日チェックイン';
         logs.push(`Event title set to: ${eventTitle}`);
         break;
+      case 'workshop6':
+        // 6番工作室の場合は「6番_当日チェックイン」というタイトルを使用
+        // これはgetCalendarReservations関数で「6番」という識別子でフィルタリングされる
+        eventTitle = '6番_当日チェックイン';
+        logs.push(`Event title set to: ${eventTitle}`);
+        break;
       default:
-        const errorMsg = `Invalid room ID: ${room}. Only private4 and large6 are supported for automatic check-in.`;
+        const errorMsg = `Invalid room ID: ${room}. Only private4, large6, and workshop6 are supported for automatic check-in.`;
         logs.push(`Error: ${errorMsg}`);
         throw new functions.https.HttpsError(
           'invalid-argument',
@@ -689,7 +695,7 @@ export const sendCheckinNotification = functions.region('asia-northeast1')
         "private4": "4番個室",
         "large4": "4番大部屋",
         "large6": "6番大部屋",
-        "studio6": "6番工作室",
+        "workshop6": "6番工作室",
         "tour": "見学",
       };
       
@@ -828,7 +834,7 @@ export const getCalendarReservationsForPeriod = functions.region('asia-northeast
           case 'large4':
             return identifier === '4番大部屋';
           case 'large6':
-          case 'studio6':
+          case 'workshop6':
             // 6番の場合は特殊処理（大部屋と工作室は同時に予約できない）
             return identifier === '6番';
           case 'room1':

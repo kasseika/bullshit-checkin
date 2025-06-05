@@ -58,7 +58,7 @@ const getRoomDisplayName = (roomCode: string | null): string => {
     "private4": "4番個室",
     "large4": "4番大部屋",
     "large6": "6番大部屋",
-    "studio6": "6番工作室",
+    "workshop6": "6番工作室",
     "tour": "見学",
     // 必要に応じて他の部屋も追加
   };
@@ -287,7 +287,7 @@ function TimeSelection() {
                   </div>
                 )}
                 {/* 部屋タイプに応じた注意書きを表示 */}
-                {(room === "private4" || room === "large6" || room === "studio6") ? (
+                {(room === "private4" || room === "large6" || room === "workshop6") ? (
                   <div className="mb-4 p-3 bg-yellow-100 rounded-md text-center">
                     <p className="text-sm text-gray-600">一度確定すると変更できません。<br />次の利用者のために時間内にご退室をお願いします。</p>
                   </div>

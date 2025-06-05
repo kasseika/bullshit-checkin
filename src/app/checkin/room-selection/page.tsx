@@ -21,7 +21,8 @@ interface Room {
 // 予約ありの場合の部屋リスト
 const reservationRooms: Room[] = [
   { id: "private4", name: "4番個室" },
-  { id: "large6", name: "6番 大部屋・工作室" },
+  { id: "large6", name: "6番大部屋" },
+  { id: "workshop6", name: "6番工作室" },
 ];
 
 // 予約なしの場合の部屋リスト
@@ -29,6 +30,7 @@ const noReservationRooms: Room[] = [
   { id: "large4", name: "4番大部屋", description: "テレワーク・勉強に使えるオープン席です", priority: true },
   { id: "private4", name: "4番個室", description: "Web会議等。予約がないときに使えます" },
   { id: "large6", name: "6番大部屋", description: "複数名の会議・イベント等。予約がないときに使えます" },
+  { id: "workshop6", name: "6番工作室", description: "制作・工作作業等。予約がないときに使えます" },
   { id: "room1", name: "1番", description: "飲食や他の部屋が使えないときなどにお使いください" },
   { id: "tour", name: "見学", description: "施設内を見学する際に選択してください" },
 ];

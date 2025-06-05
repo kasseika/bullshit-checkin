@@ -408,7 +408,7 @@ const ROOM_CODE_TO_NAME: { [key: string]: string } = {
   "private4": "4番個室",
   "large4": "4番大部屋",
   "large6": "6番大部屋",
-  "studio6": "6番工作室",
+  "workshop6": "6番工作室",
   "tour": "見学",
   // 既に日本語名の場合はそのままマッピング
   "1番": "1番",
