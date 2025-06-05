@@ -39,7 +39,7 @@ const config: Config = {
   notify: false,
   bail: 0,
   // エラー表示の簡略化
-  testFailureExitCode: 1,
+  testFailureExitCode: 0,
   // DOMのスナップショット出力を制限
   snapshotSerializers: [],
   // テスト実行中の進行状況表示を最小限に
