@@ -61,9 +61,6 @@ describe("StatisticsPage", () => {
   });
 
   it("初期表示で現在月のデータを取得する", async () => {
-    const currentDate = new Date();
-    const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
     const mockStatsData: MonthlyStats = {
       totalCheckIns: 10,

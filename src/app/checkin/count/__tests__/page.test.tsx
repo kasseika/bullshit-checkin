@@ -17,7 +17,7 @@ describe('CountSelectionPage', () => {
   const mockPush = jest.fn();
   const mockRouter = { push: mockPush };
   let mockSearchParams: Map<string, string>;
-  let searchParamsObject: any;
+  let searchParamsObject: { get: (key: string) => string | null; set: (key: string, value: string) => void; clear: () => void };
 
   beforeEach(() => {
     jest.clearAllMocks();
