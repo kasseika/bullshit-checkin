@@ -11,6 +11,7 @@ import {
   getMonthlyCheckIns,
   getMonthlyBookings,
   getMonthlyStats,
+  getDateRangeStats,
 } from "../dashboardFirestore";
 
 jest.mock("../firebase", () => ({
@@ -353,6 +354,7 @@ describe("dashboardFirestore", () => {
       expect(result.totalCheckIns).toBe(3);
       expect(result.totalBookings).toBe(2);
       expect(result.totalUsers).toBe(6); // 3 + 2 + 1
+      expect(result.averageStayTime).toBe(60); // 全てが1時間なので平均は60分
       expect(result.peakDay).toBe("2025-01-15");
       expect(result.peakDayCheckIns).toBe(2);
       
@@ -409,6 +411,7 @@ describe("dashboardFirestore", () => {
       expect(result.totalCheckIns).toBe(0);
       expect(result.totalBookings).toBe(0);
       expect(result.totalUsers).toBe(0);
+      expect(result.averageStayTime).toBe(0);
       expect(result.peakDay).toBeNull();
       expect(result.peakDayCheckIns).toBe(0);
       
@@ -417,7 +420,131 @@ describe("dashboardFirestore", () => {
       expect(result.purposeStats.meeting).toBe(0);
       expect(result.dayOfWeekStats.monday).toBe(0);
       expect(result.timeSlotStats.morning).toBe(0);
+      expect(result.roomStats).toEqual({});
       expect(result.participantCountStats).toEqual({});
+      expect(result.averageStayTime).toBe(0);
+    });
+  });
+
+  describe("getDateRangeStats", () => {
+    it("指定期間の統計情報を取得できる", async () => {
+      const mockCheckIns = [
+        {
+          id: "1",
+          data: () => ({
+            room: "large4",
+            startDate: "2025-01-10",
+            startTime: "09:00",
+            endTime: "11:00",
+            count: 5,
+            ageGroup: "30s",
+            purpose: "meeting",
+          }),
+        },
+        {
+          id: "2",
+          data: () => ({
+            room: "workshop6",
+            startDate: "2025-01-12",
+            startTime: "13:00",
+            endTime: "14:30",
+            count: 3,
+            ageGroup: "20s",
+            purpose: "creation",
+          }),
+        },
+      ];
+
+      mockGetDocs.mockResolvedValue({
+        docs: mockCheckIns,
+        size: mockCheckIns.length,
+      } as unknown as QuerySnapshot<DocumentData>);
+
+      const fromDate = new Date("2025-01-10");
+      const toDate = new Date("2025-01-15");
+      const result = await getDateRangeStats(fromDate, toDate);
+
+      expect(result.totalCheckIns).toBe(2);
+      expect(result.totalUsers).toBe(8); // 5 + 3
+      expect(result.averageStayTime).toBe(105); // (120 + 90) / 2 = 105分
+      expect(result.peakDay).toBe("2025-01-10");
+      expect(result.peakDayCheckIns).toBe(1);
+      
+      // 年代別統計
+      expect(result.ageGroupStats.twenties).toBe(3);
+      expect(result.ageGroupStats.thirties).toBe(5);
+      
+      // 目的別統計
+      expect(result.purposeStats.meeting).toBe(5);
+      expect(result.purposeStats.digital).toBe(3);
+      
+      // 部屋別統計
+      expect(result.roomStats["4番大部屋"]).toBe(5);
+      expect(result.roomStats["6番工作室"]).toBe(3);
+    });
+
+    it("滞在時間のデータが不完全な場合の平均滞在時間", async () => {
+      const mockCheckIns = [
+        {
+          id: "1",
+          data: () => ({
+            room: "room1",
+            startDate: "2025-01-10",
+            startTime: "10:00",
+            endTime: "12:00",
+            count: 2,
+          }),
+        },
+        {
+          id: "2",
+          data: () => ({
+            room: "room1",
+            startDate: "2025-01-11",
+            startTime: "14:00",
+            // endTimeがない
+            count: 1,
+          }),
+        },
+        {
+          id: "3",
+          data: () => ({
+            room: "room1",
+            startDate: "2025-01-12",
+            // startTimeがない
+            endTime: "16:00",
+            count: 1,
+          }),
+        },
+      ];
+
+      mockGetDocs.mockResolvedValue({
+        docs: mockCheckIns,
+        size: mockCheckIns.length,
+      } as unknown as QuerySnapshot<DocumentData>);
+
+      const fromDate = new Date("2025-01-10");
+      const toDate = new Date("2025-01-15");
+      const result = await getDateRangeStats(fromDate, toDate);
+
+      expect(result.totalCheckIns).toBe(3);
+      expect(result.totalUsers).toBe(4);
+      // 有効なデータは1件だけなので120分
+      expect(result.averageStayTime).toBe(120);
+    });
+
+    it("データがない場合の平均滞在時間", async () => {
+      mockGetDocs.mockResolvedValue({
+        docs: [],
+        size: 0,
+      } as unknown as QuerySnapshot<DocumentData>);
+
+      const fromDate = new Date("2025-01-10");
+      const toDate = new Date("2025-01-15");
+      const result = await getDateRangeStats(fromDate, toDate);
+
+      expect(result.totalCheckIns).toBe(0);
+      expect(result.totalUsers).toBe(0);
+      expect(result.averageStayTime).toBe(0);
     });
   });
 });

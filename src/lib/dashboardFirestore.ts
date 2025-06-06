@@ -177,13 +177,14 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 // 月別集計用のデータ型
 export interface MonthlyStats {
-  year: number;
-  month: number;
+  year?: number;
+  month?: number;
   totalCheckIns: number;
-  totalBookings: number;
+  totalBookings?: number;
   peakDay: string | null;
   peakDayCheckIns: number;
   totalUsers: number; // 選択区間の利用者数
+  averageStayTime: number; // 平均滞在時間（分）
   ageGroupStats: AgeGroupStats;
   purposeStats: PurposeStats;
   dayOfWeekStats: DayOfWeekStats;
@@ -468,6 +469,28 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
     // 選択区間の利用者数を計算（各チェックインのcountを合計）
     const totalUsers = checkIns.reduce((sum, checkIn) => sum + (checkIn.count || 0), 0);
     
+    // 平均滞在時間を計算
+    let totalStayTime = 0;
+    let validStayTimeCount = 0;
+    
+    checkIns.forEach(checkIn => {
+      if (checkIn.startTime && checkIn.endTime) {
+        const [startHour, startMinute] = checkIn.startTime.split(':').map(Number);
+        const [endHour, endMinute] = checkIn.endTime.split(':').map(Number);
+        
+        const startMinutes = startHour * 60 + startMinute;
+        const endMinutes = endHour * 60 + endMinute;
+        
+        // 終了時間が開始時間より後の場合のみ計算
+        if (endMinutes > startMinutes) {
+          totalStayTime += endMinutes - startMinutes;
+          validStayTimeCount++;
+        }
+      }
+    });
+    
+    const averageStayTime = validStayTimeCount > 0 ? Math.round(totalStayTime / validStayTimeCount) : 0;
+    
     // 年代別統計を初期化
     const ageGroupStats: AgeGroupStats = {
       under20: 0,
@@ -562,6 +585,7 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       peakDay,
       peakDayCheckIns,
       totalUsers,
+      averageStayTime,
       ageGroupStats,
       purposeStats,
       dayOfWeekStats,
@@ -579,6 +603,7 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
       peakDay: null,
       peakDayCheckIns: 0,
       totalUsers: 0,
+      averageStayTime: 0,
       ageGroupStats: {
         under20: 0,
         twenties: 0,
@@ -659,6 +684,7 @@ export async function getDateRangeStats(fromDate: Date, toDate: Date): Promise<M
     return {
       totalCheckIns: 0,
       totalUsers: 0,
+      averageStayTime: 0,
       peakDay: null,
       peakDayCheckIns: 0,
       ageGroupStats: {
@@ -752,6 +778,9 @@ export async function getDateRangeStats(fromDate: Date, toDate: Date): Promise<M
 
   // チェックインデータを集計
   let totalUsers = 0;
+  let totalStayTime = 0;
+  let validStayTimeCount = 0;
+  
   checkIns.forEach(checkIn => {
     const userCount = checkIn.count || 0;
     totalUsers += userCount;
@@ -786,6 +815,21 @@ export async function getDateRangeStats(fromDate: Date, toDate: Date): Promise<M
     // 人数別統計
     const participantCount = userCount.toString();
     participantCountStats[participantCount] = (participantCountStats[participantCount] || 0) + 1;
+    
+    // 滞在時間の計算
+    if (checkIn.startTime && checkIn.endTime) {
+      const [startHour, startMinute] = checkIn.startTime.split(':').map(Number);
+      const [endHour, endMinute] = checkIn.endTime.split(':').map(Number);
+      
+      const startMinutes = startHour * 60 + startMinute;
+      const endMinutes = endHour * 60 + endMinute;
+      
+      // 終了時間が開始時間より後の場合のみ計算
+      if (endMinutes > startMinutes) {
+        totalStayTime += endMinutes - startMinutes;
+        validStayTimeCount++;
+      }
+    }
   });
 
   // ピーク日を算出
@@ -799,9 +843,12 @@ export async function getDateRangeStats(fromDate: Date, toDate: Date): Promise<M
     }
   });
 
+  const averageStayTime = validStayTimeCount > 0 ? Math.round(totalStayTime / validStayTimeCount) : 0;
+  
   return {
     totalCheckIns: checkIns.length,
     totalUsers,
+    averageStayTime,
     peakDay,
     peakDayCheckIns,
     ageGroupStats,
