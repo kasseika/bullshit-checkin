@@ -93,6 +93,19 @@ function useGraphExport() {
             (text as HTMLElement).style.fill = '#374151';
             (text as HTMLElement).style.color = '#374151';
           });
+
+          // h3要素のフォント設定を明示的に指定
+          const h3Elements = clonedElement.querySelectorAll('h3');
+          h3Elements.forEach((h3) => {
+            const htmlH3 = h3 as HTMLElement;
+            htmlH3.style.fontFamily = '"Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN W3", sans-serif';
+            htmlH3.style.letterSpacing = '0';
+            htmlH3.style.lineHeight = '1.4';
+            htmlH3.style.fontSize = '18px';
+            htmlH3.style.fontWeight = '600';
+            htmlH3.style.color = '#374151';
+            htmlH3.style.marginBottom = '16px';
+          });
         }
       });
 
@@ -270,7 +283,7 @@ function DailyUsersChart({ checkIns, fromDate, toDate }: {
 
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-semibold mb-4">日別利用者数</h3>
+      <h3 className="text-lg font-semibold mb-4 whitespace-nowrap">日別利用者数</h3>
       <ChartContainer config={chartConfig} className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={dailyData}>
