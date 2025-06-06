@@ -58,6 +58,52 @@ export interface DashboardStats {
 }
 
 /**
+ * 滞在時間を分単位で計算する
+ * @param startTime 開始時刻（HH:MM形式）
+ * @param endTime 終了時刻（HH:MM形式）
+ * @returns 滞在時間（分）、無効な場合はnull
+ */
+export function calculateStayMinutes(startTime: string | undefined, endTime: string | undefined): number | null {
+  if (!startTime || !endTime) {
+    return null;
+  }
+
+  const startParts = startTime.split(':');
+  const endParts = endTime.split(':');
+
+  // 時刻形式の検証
+  if (startParts.length !== 2 || endParts.length !== 2) {
+    return null;
+  }
+
+  const startHour = Number(startParts[0]);
+  const startMinute = Number(startParts[1]);
+  const endHour = Number(endParts[0]);
+  const endMinute = Number(endParts[1]);
+
+  // 数値の妥当性チェック
+  if (isNaN(startHour) || isNaN(startMinute) || isNaN(endHour) || isNaN(endMinute)) {
+    return null;
+  }
+
+  // 時間と分の範囲チェック
+  if (startHour < 0 || startHour > 23 || endHour < 0 || endHour > 23 ||
+      startMinute < 0 || startMinute > 59 || endMinute < 0 || endMinute > 59) {
+    return null;
+  }
+
+  const startMinutes = startHour * 60 + startMinute;
+  let endMinutes = endHour * 60 + endMinute;
+
+  // 日跨ぎ対応：終了時刻が開始時刻より前の場合、24時間追加
+  if (endMinutes < startMinutes) {
+    endMinutes += 24 * 60;
+  }
+
+  return endMinutes - startMinutes;
+}
+
+/**
  * 今日の日付範囲を取得（JST）
  */
 function getTodayDateRange() {
@@ -474,18 +520,10 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
     let validStayTimeCount = 0;
     
     checkIns.forEach(checkIn => {
-      if (checkIn.startTime && checkIn.endTime) {
-        const [startHour, startMinute] = checkIn.startTime.split(':').map(Number);
-        const [endHour, endMinute] = checkIn.endTime.split(':').map(Number);
-        
-        const startMinutes = startHour * 60 + startMinute;
-        const endMinutes = endHour * 60 + endMinute;
-        
-        // 終了時間が開始時間より後の場合のみ計算
-        if (endMinutes > startMinutes) {
-          totalStayTime += endMinutes - startMinutes;
-          validStayTimeCount++;
-        }
+      const stayMinutes = calculateStayMinutes(checkIn.startTime, checkIn.endTime);
+      if (stayMinutes !== null) {
+        totalStayTime += stayMinutes;
+        validStayTimeCount++;
       }
     });
     
