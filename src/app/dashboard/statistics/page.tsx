@@ -552,7 +552,7 @@ export default function StatisticsPage() {
             </Card>
 
             <Card className="p-6">
-              <p className="text-sm text-gray-600 mb-2">月全体の利用者数</p>
+              <p className="text-sm text-gray-600 mb-2">利用者数</p>
               <p className="text-3xl font-bold">{stats.totalUsers}人</p>
             </Card>
 

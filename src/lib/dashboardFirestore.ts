@@ -183,7 +183,7 @@ export interface MonthlyStats {
   totalBookings: number;
   peakDay: string | null;
   peakDayCheckIns: number;
-  totalUsers: number; // 月全体の利用者数
+  totalUsers: number; // 選択区間の利用者数
   ageGroupStats: AgeGroupStats;
   purposeStats: PurposeStats;
   dayOfWeekStats: DayOfWeekStats;
@@ -465,7 +465,7 @@ export async function getMonthlyStats(year: number, month: number): Promise<Mont
     });
     
     
-    // 月全体の利用者数を計算（各チェックインのcountを合計）
+    // 選択区間の利用者数を計算（各チェックインのcountを合計）
     const totalUsers = checkIns.reduce((sum, checkIn) => sum + (checkIn.count || 0), 0);
     
     // 年代別統計を初期化
