@@ -2,11 +2,14 @@
  * 集計ページ
  * 期間指定でのチェックイン・予約データを集計表示
  * バーチャート・パイチャート機能を含む
+ * グラフ画像エクスポート機能を含む
  */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import html2canvas from "html2canvas-pro";
 import { 
   ChartContainer, 
   ChartTooltip, 
@@ -16,6 +19,99 @@ import { getDateRangeStats, MonthlyStats, getDateRangeCheckIns, DashboardCheckIn
 import { formatDateToJSTWithSlash } from "@/utils/dateUtils";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, LabelList } from "recharts";
+
+// グラフエクスポート用のカスタムフック
+function useGraphExport() {
+  // 非破壊的エクスポート: oncloneでスタイル調整
+  const exportGraphAsImage = async (
+    elementRef: React.RefObject<HTMLElement | HTMLDivElement | null>,
+    filename: string = "statistics-charts"
+  ) => {
+    if (!elementRef.current) return;
+
+    try {
+      // 元のDOMは一切変更せず、oncloneでクローンを調整
+      const canvas = await html2canvas(elementRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2, // 高解像度
+        useCORS: true,
+        allowTaint: true,
+        width: 1200,
+        onclone: (_clonedDoc: Document, clonedElement: HTMLElement) => {
+          // クローンされた要素に対してのみPC表示レイアウトを適用
+          clonedElement.style.width = '1200px';
+          clonedElement.style.minWidth = '1200px';
+          clonedElement.style.backgroundColor = '#ffffff';
+          clonedElement.style.padding = '20px';
+          clonedElement.style.margin = '0';
+          clonedElement.style.position = 'static';
+          
+          // グリッド要素を2列固定に調整
+          const gridElements = clonedElement.querySelectorAll('.grid');
+          gridElements.forEach((element) => {
+            const htmlElement = element as HTMLElement;
+            htmlElement.style.display = 'grid';
+            htmlElement.style.gridTemplateColumns = '1fr 1fr';
+            htmlElement.style.gap = '1.5rem';
+            htmlElement.style.width = '100%';
+          });
+
+          // 不要な要素を非表示にする
+          const unnecessaryElements = clonedElement.querySelectorAll('.recharts-tooltip-wrapper, .recharts-active-dot');
+          unnecessaryElements.forEach((element) => {
+            (element as HTMLElement).style.display = 'none';
+          });
+
+          // すべてのSVG要素のサイズを固定
+          const svgElements = clonedElement.querySelectorAll('svg');
+          svgElements.forEach((svg) => {
+            svg.style.width = '100%';
+            svg.style.height = '300px';
+          });
+
+          // ResponsiveContainerの高さを固定
+          const responsiveContainers = clonedElement.querySelectorAll('[class*="recharts-responsive-container"]');
+          responsiveContainers.forEach((container) => {
+            (container as HTMLElement).style.height = '300px';
+            (container as HTMLElement).style.width = '100%';
+          });
+
+          // カード要素のスタイル調整
+          const cardElements = clonedElement.querySelectorAll('[class*="Card"], .card');
+          cardElements.forEach((card) => {
+            const htmlCard = card as HTMLElement;
+            htmlCard.style.backgroundColor = '#ffffff';
+            htmlCard.style.border = '1px solid #e2e8f0';
+            htmlCard.style.borderRadius = '8px';
+            htmlCard.style.padding = '24px';
+            htmlCard.style.marginBottom = '24px';
+          });
+
+          // テキスト要素の色を明示的に設定
+          const textElements = clonedElement.querySelectorAll('text, .recharts-text');
+          textElements.forEach((text) => {
+            (text as HTMLElement).style.fill = '#374151';
+            (text as HTMLElement).style.color = '#374151';
+          });
+        }
+      });
+
+      // PNG画像としてダウンロード
+      const link = document.createElement('a');
+      link.download = `${filename}.png`;
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (error) {
+      console.error('グラフの画像エクスポートに失敗しました:', error);
+      alert('画像の保存に失敗しました。再度お試しください。');
+    }
+  };
+
+  return { exportGraphAsImage };
+}
 
 // 統計表示用のコンポーネント
 function StatsCard({ title, data }: { title: string; data: Record<string, number> }) {
@@ -478,7 +574,21 @@ export default function StatisticsPage() {
   const [stats, setStats] = useState<MonthlyStats | null>(null);
   const [checkIns, setCheckIns] = useState<DashboardCheckInData[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // グラフエリアのref
+  const chartsRef = useRef<HTMLDivElement>(null);
+  const { exportGraphAsImage } = useGraphExport();
 
+  // グラフ画像エクスポートのハンドラー
+  const handleExportCharts = () => {
+    if (!dateRange.from || !dateRange.to) return;
+    
+    const fromStr = formatDateToJSTWithSlash(dateRange.from).replace(/\//g, '-');
+    const toStr = formatDateToJSTWithSlash(dateRange.to).replace(/\//g, '-');
+    const filename = `statistics_${fromStr}_${toStr}`;
+    
+    exportGraphAsImage(chartsRef, filename);
+  };
 
   // データの取得
   useEffect(() => {
@@ -591,40 +701,51 @@ export default function StatisticsPage() {
 
           {/* グラフ表示 */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold">グラフ表示</h2>
-            
-            {/* 日別利用者数バーチャート */}
-            <DailyUsersChart 
-              checkIns={checkIns} 
-              fromDate={dateRange.from} 
-              toDate={dateRange.to} 
-            />
-            
-            {/* 統計別チャート1行目 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* 年代別バーチャート */}
-              <AgeGroupChart ageGroupStats={stats.ageGroupStats} />
-              
-              {/* 目的別バーチャート */}
-              <PurposeChart purposeStats={stats.purposeStats} />
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold">グラフ表示</h2>
+              <Button 
+                onClick={handleExportCharts}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                📊 グラフを画像で保存
+              </Button>
             </div>
             
-            {/* 統計別チャート2行目 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* 曜日別バーチャート */}
-              <DayOfWeekChart dayOfWeekStats={stats.dayOfWeekStats} />
+            <div ref={chartsRef} className="space-y-6">
+              {/* 日別利用者数バーチャート */}
+              <DailyUsersChart 
+                checkIns={checkIns} 
+                fromDate={dateRange.from} 
+                toDate={dateRange.to} 
+              />
               
-              {/* 時間帯別パイチャート */}
-              <TimeSlotPieChart timeSlotStats={stats.timeSlotStats} />
-            </div>
-            
-            {/* 統計別チャート3行目 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* 部屋別利用統計バーチャート */}
-              <RoomUsageChart roomStats={stats.roomStats} />
+              {/* 統計別チャート1行目 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 年代別バーチャート */}
+                <AgeGroupChart ageGroupStats={stats.ageGroupStats} />
+                
+                {/* 目的別バーチャート */}
+                <PurposeChart purposeStats={stats.purposeStats} />
+              </div>
               
-              {/* 人数別チェックイン統計バーチャート */}
-              <ParticipantCountChart participantCountStats={stats.participantCountStats} />
+              {/* 統計別チャート2行目 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 曜日別バーチャート */}
+                <DayOfWeekChart dayOfWeekStats={stats.dayOfWeekStats} />
+                
+                {/* 時間帯別パイチャート */}
+                <TimeSlotPieChart timeSlotStats={stats.timeSlotStats} />
+              </div>
+              
+              {/* 統計別チャート3行目 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 部屋別利用統計バーチャート */}
+                <RoomUsageChart roomStats={stats.roomStats} />
+                
+                {/* 人数別チェックイン統計バーチャート */}
+                <ParticipantCountChart participantCountStats={stats.participantCountStats} />
+              </div>
             </div>
           </div>
 
