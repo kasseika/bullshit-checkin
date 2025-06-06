@@ -573,9 +573,18 @@ export default function StatisticsPage() {
             <Card className="p-6">
               <p className="text-sm text-gray-600 mb-2">平均滞在時間</p>
               <p className="text-3xl font-bold">
-                {stats.averageStayTime > 0 ? 
-                  `${Math.floor(stats.averageStayTime / 60).toString().padStart(2, '0')}:${(stats.averageStayTime % 60).toString().padStart(2, '0')}` : 
-                  "--:--"}
+                {stats.averageStayTime > 0 ? (
+                  <>
+                    {Math.floor(stats.averageStayTime / 60).toString().padStart(2, '0')}
+                    <span className="text-lg text-gray-600 font-normal mx-1">h</span>
+                    {(stats.averageStayTime % 60).toString().padStart(2, '0')}
+                    <span className="text-lg text-gray-600 font-normal mx-1">min</span>
+                  </>
+                ) : (
+                  <>
+                    --<span className="text-lg font-normal">h</span>--<span className="text-lg font-normal">min</span>
+                  </>
+                )}
               </p>
             </Card>
           </div>
