@@ -1031,3 +1031,253 @@ async function sendBookingConfirmationEmail(bookingData: BookingEventData): Prom
   // POSTリクエストを送信
   await axios.post(gasWebAppUrl, payload);
 }
+
+/**
+ * 指定された期間のチェックインデータを取得するCloud Function
+ */
+export const getCheckinsForPeriod = functions.region('asia-northeast1').https.onCall(async (data) => {
+  const logs: string[] = [];
+  logs.push(`Function called with startDate: ${data.startDate}, endDate: ${data.endDate}`);
+  
+  try {
+    const { startDate, endDate } = data;
+    
+    if (!startDate || !endDate) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        '開始日と終了日は必須です'
+      );
+    }
+    
+    // 日付をDateオブジェクトに変換
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    
+    logs.push(`Querying checkins from ${start.toISOString()} to ${end.toISOString()}`);
+    
+    // Firestoreからチェックインデータを取得
+    const db = admin.firestore();
+    const checkinsRef = db.collection('checkins');
+    
+    // clientCheckInTimeフィールドで期間を絞り込み
+    const snapshot = await checkinsRef
+      .where('clientCheckInTime', '>=', start.toISOString())
+      .where('clientCheckInTime', '<=', end.toISOString())
+      .orderBy('clientCheckInTime', 'asc')
+      .get();
+    
+    logs.push(`Found ${snapshot.size} checkins`);
+    
+    // チェックインデータを配列に変換
+    interface CheckinData {
+      id: string;
+      clientCheckInTime?: string;
+      room?: string;
+      purpose?: string;
+      count?: number;
+      startTime?: string;
+      endTime?: string;
+      ageGroup?: string;
+      parking?: boolean;
+      reservationId?: string;
+      checkInDate: string;
+      checkInTime: string;
+      [key: string]: unknown; // その他のフィールドも許可
+    }
+    const checkins: CheckinData[] = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      checkins.push({
+        id: doc.id,
+        ...data,
+        // 日付を読みやすい形式に変換
+        checkInDate: data.clientCheckInTime ? new Date(data.clientCheckInTime).toISOString().split('T')[0] : '',
+        checkInTime: data.clientCheckInTime ? formatTimeString(new Date(data.clientCheckInTime)) : '',
+      });
+    });
+    
+    // 部屋ごとの集計
+    const roomStats: Record<string, number> = {};
+    const purposeStats: Record<string, number> = {};
+    let totalCount = 0;
+    
+    checkins.forEach(checkin => {
+      // 部屋ごとの集計
+      if (checkin.room) {
+        roomStats[checkin.room] = (roomStats[checkin.room] || 0) + 1;
+      }
+      
+      // 目的ごとの集計
+      if (checkin.purpose) {
+        purposeStats[checkin.purpose] = (purposeStats[checkin.purpose] || 0) + 1;
+      }
+      
+      // 合計人数
+      totalCount += checkin.count || 1;
+    });
+    
+    logs.push('Statistics calculated successfully');
+    
+    return {
+      checkins,
+      stats: {
+        totalCheckins: checkins.length,
+        totalPeople: totalCount,
+        byRoom: roomStats,
+        byPurpose: purposeStats,
+      },
+      logs
+    };
+  } catch (error) {
+    console.error('Error fetching checkins for period:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logs.push(`Error: ${errorMessage}`);
+    throw new functions.https.HttpsError(
+      'internal',
+      'チェックインデータの取得に失敗しました',
+      { error: errorMessage, logs }
+    );
+  }
+});
+
+/**
+ * 指定された期間のチェックインデータを取得するREST API
+ */
+export const getCheckinsForPeriodApi = functions.region('asia-northeast1').https.onRequest(async (req: express.Request, res: express.Response) => {
+  const logs: string[] = [];
+  logs.push(`API called with startDate: ${req.query.startDate}, endDate: ${req.query.endDate}`);
+  
+  try {
+    // APIキー認証
+    const apiKey = req.headers['x-api-key'] || req.query.apiKey;
+    const config = functions.config();
+    const configToken = config.api?.token;
+    
+    if (!configToken) {
+      logs.push('Error: API token not configured');
+      res.status(500).json({ 
+        error: 'APIトークンが設定されていません。管理者に連絡してください。', 
+        logs 
+      });
+      return;
+    }
+    
+    if (!apiKey || apiKey !== configToken) {
+      logs.push('Error: Unauthorized - Invalid or missing API key');
+      res.status(401).json({ 
+        error: '認証が必要です。有効なAPIキーを提供してください。', 
+        logs 
+      });
+      return;
+    }
+    
+    logs.push('API key authentication successful');
+    const startDate = req.query.startDate as string;
+    const endDate = req.query.endDate as string;
+    
+    if (!startDate || !endDate) {
+      logs.push('Error: Start date and end date are required');
+      res.status(400).json({ error: '開始日と終了日は必須です', logs });
+      return;
+    }
+    
+    // 日付をDateオブジェクトに変換
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+    
+    logs.push(`Querying checkins from ${start.toISOString()} to ${end.toISOString()}`);
+    
+    // Firestoreからチェックインデータを取得
+    const db = admin.firestore();
+    const checkinsRef = db.collection('checkins');
+    
+    // clientCheckInTimeフィールドで期間を絞り込み
+    const snapshot = await checkinsRef
+      .where('clientCheckInTime', '>=', start.toISOString())
+      .where('clientCheckInTime', '<=', end.toISOString())
+      .orderBy('clientCheckInTime', 'asc')
+      .get();
+    
+    logs.push(`Found ${snapshot.size} checkins`);
+    
+    // チェックインデータを配列に変換
+    interface CheckinData {
+      id: string;
+      clientCheckInTime?: string;
+      room?: string;
+      purpose?: string;
+      count?: number;
+      startTime?: string;
+      endTime?: string;
+      ageGroup?: string;
+      parking?: boolean;
+      reservationId?: string;
+      checkInDate: string;
+      checkInTime: string;
+      [key: string]: unknown; // その他のフィールドも許可
+    }
+    const checkins: CheckinData[] = [];
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      checkins.push({
+        id: doc.id,
+        ...data,
+        // 日付を読みやすい形式に変換
+        checkInDate: data.clientCheckInTime ? new Date(data.clientCheckInTime).toISOString().split('T')[0] : '',
+        checkInTime: data.clientCheckInTime ? formatTimeString(new Date(data.clientCheckInTime)) : '',
+      });
+    });
+    
+    // 部屋ごとの集計
+    const roomStats: Record<string, number> = {};
+    const purposeStats: Record<string, number> = {};
+    let totalCount = 0;
+    
+    checkins.forEach(checkin => {
+      // 部屋ごとの集計
+      if (checkin.room) {
+        roomStats[checkin.room] = (roomStats[checkin.room] || 0) + 1;
+      }
+      
+      // 目的ごとの集計
+      if (checkin.purpose) {
+        purposeStats[checkin.purpose] = (purposeStats[checkin.purpose] || 0) + 1;
+      }
+      
+      // 合計人数
+      totalCount += checkin.count || 1;
+    });
+    
+    logs.push('Statistics calculated successfully');
+    
+    // CORS設定
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    
+    res.status(200).json({
+      checkins,
+      stats: {
+        totalCheckins: checkins.length,
+        totalPeople: totalCount,
+        byRoom: roomStats,
+        byPurpose: purposeStats,
+      },
+      logs
+    });
+  } catch (error) {
+    console.error('Error fetching checkins for period:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    logs.push(`Error: ${errorMessage}`);
+    
+    // CORS設定
+    res.set('Access-Control-Allow-Origin', '*');
+    res.status(500).json({ error: 'チェックインデータの取得に失敗しました', errorDetails: errorMessage, logs });
+  }
+});
