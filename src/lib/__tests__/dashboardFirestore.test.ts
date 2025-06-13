@@ -13,6 +13,7 @@ import {
   getMonthlyStats,
   getDateRangeStats,
   calculateStayMinutes,
+  categorizeTimeSlot,
 } from "../dashboardFirestore";
 
 jest.mock("../firebase", () => ({
@@ -598,6 +599,70 @@ describe("dashboardFirestore", () => {
       expect(calculateStayMinutes("23:59", "00:00")).toBe(1); // 1分（日跨ぎ）
       expect(calculateStayMinutes("00:00", "23:59")).toBe(1439); // 23時間59分
       expect(calculateStayMinutes("12:00", "12:00")).toBe(0); // 同じ時刻は0分
+    });
+  });
+
+  describe("categorizeTimeSlot", () => {
+    it("午前の時間帯を正しく分類する（9:00-13:00）", () => {
+      expect(categorizeTimeSlot("09:00")).toBe("morning");
+      expect(categorizeTimeSlot("10:30")).toBe("morning");
+      expect(categorizeTimeSlot("12:00")).toBe("morning");
+      expect(categorizeTimeSlot("12:30")).toBe("morning");
+      expect(categorizeTimeSlot("12:59")).toBe("morning");
+    });
+
+    it("午後の時間帯を正しく分類する（13:00-18:00）", () => {
+      expect(categorizeTimeSlot("13:00")).toBe("afternoon");
+      expect(categorizeTimeSlot("13:01")).toBe("afternoon");
+      expect(categorizeTimeSlot("15:30")).toBe("afternoon");
+      expect(categorizeTimeSlot("17:00")).toBe("afternoon");
+      expect(categorizeTimeSlot("17:59")).toBe("afternoon");
+    });
+
+    it("夜の時間帯を正しく分類する（18:00-24:00）", () => {
+      expect(categorizeTimeSlot("18:00")).toBe("evening");
+      expect(categorizeTimeSlot("18:01")).toBe("evening");
+      expect(categorizeTimeSlot("20:00")).toBe("evening");
+      expect(categorizeTimeSlot("23:00")).toBe("evening");
+      expect(categorizeTimeSlot("23:59")).toBe("evening");
+    });
+
+    it("営業時間外をunknownとして分類する", () => {
+      expect(categorizeTimeSlot("00:00")).toBe("unknown");
+      expect(categorizeTimeSlot("05:00")).toBe("unknown");
+      expect(categorizeTimeSlot("08:00")).toBe("unknown");
+      expect(categorizeTimeSlot("08:59")).toBe("unknown");
+    });
+
+    it("境界値を正しく分類する", () => {
+      // 午前と午後の境界
+      expect(categorizeTimeSlot("12:59")).toBe("morning");
+      expect(categorizeTimeSlot("13:00")).toBe("afternoon");
+      
+      // 午後と夜の境界
+      expect(categorizeTimeSlot("17:59")).toBe("afternoon");
+      expect(categorizeTimeSlot("18:00")).toBe("evening");
+      
+      // 夜と営業時間外の境界
+      expect(categorizeTimeSlot("23:59")).toBe("evening");
+      expect(categorizeTimeSlot("00:00")).toBe("unknown");
+      
+      // 営業時間外と午前の境界
+      expect(categorizeTimeSlot("08:59")).toBe("unknown");
+      expect(categorizeTimeSlot("09:00")).toBe("morning");
+    });
+
+    it("不正な入力の場合はunknownを返す", () => {
+      expect(categorizeTimeSlot("")).toBe("unknown");
+      expect(categorizeTimeSlot("invalid")).toBe("unknown");
+      expect(categorizeTimeSlot("25:00")).toBe("unknown");
+      expect(categorizeTimeSlot("24:00")).toBe("unknown");
+      expect(categorizeTimeSlot("12:60")).toBe("morning"); // 時間部分は12なのでmorningになる
+    });
+
+    it("1桁の時間も正しく処理する", () => {
+      expect(categorizeTimeSlot("9:00")).toBe("morning");
+      expect(categorizeTimeSlot("9:30")).toBe("morning");
     });
   });
 });

@@ -278,9 +278,9 @@ export interface DayOfWeekStats {
 
 // 時間帯別統計
 export interface TimeSlotStats {
-  morning: number;    // 午前(9:00-12:00)
-  afternoon: number;  // 午後(12:00-18:00)
-  evening: number;    // 夜(18:00-0:00)
+  morning: number;    // 午前(9:00-13:00)
+  afternoon: number;  // 午後(13:00-18:00)
+  evening: number;    // 夜(18:00-24:00)
   unknown: number;    // 不明
   [key: string]: number;   // インデックスシグネチャ
 }
@@ -363,18 +363,18 @@ function getDayOfWeek(dateStr: string): keyof DayOfWeekStats {
 /**
  * 時間帯を分類する
  */
-function categorizeTimeSlot(timeStr: string): keyof TimeSlotStats {
+export function categorizeTimeSlot(timeStr: string): keyof TimeSlotStats {
   if (!timeStr) return "unknown";
   
   const [hourStr] = timeStr.split(":");
   const hour = Number.parseInt(hourStr, 10);
   
-  if (hour >= 9 && hour < 12) {
-    return "morning";    // 9:00-12:00
-  } else if (hour >= 12 && hour < 18) {
-    return "afternoon";  // 12:00-18:00
+  if (hour >= 9 && hour < 13) {
+    return "morning";    // 9:00-13:00
+  } else if (hour >= 13 && hour < 18) {
+    return "afternoon";  // 13:00-18:00
   } else if (hour >= 18 && hour < 24) {
-    return "evening";    // 18:00-0:00
+    return "evening";    // 18:00-24:00
   } else {
     return "unknown";
   }
