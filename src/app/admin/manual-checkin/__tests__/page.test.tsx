@@ -16,6 +16,11 @@ jest.mock('@/lib/manualCheckin', () => ({
   saveManualCheckIn: jest.fn(),
 }));
 
+// 認証コンポーネントのモック
+jest.mock('../auth', () => ({
+  AuthWrapper: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 // react-day-pickerのモック
 jest.mock('@/components/ui/calendar', () => ({
   Calendar: ({ onSelect, selected }: { onSelect: (date: Date) => void; selected: Date | undefined }) => (
