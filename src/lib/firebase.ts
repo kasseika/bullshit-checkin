@@ -18,8 +18,8 @@ const firebaseConfig = {
 // Next.jsではサーバーサイドとクライアントサイドの両方で実行されるため、
 // グローバル変数を使って初期化を一度だけ行うようにします
 let firebaseApp;
-let firestoreDb: Firestore;
-let functions: Functions;
+let firestoreDb: Firestore | undefined;
+let functions: Functions | undefined;
 
 if (typeof window !== 'undefined') {
   // クライアントサイドの場合
@@ -41,5 +41,8 @@ if (typeof window !== 'undefined') {
   firestoreDb = getFirestore(firebaseApp);
   functions = getFunctions(firebaseApp, 'asia-northeast1');
 }
+
+// 後方互換性のためのエイリアス
+export const db = firestoreDb!;
 
 export { firestoreDb, functions };
