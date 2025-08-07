@@ -5,18 +5,27 @@
 import { db } from './firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import type { CheckInData } from './firestore';
+import { formatDateToJST } from '../utils/dateUtils';
 
 export async function saveManualCheckIn(checkInData: CheckInData, checkInDate: Date) {
   try {
-    // チェックイン日付をベースに開始日・終了日を設定
-    const dateString = checkInDate.toISOString().split('T')[0];
+    // チェックイン日付をJSTベースで設定（通常のチェックインと同じ形式）
+    const dateString = formatDateToJST(checkInDate);
+    
+    // 開始時刻を使って、UTC形式のcheckInTimeを生成
+    // checkInDateの日付とstartTimeを組み合わせて、UTC形式のISO文字列を作成
+    const [hours, minutes] = checkInData.startTime.split(':').map(Number);
+    const checkInDateTime = new Date(checkInDate);
+    checkInDateTime.setHours(hours, minutes, 0, 0);
+    const checkInTimeUTC = checkInDateTime.toISOString();
     
     // サーバータイムスタンプと日付を追加
     const dataToSave = {
       ...checkInData,
       startDate: dateString,
       endDate: dateString,
-      clientCheckInTime: checkInData.checkInTime,
+      checkInTime: checkInTimeUTC,  // UTC形式のISO文字列
+      clientCheckInTime: checkInTimeUTC,  // 通常のチェックインと同じ形式
       serverCheckInTime: serverTimestamp(),
       createdAt: serverTimestamp(),
       isManualEntry: true, // 手動入力フラグ
