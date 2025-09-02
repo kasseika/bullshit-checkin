@@ -296,113 +296,97 @@ function TimeSelection() {
                     <p className="text-sm text-gray-600">{roomDisplayName}はオープン席です。空いている席をご自由にお使いください。<br />終了時間は目安でご入力ください。</p>
                   </div>
                 )}
-                <div className="flex justify-center items-center gap-8 mb-6">
-                  {/* 時間選択ホイールピッカー */}
-                  <div className="flex flex-col items-center">
-                    <label className="block text-lg font-medium mb-2 text-center">時間</label>
-                    <div className="flex flex-col items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-12 w-12 rounded-full shadow-lg"
-                        onClick={() => {
-                          const currentIndex = availableHourOptions.findIndex(option => option.value === endHour);
-                          if (currentIndex < availableHourOptions.length - 1) {
-                            setEndHour(availableHourOptions[currentIndex + 1].value);
-                          }
-                        }}
-                        disabled={availableHourOptions.findIndex(option => option.value === endHour) >= availableHourOptions.length - 1}
-                      >
-                        <Plus className="h-8 w-8" />
-                      </Button>
-                      
-                      <Card className="w-32 h-14 flex items-center justify-center shadow-md">
-                        <CardContent className="p-0 flex items-center justify-center h-full w-full">
-                          <span className="text-2xl font-bold">
-                            {endHour}時
-                          </span>
-                        </CardContent>
-                      </Card>
-                      
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-12 w-12 rounded-full shadow-lg"
-                        onClick={() => {
-                          const currentIndex = availableHourOptions.findIndex(option => option.value === endHour);
-                          if (currentIndex > 0) {
-                            setEndHour(availableHourOptions[currentIndex - 1].value);
-                          }
-                        }}
-                        disabled={availableHourOptions.findIndex(option => option.value === endHour) <= 0}
-                      >
-                        <Minus className="h-8 w-8" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* 分選択カード */}
-                  <div className="flex flex-col items-center">
-                    <label className="block text-lg font-medium mb-2 text-center">分</label>
-                    <div className="flex flex-col items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-12 w-12 rounded-full shadow-lg"
-                        onClick={() => {
-                          const currentIndex = availableMinuteOptions.findIndex(option => option.value === endMinute);
-                          if (currentIndex < availableMinuteOptions.length - 1) {
-                            setEndMinute(availableMinuteOptions[currentIndex + 1].value);
-                          }
-                        }}
-                        disabled={availableMinuteOptions.findIndex(option => option.value === endMinute) >= availableMinuteOptions.length - 1}
-                      >
-                        <Plus className="h-8 w-8" />
-                      </Button>
-                      
-                      <Card className="w-32 h-14 flex items-center justify-center shadow-md">
-                        <CardContent className="p-0 flex items-center justify-center h-full w-full">
-                          <span className="text-2xl font-bold">
-                            {endMinute}分
-                          </span>
-                        </CardContent>
-                      </Card>
-                      
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-12 w-12 rounded-full shadow-lg"
-                        onClick={() => {
-                          const currentIndex = availableMinuteOptions.findIndex(option => option.value === endMinute);
-                          if (currentIndex > 0) {
-                            setEndMinute(availableMinuteOptions[currentIndex - 1].value);
-                          }
-                        }}
-                        disabled={availableMinuteOptions.findIndex(option => option.value === endMinute) <= 0}
-                      >
-                        <Minus className="h-8 w-8" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-center gap-6 mb-8">
                   {/* 開始時刻 */}
                   <div className="flex flex-col items-center">
-                    <div className="text-3xl font-bold py-4 px-8 bg-primary text-primary-foreground rounded-md">
+                    <span className="text-xs text-gray-500 mb-1">開始時刻</span>
+                    <div className="text-xl font-semibold py-2 px-4 bg-gray-100 text-gray-600 rounded-md">
                       {startTime || "読み込み中..."}
                     </div>
-                    <span className="mt-2 text-sm">開始時刻</span>
                   </div>
 
-                  <ChevronsRight className="h-8 w-8" />
+                  <ChevronsRight className="h-6 w-6 text-gray-400 mt-6" />
 
                   {/* 終了時刻 */}
                   <div className="flex flex-col items-center">
-                    <div className="text-3xl font-bold py-4 px-8 bg-primary text-primary-foreground rounded-md">
-                      {endHour}:{endMinute}
+                    <span className="text-sm text-gray-600 mb-2">終了時刻</span>
+                    <div className="flex items-center gap-2">
+                      {/* 時間選択 */}
+                      <div className="flex flex-col items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => {
+                            const currentIndex = availableHourOptions.findIndex(option => option.value === endHour);
+                            if (currentIndex < availableHourOptions.length - 1) {
+                              setEndHour(availableHourOptions[currentIndex + 1].value);
+                            }
+                          }}
+                          disabled={availableHourOptions.findIndex(option => option.value === endHour) >= availableHourOptions.length - 1}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        
+                        <div className="text-3xl font-bold py-2 px-4 bg-blue-50 text-blue-700 rounded-md border-2 border-blue-200">
+                          {endHour}
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => {
+                            const currentIndex = availableHourOptions.findIndex(option => option.value === endHour);
+                            if (currentIndex > 0) {
+                              setEndHour(availableHourOptions[currentIndex - 1].value);
+                            }
+                          }}
+                          disabled={availableHourOptions.findIndex(option => option.value === endHour) <= 0}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <span className="text-3xl font-bold">:</span>
+
+                      {/* 分選択 */}
+                      <div className="flex flex-col items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => {
+                            const currentIndex = availableMinuteOptions.findIndex(option => option.value === endMinute);
+                            if (currentIndex < availableMinuteOptions.length - 1) {
+                              setEndMinute(availableMinuteOptions[currentIndex + 1].value);
+                            }
+                          }}
+                          disabled={availableMinuteOptions.findIndex(option => option.value === endMinute) >= availableMinuteOptions.length - 1}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        
+                        <div className="text-3xl font-bold py-2 px-4 bg-blue-50 text-blue-700 rounded-md border-2 border-blue-200">
+                          {endMinute}
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => {
+                            const currentIndex = availableMinuteOptions.findIndex(option => option.value === endMinute);
+                            if (currentIndex > 0) {
+                              setEndMinute(availableMinuteOptions[currentIndex - 1].value);
+                            }
+                          }}
+                          disabled={availableMinuteOptions.findIndex(option => option.value === endMinute) <= 0}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <span className="mt-2 text-sm">終了時刻</span>
                   </div>
                 </div>
 
