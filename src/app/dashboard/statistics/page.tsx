@@ -287,15 +287,15 @@ function DailyUsersChart({ checkIns, fromDate, toDate }: {
       <ChartContainer config={chartConfig} className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={dailyData}>
-            <XAxis 
-              dataKey="displayLabel" 
+            <XAxis
+              dataKey="displayLabel"
               tick={<CustomXAxisTick />}
               interval={0} // すべてのラベルを表示
               height={50}
             />
             <YAxis tick={{ fontSize: 12 }} />
             <ChartTooltip content={<CustomTooltip />} />
-            <Bar dataKey="users" fill="var(--color-users)">
+            <Bar dataKey="users" fill="var(--color-users)" isAnimationActive={false}>
               <LabelList dataKey="users" position="top" fontSize={12} />
             </Bar>
           </BarChart>
@@ -336,17 +336,18 @@ function TimeSlotPieChart({ timeSlotStats }: { timeSlotStats: Record<string, num
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent, value }) => 
+                label={({ name, percent, value }) =>
                   `${name} ${value}人 (${(percent * 100).toFixed(0)}%)`
                 }
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
+                isAnimationActive={false}
               >
                 {data.map((_, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={COLORS[index % COLORS.length]} 
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
                   />
                 ))}
               </Pie>
@@ -386,8 +387,8 @@ function AgeGroupChart({ ageGroupStats }: { ageGroupStats: Record<string, number
       <ChartContainer config={chartConfig} className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <XAxis 
-              dataKey="ageGroup" 
+            <XAxis
+              dataKey="ageGroup"
               tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
@@ -395,7 +396,7 @@ function AgeGroupChart({ ageGroupStats }: { ageGroupStats: Record<string, number
             />
             <YAxis tick={{ fontSize: 12 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="users" fill="var(--color-users)">
+            <Bar dataKey="users" fill="var(--color-users)" isAnimationActive={false}>
               <LabelList dataKey="users" position="top" fontSize={12} />
             </Bar>
           </BarChart>
@@ -428,8 +429,8 @@ function PurposeChart({ purposeStats }: { purposeStats: Record<string, number> }
       <ChartContainer config={chartConfig} className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <XAxis 
-              dataKey="purpose" 
+            <XAxis
+              dataKey="purpose"
               tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
@@ -437,7 +438,7 @@ function PurposeChart({ purposeStats }: { purposeStats: Record<string, number> }
             />
             <YAxis tick={{ fontSize: 12 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="users" fill="var(--color-users)">
+            <Bar dataKey="users" fill="var(--color-users)" isAnimationActive={false}>
               <LabelList dataKey="users" position="top" fontSize={12} />
             </Bar>
           </BarChart>
@@ -470,13 +471,13 @@ function DayOfWeekChart({ dayOfWeekStats }: { dayOfWeekStats: Record<string, num
       <ChartContainer config={chartConfig} className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <XAxis 
-              dataKey="dayOfWeek" 
+            <XAxis
+              dataKey="dayOfWeek"
               tick={{ fontSize: 12 }}
             />
             <YAxis tick={{ fontSize: 12 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="users" fill="var(--color-users)">
+            <Bar dataKey="users" fill="var(--color-users)" isAnimationActive={false}>
               <LabelList dataKey="users" position="top" fontSize={12} />
             </Bar>
           </BarChart>
@@ -508,8 +509,8 @@ function RoomUsageChart({ roomStats }: { roomStats: Record<string, number> }) {
       <ChartContainer config={chartConfig} className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
-            <XAxis 
-              dataKey="room" 
+            <XAxis
+              dataKey="room"
               tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
@@ -517,7 +518,7 @@ function RoomUsageChart({ roomStats }: { roomStats: Record<string, number> }) {
             />
             <YAxis tick={{ fontSize: 12 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="users" fill="var(--color-users)">
+            <Bar dataKey="users" fill="var(--color-users)" isAnimationActive={false}>
               <LabelList dataKey="users" position="top" fontSize={12} />
             </Bar>
           </BarChart>
@@ -553,13 +554,13 @@ function ParticipantCountChart({ participantCountStats }: { participantCountStat
         <ChartContainer config={chartConfig} className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>
-              <XAxis 
-                dataKey="people" 
+              <XAxis
+                dataKey="people"
                 tick={{ fontSize: 12 }}
               />
               <YAxis tick={{ fontSize: 12 }} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="checkIns" fill="var(--color-checkIns)">
+              <Bar dataKey="checkIns" fill="var(--color-checkIns)" isAnimationActive={false}>
                 <LabelList dataKey="checkIns" position="top" fontSize={12} />
               </Bar>
             </BarChart>
