@@ -4,6 +4,7 @@ import * as admin from 'firebase-admin';
 import { google, calendar_v3 } from 'googleapis';
 import axios from 'axios';
 import { convertFullWidthNumbersToHalfWidth } from "../../src/utils/textUtils";
+import { generateStatisticsImage, StatsData } from './chartGenerator';
 
 // Firebase初期化
 admin.initializeApp();
@@ -1281,3 +1282,268 @@ export const getCheckinsForPeriodApi = functions.region('asia-northeast1').https
     res.status(500).json({ error: 'チェックインデータの取得に失敗しました', errorDetails: errorMessage, logs });
   }
 });
+
+/**
+ * 指定された期間の統計グラフ画像を生成するCloud Function
+ * @param year - 年（デフォルト: 今年）
+ * @param month - 月（1-12）
+ * @param apiKey - APIキー（ヘッダーまたはクエリパラメータ）
+ * @returns PNG画像
+ */
+export const generateStatisticsImageApi = functions.region('asia-northeast1')
+  .runWith({
+    timeoutSeconds: 540, // 9分（画像生成は時間がかかるため）
+    memory: '1GB' // Chart.js + Canvasのため1GBメモリを確保
+  })
+  .https.onRequest(async (req: express.Request, res: express.Response) => {
+    const logs: string[] = [];
+    logs.push(`API called with year: ${req.query.year}, month: ${req.query.month}`);
+
+    try {
+      // APIキー認証
+      const apiKey = req.headers['x-api-key'] || req.query.apiKey;
+      const config = functions.config();
+      const configToken = config.api?.token;
+
+      if (!configToken) {
+        logs.push('Error: API token not configured');
+        res.status(500).json({
+          error: 'APIトークンが設定されていません。管理者に連絡してください。',
+          logs
+        });
+        return;
+      }
+
+      if (!apiKey || apiKey !== configToken) {
+        logs.push('Error: Unauthorized - Invalid or missing API key');
+        res.status(401).json({
+          error: '認証が必要です。有効なAPIキーを提供してください。',
+          logs
+        });
+        return;
+      }
+
+      logs.push('API key authentication successful');
+
+      // 年月パラメータの取得
+      const today = new Date();
+      const year = req.query.year ? parseInt(req.query.year as string) : today.getFullYear();
+      const month = req.query.month ? parseInt(req.query.month as string) : today.getMonth() + 1;
+
+      if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+        logs.push('Error: Invalid year or month parameter');
+        res.status(400).json({
+          error: '無効な年または月が指定されました。月は1-12の範囲で指定してください。',
+          logs
+        });
+        return;
+      }
+
+      logs.push(`Generating statistics image for ${year}年${month}月`);
+
+      // 期間の開始日と終了日を計算
+      const startDate = new Date(year, month - 1, 1);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(year, month, 0); // 翌月の0日 = 当月の最終日
+      endDate.setHours(23, 59, 59, 999);
+
+      logs.push(`Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+
+      // Firestoreからチェックインデータを取得
+      const db = admin.firestore();
+      const checkinsRef = db.collection('checkins');
+
+      const snapshot = await checkinsRef
+        .where('clientCheckInTime', '>=', startDate.toISOString())
+        .where('clientCheckInTime', '<=', endDate.toISOString())
+        .orderBy('clientCheckInTime', 'asc')
+        .get();
+
+      logs.push(`Found ${snapshot.size} checkins`);
+
+      // チェックインデータを集計
+      const ageGroupStats: Record<string, number> = {};
+      const purposeStats: Record<string, number> = {};
+      const dayOfWeekStats: Record<string, number> = {};
+      const timeSlotStats: Record<string, number> = {};
+      const roomStats: Record<string, number> = {};
+      const participantCountStats: Record<string, number> = {};
+      const dailyUsersMap: Record<string, number> = {};
+
+      // 期間内の全日付を初期化
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        dailyUsersMap[dateStr] = 0;
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // データを集計
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const count = data.count || 1;
+
+        // 年代別（フォーマット変換）
+        if (data.ageGroup) {
+          const ageGroupKey = categorizeAgeGroup(data.ageGroup);
+          ageGroupStats[ageGroupKey] = (ageGroupStats[ageGroupKey] || 0) + count;
+        }
+
+        // 目的別（フォーマット変換）
+        if (data.purpose) {
+          const purposeKey = categorizePurpose(data.purpose);
+          purposeStats[purposeKey] = (purposeStats[purposeKey] || 0) + count;
+        }
+
+        // 曜日別
+        if (data.clientCheckInTime) {
+          const date = new Date(data.clientCheckInTime);
+          const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
+          dayOfWeekStats[dayOfWeek] = (dayOfWeekStats[dayOfWeek] || 0) + count;
+
+          // 日別利用者数
+          const dateStr = date.toISOString().split('T')[0];
+          if (dailyUsersMap[dateStr] !== undefined) {
+            dailyUsersMap[dateStr] += count;
+          }
+        }
+
+        // 時間帯別（正しい時間帯定義に修正）
+        if (data.startTime) {
+          const hour = parseInt(data.startTime.split(':')[0]);
+          let timeSlot = 'unknown';
+          if (hour >= 9 && hour < 13) {
+            timeSlot = 'morning';      // 9:00-13:00
+          } else if (hour >= 13 && hour < 18) {
+            timeSlot = 'afternoon';    // 13:00-18:00
+          } else if (hour >= 18 && hour < 24) {
+            timeSlot = 'evening';      // 18:00-24:00
+          }
+          timeSlotStats[timeSlot] = (timeSlotStats[timeSlot] || 0) + count;
+        }
+
+        // 部屋別
+        if (data.room) {
+          const roomName = getRoomDisplayName(data.room);
+          roomStats[roomName] = (roomStats[roomName] || 0) + count;
+        }
+
+        // 人数別
+        const people = count.toString();
+        participantCountStats[people] = (participantCountStats[people] || 0) + 1;
+      });
+
+      logs.push('Statistics calculated successfully');
+
+      // 日別データを配列に変換
+      const dailyUsersData = Object.entries(dailyUsersMap).map(([dateStr, users]) => {
+        const date = new Date(dateStr);
+        const day = date.getDate();
+        const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'][date.getDay()];
+        return {
+          date: `${day}日\n${dayOfWeek}`,
+          users
+        };
+      });
+
+      // StatsDataオブジェクトを構築
+      const statsData: StatsData = {
+        ageGroupStats,
+        purposeStats,
+        dayOfWeekStats,
+        timeSlotStats,
+        roomStats,
+        participantCountStats,
+        dailyUsersData
+      };
+
+      logs.push('Generating chart image...');
+
+      // グラフ画像を生成
+      const imageBuffer = await generateStatisticsImage(statsData, { year, month });
+
+      logs.push(`Image generated successfully. Size: ${imageBuffer.length} bytes`);
+
+      // PNG画像として返却
+      res.set('Content-Type', 'image/png');
+      res.set('Content-Disposition', `inline; filename="statistics_${year}-${String(month).padStart(2, '0')}.png"`);
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate'); // キャッシュ無効化
+      res.set('Pragma', 'no-cache'); // HTTP/1.0互換
+      res.set('Expires', '0'); // 古いブラウザ対応
+      res.status(200).send(imageBuffer);
+
+    } catch (error) {
+      console.error('Error generating statistics image:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logs.push(`Error: ${errorMessage}`);
+
+      res.set('Content-Type', 'application/json');
+      res.status(500).json({
+        error: '統計グラフ画像の生成に失敗しました',
+        errorDetails: errorMessage,
+        logs
+      });
+    }
+  });
+
+/**
+ * 部屋IDから表示用の部屋名を取得
+ */
+function getRoomDisplayName(roomId: string): string {
+  const roomNames: Record<string, string> = {
+    "room1": "1番",
+    "private4": "4番個室",
+    "large4": "4番大部屋",
+    "large6": "6番大部屋",
+    "workshop6": "6番工作室",
+    "tour": "見学"
+  };
+  return roomNames[roomId] || roomId;
+}
+
+/**
+ * 年代グループをカテゴリ化（dashboardFirestore.tsと同じロジック）
+ */
+function categorizeAgeGroup(ageGroup: string): string {
+  switch (ageGroup) {
+    case "under10s":
+      return "under20";
+    case "20s":
+      return "twenties";
+    case "30s":
+      return "thirties";
+    case "40s":
+      return "forties";
+    case "50s":
+      return "fifties";
+    case "over60s":
+      return "over60";
+    default:
+      return "unknown";
+  }
+}
+
+/**
+ * 目的をカテゴリ化（dashboardFirestore.tsと同じロジック）
+ */
+function categorizePurpose(purpose: string): string {
+  switch (purpose) {
+    case "meeting":
+      return "meeting";
+    case "remote":
+      return "telework";
+    case "study":
+      return "study";
+    case "event":
+      return "event";
+    case "creation":
+      return "digital";
+    case "tour":
+      return "inspection";
+    case "other":
+      return "other";
+    default:
+      return "unknown";
+  }
+}
